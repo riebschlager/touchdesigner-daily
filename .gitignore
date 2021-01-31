@@ -1,6 +1,7 @@
 *.mov
 *.mp4
 *.jpg
+*.png
 *.tif
 
 *.*.toe
