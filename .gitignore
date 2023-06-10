@@ -4,6 +4,7 @@
 *.jpg
 *.png
 *.tif
+*.psd
 
 *.*.toe
 **/Backup
