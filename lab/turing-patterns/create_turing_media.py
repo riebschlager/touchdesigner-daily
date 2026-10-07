@@ -173,6 +173,46 @@ void main() {
 """
 
 
+TRANSFORM_SHADER = r"""
+layout(location = 0) out vec4 fragColor;
+uniform vec4 uWarp; // grow %, scale X %, scale Y %, rotation radians (all per frame)
+uniform vec4 uDrift; // translate X/Y in cells per frame, pivot X/Y in UV
+uniform vec4 uWarpMode; // active, edge mode index, unused, unused
+
+const vec4 EMPTY_CELL = vec4(1.0, 0.0, 0.0, 0.0); // A=1, B=0, colourless
+
+// Manual bilinear over integer texels keeps torus edges exact and avoids
+// relying on 32-bit float texture filtering. Clear mode refills from outside.
+vec4 readCell(ivec2 p, ivec2 size) {
+    bool outside = any(lessThan(p, ivec2(0))) || any(greaterThanEqual(p, size));
+    if (uWarpMode.y > 0.5 && outside) return EMPTY_CELL;
+    p = (p % size + size) % size;
+    return texelFetch(sTD2DInputs[0], p, 0);
+}
+
+void main() {
+    ivec2 size = textureSize(sTD2DInputs[0], 0);
+    if (uWarpMode.x < 0.5) {
+        fragColor = TDOutputSwizzle(texelFetch(sTD2DInputs[0], ivec2(gl_FragCoord.xy), 0));
+        return;
+    }
+    // Forward move per frame: scale, rotate about the pivot, then translate.
+    // Each output cell samples the inverse of that move from the previous state.
+    vec2 pivot = uDrift.zw * vec2(size);
+    vec2 q = gl_FragCoord.xy - pivot - uDrift.xy;
+    float c = cos(uWarp.w), s = sin(uWarp.w);
+    q = vec2(c * q.x + s * q.y, -s * q.x + c * q.y);
+    vec2 scale = (1.0 + uWarp.x * 0.01) * (1.0 + uWarp.yz * 0.01);
+    vec2 source = pivot + q / max(scale, vec2(0.01)) - 0.5;
+    ivec2 base = ivec2(floor(source));
+    vec2 f = source - vec2(base);
+    vec4 bottom = mix(readCell(base, size), readCell(base + ivec2(1, 0), size), f.x);
+    vec4 top = mix(readCell(base + ivec2(0, 1), size), readCell(base + ivec2(1, 1), size), f.x);
+    fragColor = TDOutputSwizzle(mix(bottom, top, f.y));
+}
+"""
+
+
 DISPLAY_SHADER = r"""
 layout(location = 0) out vec4 fragColor;
 uniform vec4 uDisplay; // color amount, contrast, invert, color mode index
@@ -484,6 +524,10 @@ def onPulse(par):
     elif par.name == 'Restartclip':
         component.op('movie').par.cuepulse.pulse()
         component.op('demo_clock').par.resetpulse.pulse()
+    elif par.name == 'Transformzero':
+        for name in ('Grow', 'Scalex', 'Scaley', 'Translatex', 'Translatey', 'Rotate'):
+            component.par[name].val = 0.0
+        return
     resetSimulation(component)
     return
 
@@ -575,6 +619,23 @@ Carried Color: hue/chroma travel INSIDE the simulation (state blue/alpha, Oklab
   since averaging desaturates. Uncolored areas read as gray. Reset clears color.
   The carried color always runs, so it has history when you switch to it.
 
+TRANSFORM PAGE
+Moves the chemical state (and carried color) a little every frame, inside the
+feedback loop, so the move compounds: patterns spiral, zoom and drift forever
+while the reaction keeps re-forming them. Applied once per frame after all
+passes, so its speed depends on project FPS, not Passes. Off by default; also
+frozen while Running is off.
+Grow / Shrink: uniform zoom about the pivot (+ grows outward, - pulls inward).
+Scale X / Y: extra per-axis stretch on top of Grow (+/- for shear-like flows).
+Translate X / Y: drift in cells per frame. Rotate: degrees per frame.
+Pivot X / Y: the center for scale and rotation (0-1 across the canvas).
+Edges: Wrap keeps the torus (shrinking tiles the field); Clear refills the
+border with empty field (A=1, B=0) so the influence or seeds must re-grow it.
+Zero Motion clears every rate without resetting. Sampling is bilinear, which
+slightly softens each frame; the reaction re-sharpens it. Small values go a long
+way: try Grow .1-.5, Rotate .1-1. Pair with a nonzero Strength or Ambient Seeds
+so Shrink + Clear never empties the field.
+
 USEFUL OPERATORS
 out1: final image (or the selected diagnostic view).
 patterns: colored simulation before clipping/overlay.
@@ -593,7 +654,8 @@ NETWORK
 movie + demo -> media_source -> media_prepared -> media_cache (2 frames)
 media_previous selects cache index -1. media_mask reads current and previous.
 mask_preview -> reaction_diffusion input 1; feedback remains input 0.
-seed -> feedback -> reaction_diffusion -> state; Feedback Target TOP = state.
+seed -> feedback -> reaction_diffusion -> state_transform -> state;
+Feedback Target TOP = state.
 media_prepared -> reaction_diffusion input 2 (carried color injection).
 media_prepared -> palette_cells -> palette_sort -> palette; palette_feedback
 (Target TOP = palette, initialized by palette_init) feeds palette_sort input 1.
@@ -770,6 +832,21 @@ def build_turing_media(container=None):
         ('source', 'Source on Checkerboard'),
     ], 'final')
 
+    transform_page = component.appendCustomPage('Transform')
+    _toggle(transform_page, 'Transform', 'Enable Transform', False)
+    _number(transform_page, 'Grow', 'Grow / Shrink (% / frame)', 0.1, -5.0, 5.0)
+    _number(transform_page, 'Scalex', 'Scale X (% / frame)', 0.0, -5.0, 5.0)
+    _number(transform_page, 'Scaley', 'Scale Y (% / frame)', 0.0, -5.0, 5.0)
+    _number(transform_page, 'Translatex', 'Translate X (cells / frame)', 0.0, -8.0, 8.0)
+    _number(transform_page, 'Translatey', 'Translate Y (cells / frame)', 0.0, -8.0, 8.0)
+    _number(transform_page, 'Rotate', 'Rotate (degrees / frame)', 0.1, -10.0, 10.0)
+    _number(transform_page, 'Pivotx', 'Pivot X', 0.5, 0.0, 1.0)
+    _number(transform_page, 'Pivoty', 'Pivot Y', 0.5, 0.0, 1.0)
+    _menu(transform_page, 'Transformedge', 'Edges', [
+        ('wrap', 'Wrap'), ('clear', 'Clear'),
+    ], 'wrap')
+    transform_page.appendPulse('Transformzero', label='Zero Motion')
+
     color_page = component.appendCustomPage('Color')
     _menu(color_page, 'Colormode', 'Color Mode', [
         ('fixed', 'Fixed Palette'), ('tint', 'Source Tint'), ('ramp', 'Clip Palette'),
@@ -893,9 +970,22 @@ def build_turing_media(container=None):
                   'parent().par.Dyedecay', '0')),
     ])
 
+    # Applied once per frame after all passes, so the move compounds through feedback.
+    transform = _shader(component, 'state_transform', 'transform_pixel',
+                        TRANSFORM_SHADER, (150, 200))
+    transform.inputConnectors[0].connect(simulation)
+    _uniforms(transform, [
+        ('uWarp', ('parent().par.Grow', 'parent().par.Scalex', 'parent().par.Scaley',
+                   'parent().par.Rotate * 0.0174532925199433')),
+        ('uDrift', ('parent().par.Translatex', 'parent().par.Translatey',
+                    'parent().par.Pivotx', 'parent().par.Pivoty')),
+        ('uWarpMode', ('1 if parent().par.Transform and parent().par.Running else 0',
+                       _menu_index('Transformedge'), '0', '0')),
+    ])
+
     state = component.create(nullTOP, 'state')
-    state.nodeX, state.nodeY = 150, 200
-    state.inputConnectors[0].connect(simulation)
+    state.nodeX, state.nodeY = 150, 420
+    state.inputConnectors[0].connect(transform)
     _set(state, 'format', 'rgba32float')
     _set(feedback, 'top', state.name)
 
@@ -971,7 +1061,7 @@ def build_turing_media(container=None):
     _set(callbacks, 'active', False)
     callbacks.text = CONTROL_CALLBACKS.strip() + '\n'
     _set(callbacks, 'op', '..')
-    _set(callbacks, 'pars', 'Reset Reseed Coral Spots Resolution Seed Seedradius Ambient Moviefile Clipseed Restartclip')
+    _set(callbacks, 'pars', 'Reset Reseed Coral Spots Resolution Seed Seedradius Ambient Moviefile Clipseed Restartclip Transformzero')
     _set(callbacks, 'custom', True)
     _set(callbacks, 'builtin', False)
     _set(callbacks, 'onpulse', True)
