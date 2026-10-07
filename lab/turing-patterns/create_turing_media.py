@@ -144,7 +144,7 @@ void main() {
 SIMULATION_SHADER = r"""
 layout(location = 0) out vec4 fragColor;
 uniform vec4 uRates; // feed, kill, diffusion A, diffusion B
-uniform vec4 uStep;  // timestep, running, unused, unused
+uniform vec4 uStep;  // timestep, running, edge mode index (wrap, clear), unused
 uniform vec4 uInfluence; // strength per frame, fade per frame, unused, unused
 uniform vec4 uDye; // colour spread per pass, injection per frame, decay per frame, unused
 """ + OKLAB_GLSL + r"""
@@ -152,11 +152,12 @@ const ivec2 OFFSETS[8] = ivec2[8](ivec2(-1, 0), ivec2(1, 0), ivec2(0, -1), ivec2
                                   ivec2(-1, -1), ivec2(1, -1), ivec2(-1, 1), ivec2(1, 1));
 const float WEIGHTS[8] = float[8](0.2, 0.2, 0.2, 0.2, 0.05, 0.05, 0.05, 0.05);
 
-// Integer addressing makes the nine-cell stencil exact. Wrap both axes.
+// Integer addressing makes the nine-cell stencil exact. Wrap both axes, or in
+// Clear mode clamp to the edge (zero flux) so opposite edges never interact.
 // R = A, G = B, B/A = carried colour as Oklab a/b.
 vec4 readCell(ivec2 p) {
     ivec2 size = textureSize(sTD2DInputs[0], 0);
-    p = (p % size + size) % size;
+    p = (uStep.z > 0.5) ? clamp(p, ivec2(0), size - 1) : (p % size + size) % size;
     return texelFetch(sTD2DInputs[0], p, 0);
 }
 
@@ -249,12 +250,13 @@ DISPLAY_SHADER = r"""
 layout(location = 0) out vec4 fragColor;
 uniform vec4 uDisplay; // color amount, contrast, invert, color mode index
 uniform vec4 uColor; // tint spread in pixels, palette anchoring, carried saturation, ramp width
-uniform vec4 uUpscale; // filter index (smooth, linear, nearest), unused, unused, unused
+uniform vec4 uUpscale; // filter index (smooth, linear, nearest), edge mode index (wrap, clear), unused, unused
 """ + OKLAB_GLSL + _base_palette_glsl(0.75) + r"""
 // The state can be coarser than the output. Integer fetches with wrapping keep
 // the torus seamless and avoid relying on 32-bit float texture filtering.
+// Clear mode clamps instead, so edge pixels never blend in the opposite edge.
 vec4 stateCell(ivec2 p, ivec2 size) {
-    p = (p % size + size) % size;
+    p = (uUpscale.y > 0.5) ? clamp(p, ivec2(0), size - 1) : (p % size + size) % size;
     return texelFetch(sTD2DInputs[0], p, 0);
 }
 
@@ -710,6 +712,8 @@ Pivot X / Y: the center for scale and rotation (0-1 across the canvas).
 Rotation works in cells, so it stays undistorted on a rectangular canvas.
 Edges: Wrap keeps the torus (shrinking tiles the field); Clear refills the
 border with empty field (A=1, B=0) so the influence or seeds must re-grow it.
+Edges applies even with Transform off: Clear also stops the reaction and the
+display upscale from wrapping, so opposite edges never bleed into each other.
 Zero Motion clears every rate without resetting. Sampling is bilinear, which
 slightly softens each frame; the reaction re-sharpens it. Small values go a long
 way: try Grow .1-.5, Rotate .1-1. Pair with a nonzero Strength or Ambient Seeds
@@ -1063,7 +1067,7 @@ def build_turing_media(container=None):
     _uniforms(simulation, [
         ('uRates', ('parent().par.Feed', 'parent().par.Kill',
                     'parent().par.Diffusiona', 'parent().par.Diffusionb')),
-        ('uStep', ('parent().par.Timestep', 'parent().par.Running', '0', '0')),
+        ('uStep', ('parent().par.Timestep', 'parent().par.Running', _menu_index('Transformedge'), '0')),
         ('uInfluence', ('parent().par.Strength', 'parent().par.Fade', '0', '0')),
         ('uDye', ('parent().par.Dyespread', 'parent().par.Dyeinject',
                   'parent().par.Dyedecay', '0')),
@@ -1149,7 +1153,7 @@ def build_turing_media(container=None):
                       'parent().par.Invert', _menu_index('Colormode'))),
         ('uColor', ('parent().par.Tintspread * parent().par.Cellsize', 'parent().par.Paletteanchor',
                     'parent().par.Dyesaturation', str(PALETTE_WIDTH))),
-        ('uUpscale', (_menu_index('Upscale'), '0', '0', '0')),
+        ('uUpscale', (_menu_index('Upscale'), _menu_index('Transformedge'), '0', '0')),
         ramp_uniform,
     ])
     _set(display, 'inputfiltertype', 'linear')
