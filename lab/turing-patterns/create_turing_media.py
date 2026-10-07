@@ -16,6 +16,7 @@ ramp, state = raw A/B concentrations plus carried color.
 Clear Movie File to return to the built-in demo. No external dependencies.
 
 Default: 512 square, 32-bit float state, 16 simulation steps per frame.
+Turn on Turing > Rectangular Canvas for an independent Width and Height.
 Simulation speed therefore depends on frame rate. Passes costs GPU time.
 Save the .toe or save this component as a .tox to keep the generated network.
 
@@ -37,6 +38,12 @@ This file has not been run in a live TouchDesigner session here.
 # The clip palette is built from a square grid of averaged cells, sorted into a ramp.
 PALETTE_CELLS = 8
 PALETTE_WIDTH = 64
+
+# Canvas size in cells: square Resolution, or independent Width/Height when Rectangle is on.
+CANVAS_WIDTH = 'parent().par.Canvaswidth if parent().par.Rectangle else parent().par.Resolution'
+CANVAS_HEIGHT = 'parent().par.Canvasheight if parent().par.Rectangle else parent().par.Resolution'
+CANVAS_ASPECT = ('parent().par.Canvaswidth / max(1, parent().par.Canvasheight) '
+                 'if parent().par.Rectangle else 1')
 
 
 # Shared GLSL: Oklab keeps averaged colours perceptually even; grey is a = b = 0.
@@ -81,7 +88,8 @@ vec3 fixedPalette(float t) {
 
 SEED_SHADER = r"""
 layout(location = 0) out vec4 fragColor;
-uniform vec4 uSeed; // random seed, radius in cells, resolution, ambient seeds
+uniform vec4 uSeed; // random seed, radius in cells, unused, ambient seeds
+uniform vec4 uSeedSize; // canvas width, height in cells, unused, unused
 
 float hash(float n) {
     return fract(sin(n * 127.1 + uSeed.x * 31.7) * 43758.5453);
@@ -96,7 +104,8 @@ void main() {
         vec2 center = (i == 0) ? vec2(0.5) :
             vec2(0.1 + 0.8 * hash(n * 3.0 + 1.0),
                  0.1 + 0.8 * hash(n * 3.0 + 2.0));
-        float seedMask = 1.0 - step(uSeed.y / uSeed.z, distance(uv, center));
+        // Measured in cells so patches stay round on a rectangular canvas.
+        float seedMask = 1.0 - step(uSeed.y, length((uv - center) * uSeedSize.xy));
         patchMask = max(patchMask, seedMask);
     }
     // A gentler perturbation supports both the coral and dividing-spot presets.
@@ -349,13 +358,14 @@ void main() {
 
 DEMO_SHADER = r"""
 layout(location = 0) out vec4 fragColor;
-uniform vec4 uClock; // time in seconds, unused, unused, unused
+uniform vec4 uClock; // time in seconds, canvas aspect (width / height), unused, unused
 float disk(vec2 p, vec2 center, float radius) {
     return 1.0 - smoothstep(radius - 0.003, radius + 0.003, distance(p, center));
 }
 void main() {
     float t = uClock.x;
-    vec2 p = vUV.st;
+    // Height-normalized coordinates keep the disks round on any canvas shape.
+    vec2 p = (vUV.st - 0.5) * vec2(uClock.y, 1.0) + 0.5;
     vec2 center = vec2(0.5 + 0.19 * sin(t * 0.53), 0.5 + 0.10 * cos(t * 0.71));
     float a = disk(p, center, 0.13);
     for (int i = 0; i < 5; ++i) {
@@ -373,12 +383,15 @@ void main() {
 PREPARE_SHADER = r"""
 layout(location = 0) out vec4 fragColor;
 uniform vec4 uTransform; // scale, offset X, offset Y, rotation in radians
-uniform vec4 uAlpha; // unpremultiply source, ignore alpha, original aspect ratio, unused
+uniform vec4 uAlpha; // unpremultiply source, ignore alpha, original aspect ratio, canvas aspect
 void main() {
     vec2 sourceSize = vec2(textureSize(sTD2DInputs[0], 0));
     float aspect = (uAlpha.z > 0.0) ? uAlpha.z : sourceSize.x / max(sourceSize.y, 1.0);
-    vec2 fitSize = (aspect >= 1.0) ? vec2(1.0, 1.0 / aspect) : vec2(aspect, 1.0);
-    vec2 q = vUV.st - vec2(0.5) - uTransform.yz;
+    float canvas = max(uAlpha.w, 0.0001);
+    // Work in height-normalized units (canvas spans canvas x 1) so fitting and
+    // rotation keep the source undistorted on a rectangular canvas.
+    vec2 fitSize = (aspect >= canvas) ? vec2(canvas, canvas / aspect) : vec2(aspect, 1.0);
+    vec2 q = (vUV.st - vec2(0.5) - uTransform.yz) * vec2(canvas, 1.0);
     float c = cos(uTransform.w), s = sin(uTransform.w);
     // Inverse transform the output coordinate into the source texture.
     q = vec2(c * q.x + s * q.y, -s * q.x + c * q.y);
@@ -532,7 +545,8 @@ def onPulse(par):
     return
 
 def onValueChange(par, prev):
-    if par.name in ('Resolution', 'Seed', 'Seedradius', 'Ambient', 'Moviefile'):
+    if par.name in ('Resolution', 'Rectangle', 'Canvaswidth', 'Canvasheight',
+                    'Seed', 'Seedradius', 'Ambient', 'Moviefile'):
         resetSimulation(par.owner)
     return
 '''
@@ -551,7 +565,9 @@ resampling when converted to a fixed-FPS sequence.
 
 MEDIA PAGE
 Play Media / Media Speed / Restart Clip control playback. Scale / Offset X/Y /
-Rotation fit and position the source in the simulation's square canvas.
+Rotation fit and position the source in the simulation's canvas, keeping its
+aspect ratio on square and rectangular canvases. Offsets are fractions of the
+canvas width/height.
 Ignore Source Alpha lets opaque video use its whole fitted rectangle.
 Source Premultiplied: turn on only if the decoded RGB is already multiplied by
 alpha. The Movie File In premultiply option is Off; this toggle unpremultiplies
@@ -583,7 +599,10 @@ Feed, Kill, diffusion, timestep, passes, reset and presets match the original.
 Ambient Seeds adds the original ten seed patches; enabled by default.
 Running freezes the chemical state. Media playback is controlled separately.
 Reset keeps media position. Restart Clip cues media/demo and resets simulation.
-Changing Resolution, Seed, Seed Radius, Ambient Seeds or Movie File resets state.
+Resolution sets a square canvas. Rectangular Canvas switches to independent
+Width and Height (cells); the demo, seeds and source fit follow the new shape.
+Changing canvas size/shape, Seed, Seed Radius, Ambient Seeds or Movie File
+resets state.
 Speed, influence and fade depend on project FPS. Changing resolution changes
 pattern scale. Parameters do not automatically keep the output in a loop:
 a looping clip can keep developing a different chemical history on each loop.
@@ -629,6 +648,7 @@ Grow / Shrink: uniform zoom about the pivot (+ grows outward, - pulls inward).
 Scale X / Y: extra per-axis stretch on top of Grow (+/- for shear-like flows).
 Translate X / Y: drift in cells per frame. Rotate: degrees per frame.
 Pivot X / Y: the center for scale and rotation (0-1 across the canvas).
+Rotation works in cells, so it stays undistorted on a rectangular canvas.
 Edges: Wrap keeps the torus (shrinking tiles the field); Clear refills the
 border with empty field (A=1, B=0) so the influence or seeds must re-grow it.
 Zero Motion clears every rate without resetting. Sampling is bilinear, which
@@ -773,7 +793,13 @@ def build_turing_media(container=None):
     component.nodeX, component.nodeY = me.nodeX + 220, me.nodeY
 
     page = component.appendCustomPage('Turing')
-    _number(page, 'Resolution', 'Resolution (square)', 512, 64, 2048, True)
+    resolution = _number(page, 'Resolution', 'Resolution (square)', 512, 64, 2048, True)
+    _toggle(page, 'Rectangle', 'Rectangular Canvas', False)
+    canvas_width = _number(page, 'Canvaswidth', 'Width', 768, 64, 4096, True)
+    canvas_height = _number(page, 'Canvasheight', 'Height', 432, 64, 4096, True)
+    resolution.enableExpr = 'not me.par.Rectangle'
+    canvas_width.enableExpr = 'me.par.Rectangle'
+    canvas_height.enableExpr = 'me.par.Rectangle'
     _number(page, 'Feed', 'Feed', 0.0545, 0.0, 0.1)
     _number(page, 'Kill', 'Kill', 0.062, 0.0, 0.1)
     _number(page, 'Diffusiona', 'Diffusion A', 1.0, 0.0, 1.0)
@@ -871,9 +897,9 @@ def build_turing_media(container=None):
 
     demo = _shader(component, 'demo', 'demo_pixel', DEMO_SHADER, (-1250, 400))
     _set(demo, 'outputresolution', 'custom')
-    _expression(demo, 'resolutionw', 'parent().par.Resolution')
-    _expression(demo, 'resolutionh', 'parent().par.Resolution')
-    _uniforms(demo, [('uClock', ('op("demo_clock")[0]', '0', '0', '0'))])
+    _expression(demo, 'resolutionw', CANVAS_WIDTH)
+    _expression(demo, 'resolutionh', CANVAS_HEIGHT)
+    _uniforms(demo, [('uClock', ('op("demo_clock")[0]', CANVAS_ASPECT, '0', '0'))])
 
     movie = component.create(moviefileinTOP, 'movie')
     movie.nodeX, movie.nodeY = -1250, 850
@@ -900,8 +926,8 @@ def build_turing_media(container=None):
     prepared = _shader(component, 'media_prepared', 'prepare_pixel', PREPARE_SHADER, (-700, 650))
     prepared.inputConnectors[0].connect(source)
     _set(prepared, 'outputresolution', 'custom')
-    _expression(prepared, 'resolutionw', 'parent().par.Resolution')
-    _expression(prepared, 'resolutionh', 'parent().par.Resolution')
+    _expression(prepared, 'resolutionw', CANVAS_WIDTH)
+    _expression(prepared, 'resolutionh', CANVAS_HEIGHT)
     _set(prepared, 'inputfiltertype', 'linear')
     _set(prepared, 'inputextenduv', 'zero')
     _uniforms(prepared, [
@@ -909,7 +935,10 @@ def build_turing_media(container=None):
                         'parent().par.Offsety', 'parent().par.Rotation * 0.0174532925199433')),
         ('uAlpha', ('parent().par.Sourcepremult if parent().par.Moviefile.eval().strip() else 0',
                     'parent().par.Ignorealpha',
-                    'op("movie").width / max(1, op("movie").height) if parent().par.Moviefile.eval().strip() else 1', '0')),
+                    # The demo is rendered at the canvas size, so it fills the canvas.
+                    'op("movie").width / max(1, op("movie").height) if parent().par.Moviefile.eval().strip() '
+                    'else (' + CANVAS_ASPECT + ')',
+                    CANVAS_ASPECT)),
     ])
 
     cache = component.create(cacheTOP, 'media_cache')
@@ -944,10 +973,11 @@ def build_turing_media(container=None):
 
     seed = _shader(component, 'seed', 'seed_pixel', SEED_SHADER, (-600, 200))
     _set(seed, 'outputresolution', 'custom')
-    _expression(seed, 'resolutionw', 'parent().par.Resolution')
-    _expression(seed, 'resolutionh', 'parent().par.Resolution')
+    _expression(seed, 'resolutionw', CANVAS_WIDTH)
+    _expression(seed, 'resolutionh', CANVAS_HEIGHT)
     _uniforms(seed, [('uSeed', ('parent().par.Seed', 'parent().par.Seedradius',
-                              'parent().par.Resolution', 'parent().par.Ambient'))])
+                                '0', 'parent().par.Ambient')),
+                     ('uSeedSize', (CANVAS_WIDTH, CANVAS_HEIGHT, '0', '0'))])
 
     feedback = component.create(feedbackTOP, 'feedback')
     feedback.nodeX, feedback.nodeY = -350, 200
@@ -1061,7 +1091,7 @@ def build_turing_media(container=None):
     _set(callbacks, 'active', False)
     callbacks.text = CONTROL_CALLBACKS.strip() + '\n'
     _set(callbacks, 'op', '..')
-    _set(callbacks, 'pars', 'Reset Reseed Coral Spots Resolution Seed Seedradius Ambient Moviefile Clipseed Restartclip Transformzero')
+    _set(callbacks, 'pars', 'Reset Reseed Coral Spots Resolution Rectangle Canvaswidth Canvasheight Seed Seedradius Ambient Moviefile Clipseed Restartclip Transformzero')
     _set(callbacks, 'custom', True)
     _set(callbacks, 'builtin', False)
     _set(callbacks, 'onpulse', True)
