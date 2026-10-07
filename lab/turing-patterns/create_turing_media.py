@@ -7,6 +7,7 @@ USE
   4. Select turing_media. On Media, choose Movie File to load your own clip.
   5. Explore Influence > Mask Mode, Strength, and Display > Source Overlay.
   6. On Color, switch Color Mode to tint, extract or carry the clip's colors.
+     Assign Color > Ramp TOP to replace the built-in teal/gold ramp with your own.
 
 Written for TouchDesigner 2023/2025. No external Python packages or shader files.
 Re-running creates a new numbered component; existing operators are retained.
@@ -33,7 +34,7 @@ TD-provided declarations. Alpha, masks, pass-gated injection, pause, and
 compositing checked. Color page shaders compiled and rendered under GLSL 4.10
 with the same stubs: seed/pause/decay, injection sign, ramp sort/fallback/
 smoothing, and all four Color Modes (Fixed matches the original output).
-Cell Size / Upscale Filter shader code has not been compiled outside TD.
+Cell Size / Upscale Filter and Ramp TOP shader code has not been compiled outside TD.
 This file has not been run in a live TouchDesigner session here.
 """
 
@@ -91,6 +92,21 @@ vec3 fixedPalette(float t) {
     return mix(palette, PALETTE_LIGHT, smoothstep(0.45, 1.0, t));
 }
 """
+
+
+def _base_palette_glsl(ramp_v):
+    """Shared GLSL: the optional Color > Ramp TOP, read from input 2 at row ramp_v, else the fixed ramp."""
+    return FIXED_PALETTE_GLSL + r"""
+uniform vec4 uRamp; // ramp TOP assigned, unused, unused, unused
+
+// A horizontal ramp read left (t = 0) to right (t = 1) at texel centres.
+vec3 basePalette(float t) {
+    if (uRamp.x < 0.5) return fixedPalette(t);
+    float width = float(textureSize(sTD2DInputs[2], 0).x);
+    float x = (t * (width - 1.0) + 0.5) / width;
+    return texture(sTD2DInputs[2], vec2(x, RAMP_V)).rgb;
+}
+""".replace('RAMP_V', repr(float(ramp_v)))
 
 
 SEED_SHADER = r"""
@@ -234,7 +250,7 @@ layout(location = 0) out vec4 fragColor;
 uniform vec4 uDisplay; // color amount, contrast, invert, color mode index
 uniform vec4 uColor; // tint spread in pixels, palette anchoring, carried saturation, ramp width
 uniform vec4 uUpscale; // filter index (smooth, linear, nearest), unused, unused, unused
-""" + OKLAB_GLSL + FIXED_PALETTE_GLSL + r"""
+""" + OKLAB_GLSL + _base_palette_glsl(0.75) + r"""
 // The state can be coarser than the output. Integer fetches with wrapping keep
 // the torus seamless and avoid relying on 32-bit float texture filtering.
 vec4 stateCell(ivec2 p, ivec2 size) {
@@ -296,27 +312,27 @@ void main() {
     vec4 state = sampleState(uv);
     float t = clamp(state.g * uDisplay.y, 0.0, 1.0);
     t = mix(t, 1.0 - t, uDisplay.z);
-    vec3 palette = fixedPalette(t);
+    vec3 palette = basePalette(t);
     int mode = int(uDisplay.w + 0.5);
     if (mode == 1) {
         // Source Tint: the clip's local colour becomes the middle of the ramp.
         vec4 source = tintSource(uv);
         vec3 ink = (source.a > 0.0001) ? source.rgb / source.a : vec3(0.0);
-        vec3 tinted = mix(PALETTE_DARK, ink, smoothstep(0.0, 0.55, t));
+        vec3 tinted = mix(basePalette(0.0), ink, smoothstep(0.0, 0.55, t));
         tinted = mix(tinted, mix(ink, vec3(1.0), 0.6), smoothstep(0.45, 1.0, t));
         palette = mix(palette, tinted, clamp(source.a, 0.0, 1.0));
     } else if (mode == 2) {
-        // Clip Palette: look up the luminance-sorted ramp at texel centres.
+        // Clip Palette: look up the luminance-sorted ramp (palette row 0) at texel centres.
         float x = (t * (uColor.w - 1.0) + 0.5) / uColor.w;
-        vec3 lab = linearToOklab(toLinear(texture(sTD2DInputs[2], vec2(x, 0.5)).rgb));
-        // Anchoring borrows the fixed ramp's lightness for contrast; hue stays.
+        vec3 lab = linearToOklab(toLinear(texture(sTD2DInputs[2], vec2(x, 0.25)).rgb));
+        // Anchoring borrows the base ramp's lightness for contrast; hue stays.
         // Darkening scales chroma too, as a shade of the same colour would.
         float lightness = mix(lab.x, linearToOklab(toLinear(palette)).x, uColor.y);
         lab.yz *= min(lightness / max(lab.x, 0.0001), 1.0);
         lab.x = lightness;
         palette = clamp(toDisplay(oklabToLinear(lab)), 0.0, 1.0);
     } else if (mode == 3) {
-        // Carried Color: lightness from the fixed ramp, hue/chroma from the state.
+        // Carried Color: lightness from the base ramp, hue/chroma from the state.
         vec3 lab = linearToOklab(toLinear(palette));
         lab.yz = state.ba * uColor.z;
         palette = clamp(toDisplay(oklabToLinear(lab)), 0.0, 1.0);
@@ -352,7 +368,7 @@ void main() {
 PALETTE_SORT_SHADER = r"""
 layout(location = 0) out vec4 fragColor;
 uniform vec4 uPalette; // cells per side, smoothing, history ready, ramp width
-""" + FIXED_PALETTE_GLSL + r"""
+""" + _base_palette_glsl(0.5) + r"""
 const float MIN_COVERAGE = 0.25;
 
 float luminance(vec3 rgb) {
@@ -363,17 +379,22 @@ vec4 cellAt(int i, int side) {
     return texelFetch(sTD2DInputs[0], ivec2(i % side, i / side), 0);
 }
 
-// Pixel x of the ramp holds the colour ranked x/(width-1) of the way from dark
-// to light among the visible cells; ties break by index for a stable order.
+// Row 0, pixel x holds the colour ranked x/(width-1) of the way from dark to
+// light among the visible cells; ties break by index for a stable order.
+// Row 1 carries the base ramp (Ramp TOP or fixed) so colorize needs no extra input.
 void main() {
+    float t = (gl_FragCoord.x - 0.5) / max(uPalette.w - 1.0, 1.0);
+    if (gl_FragCoord.y > 1.0) {
+        fragColor = TDOutputSwizzle(vec4(basePalette(t), 1.0));
+        return;
+    }
     int side = int(uPalette.x + 0.5);
     int count = side * side;
     int visible = 0;
     for (int i = 0; i < count; ++i) {
         if (cellAt(i, side).a >= MIN_COVERAGE) ++visible;
     }
-    float t = (gl_FragCoord.x - 0.5) / max(uPalette.w - 1.0, 1.0);
-    vec3 color = fixedPalette(t); // fallback while nothing is visible
+    vec3 color = basePalette(t); // fallback while nothing is visible
     if (visible > 0) {
         float position = t * float(visible - 1);
         int lowRank = int(floor(position));
@@ -674,21 +695,29 @@ round contours; Linear = bilinear, slightly faceted; Nearest = visible square ce
 
 COLOR PAGE
 Color Mode chooses where pattern colors come from. Switching never resets.
-Fixed Palette: the original teal/gold ramp.
+Ramp TOP (optional): drag a Ramp TOP (or any TOP) here to replace the built-in
+  teal/gold ramp everywhere it is used: Fixed Palette, the Tint dark end and
+  transparent fallback, Clip Palette anchoring/fallback, and Carried Color
+  lightness. It is read horizontally along its middle row: left = background
+  (low B), right = pattern peaks. Use a horizontal ramp; it is resampled to
+  64 steps, so very hard color stops soften slightly.
+  Contrast/Invert still choose where on the ramp each pixel lands. Clear it to
+  return to teal/gold.
+Fixed Palette: the base ramp (teal/gold, or the Ramp TOP when assigned).
 Source Tint: the clip's local color becomes the middle of the ramp; dark stays
   dark, peaks lighten toward white. Tint Spread blurs the source (in cells) so
   color bleeds past the silhouette. Transparent areas fall back to Fixed Palette.
 Clip Palette: the clip is averaged into an 8x8 grid, sorted dark->light into a
   64-pixel ramp (view palette), and used in place of the fixed ramp everywhere.
-  Cells under 25% coverage are ignored; nothing visible = Fixed Palette.
+  Cells under 25% coverage are ignored; nothing visible = base ramp.
   Palette Smoothing eases the ramp per frame (0 = instant, .99 = very slow).
-  Palette Anchoring borrows lightness from the fixed ramp (keeping the clip's
+  Palette Anchoring borrows lightness from the base ramp (keeping the clip's
   hue/chroma) so backgrounds stay dark and peaks bright. 0 = pure clip ramp.
 Carried Color: hue/chroma travel INSIDE the simulation (state blue/alpha, Oklab
   a/b). Visible source pixels stain it once per frame by Color Injection; each
   pass it spreads to neighbors weighted by chemical B, so color rides outward
   with growing pattern and stays after the clip moves. Lightness still comes
-  from the fixed ramp. Color Spread: per-pass mixing (0 freezes). Color Decay:
+  from the base ramp. Color Spread: per-pass mixing (0 freezes). Color Decay:
   per-frame fade toward gray (0 = permanent). Color Saturation: display boost,
   since averaging desaturates. Uncolored areas read as gray. Reset clears color.
   The carried color always runs, so it has history when you switch to it.
@@ -719,7 +748,9 @@ source_preview: fitted source with actual alpha, no baked checkerboard.
 state: red=A, green=B, blue/alpha=carried color (Oklab a/b), 32-bit float, at
   the simulation grid size (canvas / Cell Size), not the canvas size.
   Its alpha is not opacity; the TD viewer may show it as transparent.
-palette: 64x1 clip color ramp. palette_cells: the 8x8 averaged colors/coverage.
+palette: 64x2; row 0 = clip color ramp, row 1 = base ramp (Ramp TOP or
+  teal/gold, resampled to 64 steps). palette_cells: the 8x8 averaged colors/coverage.
+ramp: Select TOP of Color > Ramp TOP (shows palette_init while it is blank).
 movie_info: length, current index, sample rate and decode info.
 Each GLSL TOP has an Info DAT for compiler messages. Its Pixel Shader parameter
 points to the actual DAT; TD may add a suffix such as _pixel1 during creation.
@@ -735,6 +766,7 @@ Feedback Target TOP = state.
 media_prepared -> reaction_diffusion input 2 (carried color injection).
 media_prepared -> palette_cells -> palette_sort -> palette; palette_feedback
 (Target TOP = palette, initialized by palette_init) feeds palette_sort input 1.
+ramp (Select TOP of Color > Ramp TOP) -> palette_sort input 2 -> palette row 1.
 state + media_prepared + palette -> colorize (upscales to canvas) -> patterns.
 composite reads patterns, prepared source and mask.
 Injection/fade/color stain use uTDPass==0, not every simulation pass.
@@ -938,6 +970,9 @@ def build_turing_media(container=None):
         ('fixed', 'Fixed Palette'), ('tint', 'Source Tint'), ('ramp', 'Clip Palette'),
         ('dye', 'Carried Color'),
     ], 'fixed')
+    ramp_top = color_page.appendTOP('Ramptop', label='Ramp TOP (blank = teal/gold)')[0]
+    ramp_top.default = ''
+    ramp_top.val = ''
     _number(color_page, 'Tintspread', 'Tint Spread (cells)', 6.0, 0.0, 24.0)
     _number(color_page, 'Palettesmooth', 'Palette Smoothing', 0.9, 0.0, 0.99)
     _number(color_page, 'Paletteanchor', 'Palette Anchoring', 0.5, 0.0, 1.0)
@@ -1100,7 +1135,7 @@ def build_turing_media(container=None):
     palette_init.nodeX, palette_init.nodeY = 100, 1550
     _set(palette_init, 'outputresolution', 'custom')
     _set(palette_init, 'resolutionw', PALETTE_WIDTH)
-    _set(palette_init, 'resolutionh', 1)
+    _set(palette_init, 'resolutionh', 2)
     _set(palette_init, 'format', 'rgba32float')
     palette_feedback = component.create(feedbackTOP, 'palette_feedback')
     palette_feedback.nodeX, palette_feedback.nodeY = 350, 1550
@@ -1108,14 +1143,23 @@ def build_turing_media(container=None):
     _set(palette_feedback, 'format', 'rgba32float')
     _set(palette_feedback, 'reset', False)
 
+    # Optional Ramp TOP; falls back to palette_init so the select never errors when blank.
+    ramp = component.create(selectTOP, 'ramp')
+    ramp.nodeX, ramp.nodeY = 100, 1750
+    _expression(ramp, 'top', 'parent().par.Ramptop.eval() if parent().par.Ramptop.eval() is not None '
+                             'else op("palette_init")')
+    ramp_uniform = ('uRamp', ('1 if parent().par.Ramptop.eval() is not None else 0', '0', '0', '0'))
+
     palette_sort = _shader(component, 'palette_sort', 'palette_sort_pixel',
                            PALETTE_SORT_SHADER, (350, 1350))
     palette_sort.inputConnectors[0].connect(palette_cells)
     palette_sort.inputConnectors[1].connect(palette_feedback)
+    palette_sort.inputConnectors[2].connect(ramp)
     _set(palette_sort, 'outputresolution', 'custom')
     _set(palette_sort, 'resolutionw', PALETTE_WIDTH)
-    _set(palette_sort, 'resolutionh', 1)
-    _uniforms(palette_sort, palette_uniforms)
+    _set(palette_sort, 'resolutionh', 2)
+    _set(palette_sort, 'inputfiltertype', 'linear')
+    _uniforms(palette_sort, palette_uniforms + [ramp_uniform])
     palette = component.create(nullTOP, 'palette')
     palette.nodeX, palette.nodeY = 600, 1350
     palette.inputConnectors[0].connect(palette_sort)
@@ -1135,6 +1179,7 @@ def build_turing_media(container=None):
         ('uColor', ('parent().par.Tintspread * parent().par.Cellsize', 'parent().par.Paletteanchor',
                     'parent().par.Dyesaturation', str(PALETTE_WIDTH))),
         ('uUpscale', (_menu_index('Upscale'), '0', '0', '0')),
+        ramp_uniform,
     ])
     _set(display, 'inputfiltertype', 'linear')
 
