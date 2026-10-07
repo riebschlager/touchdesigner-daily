@@ -3,7 +3,7 @@
 USE
   1. Paste this entire file into a Text DAT in your project.
   2. Right-click the DAT and choose Run Script.
-  3. Play the timeline: an animated procedural demo is active immediately.
+  3. Play the timeline: ambient seed patterns grow immediately (no media).
   4. Select turing_media. On Media, choose Movie File to load your own clip.
   5. Explore Influence > Mask Mode, Strength, and Display > Source Overlay.
   6. On Color, switch Color Mode to tint, extract or carry the clip's colors.
@@ -14,7 +14,7 @@ Re-running creates a new numbered component; existing operators are retained.
 Outputs: out1 = final image, patterns = colored simulation, mask_preview =
 influence mask, source_preview = fitted RGBA source, palette = clip color
 ramp, state = raw A/B concentrations plus carried color.
-Clear Movie File to return to the built-in demo. No external dependencies.
+Clear Movie File to remove the media influence. No external dependencies.
 
 Default: 512 square, 32-bit float state, 16 simulation steps per frame.
 Turn on Turing > Rectangular Canvas for an independent Width and Height.
@@ -425,30 +425,6 @@ void main() {
 """
 
 
-DEMO_SHADER = r"""
-layout(location = 0) out vec4 fragColor;
-uniform vec4 uClock; // time in seconds, canvas aspect (width / height), unused, unused
-float disk(vec2 p, vec2 center, float radius) {
-    return 1.0 - smoothstep(radius - 0.003, radius + 0.003, distance(p, center));
-}
-void main() {
-    float t = uClock.x;
-    // Height-normalized coordinates keep the disks round on any canvas shape.
-    vec2 p = (vUV.st - 0.5) * vec2(uClock.y, 1.0) + 0.5;
-    vec2 center = vec2(0.5 + 0.19 * sin(t * 0.53), 0.5 + 0.10 * cos(t * 0.71));
-    float a = disk(p, center, 0.13);
-    for (int i = 0; i < 5; ++i) {
-        float angle = float(i) * 1.256637 + 0.6 * sin(t);
-        vec2 tip = center + vec2(cos(angle), sin(angle)) * (0.15 + 0.02 * sin(t * 2.0));
-        a = max(a, disk(p, tip, 0.045));
-    }
-    float stripes = 0.5 + 0.5 * sin(p.x * 75.0 + p.y * 30.0 + t * 2.0);
-    vec3 rgb = mix(vec3(0.1, 0.3, 0.8), vec3(1.0, 0.65, 0.2), stripes);
-    fragColor = TDOutputSwizzle(vec4(rgb, a)); // straight RGB, not premultiplied
-}
-"""
-
-
 PREPARE_SHADER = r"""
 layout(location = 0) out vec4 fragColor;
 uniform vec4 uTransform; // scale, offset X, offset Y, rotation in radians
@@ -605,7 +581,6 @@ def onPulse(par):
         component.par.Fade = 0.0
     elif par.name == 'Restartclip':
         component.op('movie').par.cuepulse.pulse()
-        component.op('demo_clock').par.resetpulse.pulse()
     elif par.name == 'Transformzero':
         for name in ('Grow', 'Scalex', 'Scaley', 'Translatex', 'Translatey', 'Rotate'):
             component.par[name].val = 0.0
@@ -624,9 +599,9 @@ def onValueChange(par, prev):
 NETWORK_HELP = '''TURING MEDIA / REACTION-DIFFUSION WITH MOVING IMAGES
 
 QUICK START
-Play the timeline: a transparent animated demo runs immediately.
+Play the timeline: ambient seed patterns grow immediately.
 Select the Base COMP > Media > Movie File to load your own clip.
-Leave Movie File blank to use the demo. Check that a GIF actually animates in
+Leave Movie File blank for no media input. Check that a GIF actually animates in
 Movie File In; if necessary use a PNG sequence or Hap Alpha movie.
 For a PNG sequence, paste the folder path into Movie File. Turn on Override FPS
 and set Sequence FPS to the intended rate. GIFs with unequal frame delays need
@@ -640,7 +615,7 @@ canvas width/height.
 Ignore Source Alpha lets opaque video use its whole fitted rectangle.
 Source Premultiplied: turn on only if the decoded RGB is already multiplied by
 alpha. The Movie File In premultiply option is Off; this toggle unpremultiplies
-existing source data. The demo is always straight RGBA.
+existing source data.
 Transparent padding stays transparent, even with Ignore Source Alpha on.
 The fitting shader normalizes source RGB into straight RGBA for mask/composite.
 
@@ -667,9 +642,9 @@ TURING PAGE
 Feed, Kill, diffusion, timestep, passes, reset and presets match the original.
 Ambient Seeds adds the original ten seed patches; enabled by default.
 Running freezes the chemical state. Media playback is controlled separately.
-Reset keeps media position. Restart Clip cues media/demo and resets simulation.
+Reset keeps media position. Restart Clip cues media and resets simulation.
 Resolution sets a square canvas. Rectangular Canvas switches to independent
-Width and Height (cells); the demo, seeds and source fit follow the new shape.
+Width and Height (cells); seeds and source fit follow the new shape.
 Cell Size (pixels) decouples the simulation grid from the canvas: the state is
 canvas / Cell Size cells and is upscaled for display (Display > Upscale Filter).
 Line width is fixed in cells, so Cell Size 4 makes lines four times thicker on
@@ -755,10 +730,10 @@ movie_info: length, current index, sample rate and decode info.
 Each GLSL TOP has an Info DAT for compiler messages. Its Pixel Shader parameter
 points to the actual DAT; TD may add a suffix such as _pixel1 during creation.
 movie may report a missing-file error while Movie File is blank; it is unselected
-and the demo branch remains available. Selecting a valid file enables that branch.
+and the transparent blank branch is used. Selecting a valid file enables that branch.
 
 NETWORK
-movie + demo -> media_source -> media_prepared -> media_cache (2 frames)
+movie + blank -> media_source -> media_prepared -> media_cache (2 frames)
 media_previous selects cache index -1. media_mask reads current and previous.
 mask_preview -> reaction_diffusion input 1; feedback remains input 0.
 seed -> feedback -> reaction_diffusion -> state_transform -> state;
@@ -905,7 +880,7 @@ def build_turing_media(container=None):
                         ('Coral', 'Coral Preset'), ('Spots', 'Dividing Spots Preset')):
         page.appendPulse(name, label=label)
     media_page = component.appendCustomPage('Media')
-    movie_file = media_page.appendFile('Moviefile', label='Movie File (blank = demo)')[0]
+    movie_file = media_page.appendFile('Moviefile', label='Movie File (blank = none)')[0]
     movie_file.default = ''
     movie_file.val = ''
     _toggle(media_page, 'Mediaplay', 'Play Media', True)
@@ -982,19 +957,14 @@ def build_turing_media(container=None):
     _number(color_page, 'Dyesaturation', 'Color Saturation', 1.5, 0.0, 4.0)
 
     component.store('Resetframe', absTime.frame)
-    clock = component.create(speedCHOP, 'demo_clock')
-    clock.nodeX, clock.nodeY = -1050, 650
-    clock_input = component.create(constantCHOP, 'demo_speed')
-    clock_input.nodeX, clock_input.nodeY = -1250, 650
-    speed_value = 'const0value' if getattr(clock_input.par, 'const0value', None) is not None else 'value0'
-    _expression(clock_input, speed_value, 'parent().par.Mediaspeed if parent().par.Mediaplay else 0')
-    clock.inputConnectors[0].connect(clock_input)
-
-    demo = _shader(component, 'demo', 'demo_pixel', DEMO_SHADER, (-1250, 400))
-    _set(demo, 'outputresolution', 'custom')
-    _expression(demo, 'resolutionw', CANVAS_WIDTH)
-    _expression(demo, 'resolutionh', CANVAS_HEIGHT)
-    _uniforms(demo, [('uClock', ('op("demo_clock")[0]', CANVAS_ASPECT, '0', '0'))])
+    # A transparent canvas-sized source: no media means no influence at all.
+    blank = component.create(constantTOP, 'blank')
+    blank.nodeX, blank.nodeY = -1250, 400
+    _set(blank, 'outputresolution', 'custom')
+    _expression(blank, 'resolutionw', CANVAS_WIDTH)
+    _expression(blank, 'resolutionh', CANVAS_HEIGHT)
+    _set(blank, 'format', 'rgba32float')
+    _set(blank, 'alpha', 0.0)
 
     movie = component.create(moviefileinTOP, 'movie')
     movie.nodeX, movie.nodeY = -1250, 850
@@ -1013,7 +983,7 @@ def build_turing_media(container=None):
 
     source = component.create(switchTOP, 'media_source')
     source.nodeX, source.nodeY = -950, 400
-    source.inputConnectors[0].connect(demo)
+    source.inputConnectors[0].connect(blank)
     source.inputConnectors[1].connect(movie)
     _set(source, 'blend', False)
     _expression(source, 'index', '1 if parent().par.Moviefile.eval().strip() else 0')
@@ -1029,8 +999,9 @@ def build_turing_media(container=None):
         ('uTransform', ('parent().par.Mediascale', 'parent().par.Offsetx',
                         'parent().par.Offsety', 'parent().par.Rotation * 0.0174532925199433')),
         ('uAlpha', ('parent().par.Sourcepremult if parent().par.Moviefile.eval().strip() else 0',
-                    'parent().par.Ignorealpha',
-                    # The demo is rendered at the canvas size, so it fills the canvas.
+                    # Ignore Alpha would make the blank source an opaque mask.
+                    'parent().par.Ignorealpha if parent().par.Moviefile.eval().strip() else 0',
+                    # The blank is rendered at the canvas size, so it fills the canvas.
                     'op("movie").width / max(1, op("movie").height) if parent().par.Moviefile.eval().strip() '
                     'else (' + CANVAS_ASPECT + ')',
                     CANVAS_ASPECT)),
@@ -1227,7 +1198,7 @@ def build_turing_media(container=None):
     component.viewer = True
     feedback.par.resetpulse.pulse()
     print('Created {}. Play the timeline; view {}/out1.'.format(component.path, component.path))
-    print('Choose Media > Movie File, or leave it blank for the animated demo.')
+    print('Choose Media > Movie File, or leave it blank for no media input.')
     print('Explore Influence > Mask Mode and Strength, then Display > Source Overlay.')
     return component
 
