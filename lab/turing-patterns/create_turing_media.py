@@ -17,6 +17,8 @@ Clear Movie File to return to the built-in demo. No external dependencies.
 
 Default: 512 square, 32-bit float state, 16 simulation steps per frame.
 Turn on Turing > Rectangular Canvas for an independent Width and Height.
+Turing > Cell Size runs the simulation on a coarser grid (canvas / Cell Size)
+and upscales it for display: larger cells give thicker lines at any canvas size.
 Simulation speed therefore depends on frame rate. Passes costs GPU time.
 Save the .toe or save this component as a .tox to keep the generated network.
 
@@ -31,6 +33,7 @@ TD-provided declarations. Alpha, masks, pass-gated injection, pause, and
 compositing checked. Color page shaders compiled and rendered under GLSL 4.10
 with the same stubs: seed/pause/decay, injection sign, ramp sort/fallback/
 smoothing, and all four Color Modes (Fixed matches the original output).
+Cell Size / Upscale Filter shader code has not been compiled outside TD.
 This file has not been run in a live TouchDesigner session here.
 """
 
@@ -44,6 +47,10 @@ CANVAS_WIDTH = 'parent().par.Canvaswidth if parent().par.Rectangle else parent()
 CANVAS_HEIGHT = 'parent().par.Canvasheight if parent().par.Rectangle else parent().par.Resolution'
 CANVAS_ASPECT = ('parent().par.Canvaswidth / max(1, parent().par.Canvasheight) '
                  'if parent().par.Rectangle else 1')
+
+# The simulation grid: the canvas divided by Cell Size, so each cell spans several pixels.
+SIM_WIDTH = 'max(8, int(round(({}) / parent().par.Cellsize)))'.format(CANVAS_WIDTH)
+SIM_HEIGHT = 'max(8, int(round(({}) / parent().par.Cellsize)))'.format(CANVAS_HEIGHT)
 
 
 # Shared GLSL: Oklab keeps averaged colours perceptually even; grey is a = b = 0.
@@ -225,8 +232,49 @@ void main() {
 DISPLAY_SHADER = r"""
 layout(location = 0) out vec4 fragColor;
 uniform vec4 uDisplay; // color amount, contrast, invert, color mode index
-uniform vec4 uColor; // tint spread in cells, palette anchoring, carried saturation, ramp width
+uniform vec4 uColor; // tint spread in pixels, palette anchoring, carried saturation, ramp width
+uniform vec4 uUpscale; // filter index (smooth, linear, nearest), unused, unused, unused
 """ + OKLAB_GLSL + FIXED_PALETTE_GLSL + r"""
+// The state can be coarser than the output. Integer fetches with wrapping keep
+// the torus seamless and avoid relying on 32-bit float texture filtering.
+vec4 stateCell(ivec2 p, ivec2 size) {
+    p = (p % size + size) % size;
+    return texelFetch(sTD2DInputs[0], p, 0);
+}
+
+vec4 catmullRomWeights(float t) {
+    float t2 = t * t, t3 = t2 * t;
+    return vec4(-0.5 * t3 + t2 - 0.5 * t,
+                 1.5 * t3 - 2.5 * t2 + 1.0,
+                -1.5 * t3 + 2.0 * t2 + 0.5 * t,
+                 0.5 * t3 - 0.5 * t2);
+}
+
+vec4 catmullRomRow(ivec2 p, ivec2 size, vec4 w) {
+    return stateCell(p + ivec2(-1, 0), size) * w.x + stateCell(p, size) * w.y
+         + stateCell(p + ivec2(1, 0), size) * w.z + stateCell(p + ivec2(2, 0), size) * w.w;
+}
+
+// Catmull-Rom passes through every cell value, so at Cell Size 1 it matches the state exactly.
+vec4 sampleState(vec2 uv) {
+    ivec2 size = textureSize(sTD2DInputs[0], 0);
+    int upscaleMode = int(uUpscale.x + 0.5);
+    if (upscaleMode == 2) return stateCell(ivec2(floor(uv * vec2(size))), size);
+    vec2 pos = uv * vec2(size) - 0.5;
+    ivec2 base = ivec2(floor(pos));
+    vec2 f = pos - vec2(base);
+    if (upscaleMode == 1) {
+        vec4 bottom = mix(stateCell(base, size), stateCell(base + ivec2(1, 0), size), f.x);
+        vec4 top = mix(stateCell(base + ivec2(0, 1), size), stateCell(base + ivec2(1, 1), size), f.x);
+        return mix(bottom, top, f.y);
+    }
+    vec4 wx = catmullRomWeights(f.x), wy = catmullRomWeights(f.y);
+    return catmullRomRow(base + ivec2(0, -1), size, wx) * wy.x
+         + catmullRomRow(base, size, wx) * wy.y
+         + catmullRomRow(base + ivec2(0, 1), size, wx) * wy.z
+         + catmullRomRow(base + ivec2(0, 2), size, wx) * wy.w;
+}
+
 // Disk-averaged source, premultiplied so transparent pixels contribute no colour.
 vec4 tintSource(vec2 uv) {
     vec4 s = texture(sTD2DInputs[1], uv);
@@ -245,7 +293,7 @@ vec4 tintSource(vec2 uv) {
 
 void main() {
     vec2 uv = vUV.st;
-    vec4 state = texture(sTD2DInputs[0], uv);
+    vec4 state = sampleState(uv);
     float t = clamp(state.g * uDisplay.y, 0.0, 1.0);
     t = mix(t, 1.0 - t, uDisplay.z);
     vec3 palette = fixedPalette(t);
@@ -545,7 +593,7 @@ def onPulse(par):
     return
 
 def onValueChange(par, prev):
-    if par.name in ('Resolution', 'Rectangle', 'Canvaswidth', 'Canvasheight',
+    if par.name in ('Resolution', 'Rectangle', 'Canvaswidth', 'Canvasheight', 'Cellsize',
                     'Seed', 'Seedradius', 'Ambient', 'Moviefile'):
         resetSimulation(par.owner)
     return
@@ -601,8 +649,13 @@ Running freezes the chemical state. Media playback is controlled separately.
 Reset keeps media position. Restart Clip cues media/demo and resets simulation.
 Resolution sets a square canvas. Rectangular Canvas switches to independent
 Width and Height (cells); the demo, seeds and source fit follow the new shape.
-Changing canvas size/shape, Seed, Seed Radius, Ambient Seeds or Movie File
-resets state.
+Cell Size (pixels) decouples the simulation grid from the canvas: the state is
+canvas / Cell Size cells and is upscaled for display (Display > Upscale Filter).
+Line width is fixed in cells, so Cell Size 4 makes lines four times thicker on
+screen, and the simulation is ~16x cheaper, which leaves room for more Passes.
+Seed Radius, Edge Width, Mask Smoothing, Tint Spread and Translate stay in cells.
+Changing canvas size/shape, Cell Size, Seed, Seed Radius, Ambient Seeds or Movie
+File resets state.
 Speed, influence and fade depend on project FPS. Changing resolution changes
 pattern scale. Parameters do not automatically keep the output in a loop:
 a looping clip can keep developing a different chemical history on each loop.
@@ -616,6 +669,8 @@ Checkerboard is a diagnostic background only, never a simulation input.
 The final composite uses premultiplied alpha; source_preview uses straight RGBA.
 Color Amount: 0 = grayscale, 1 = the selected Color Mode. Contrast/Invert apply
 to every mode.
+Upscale Filter (only visible with Cell Size above 1): Smooth = Catmull-Rom cubic,
+round contours; Linear = bilinear, slightly faceted; Nearest = visible square cells.
 
 COLOR PAGE
 Color Mode chooses where pattern colors come from. Switching never resets.
@@ -661,7 +716,8 @@ out1: final image (or the selected diagnostic view).
 patterns: colored simulation before clipping/overlay.
 mask_preview: grayscale influence; its alpha intentionally stays 1.
 source_preview: fitted source with actual alpha, no baked checkerboard.
-state: red=A, green=B, blue/alpha=carried color (Oklab a/b), 32-bit float.
+state: red=A, green=B, blue/alpha=carried color (Oklab a/b), 32-bit float, at
+  the simulation grid size (canvas / Cell Size), not the canvas size.
   Its alpha is not opacity; the TD viewer may show it as transparent.
 palette: 64x1 clip color ramp. palette_cells: the 8x8 averaged colors/coverage.
 movie_info: length, current index, sample rate and decode info.
@@ -679,7 +735,7 @@ Feedback Target TOP = state.
 media_prepared -> reaction_diffusion input 2 (carried color injection).
 media_prepared -> palette_cells -> palette_sort -> palette; palette_feedback
 (Target TOP = palette, initialized by palette_init) feeds palette_sort input 1.
-state + media_prepared + palette -> colorize -> patterns.
+state + media_prepared + palette -> colorize (upscales to canvas) -> patterns.
 composite reads patterns, prepared source and mask.
 Injection/fade/color stain use uTDPass==0, not every simulation pass.
 
@@ -800,6 +856,7 @@ def build_turing_media(container=None):
     resolution.enableExpr = 'not me.par.Rectangle'
     canvas_width.enableExpr = 'me.par.Rectangle'
     canvas_height.enableExpr = 'me.par.Rectangle'
+    _number(page, 'Cellsize', 'Cell Size (pixels)', 1.0, 1.0, 8.0)
     _number(page, 'Feed', 'Feed', 0.0545, 0.0, 0.1)
     _number(page, 'Kill', 'Kill', 0.062, 0.0, 0.1)
     _number(page, 'Diffusiona', 'Diffusion A', 1.0, 0.0, 1.0)
@@ -857,6 +914,9 @@ def build_turing_media(container=None):
         ('final', 'Final'), ('patterns', 'Patterns'), ('mask', 'Influence Mask'),
         ('source', 'Source on Checkerboard'),
     ], 'final')
+    _menu(page, 'Upscale', 'Upscale Filter', [
+        ('smooth', 'Smooth (Cubic)'), ('linear', 'Linear'), ('nearest', 'Nearest (Pixels)'),
+    ], 'smooth')
 
     transform_page = component.appendCustomPage('Transform')
     _toggle(transform_page, 'Transform', 'Enable Transform', False)
@@ -959,8 +1019,10 @@ def build_turing_media(container=None):
     _set(mask, 'inputfiltertype', 'linear')
     _set(mask, 'inputextenduv', 'zero')
     _uniforms(mask, [
+        # The mask is built at canvas size; widths are in cells, so convert to pixels.
         ('uMask', (_menu_index('Maskmode'), 'parent().par.Maskgain',
-                   'parent().par.Edgewidth', 'parent().par.Smoothing')),
+                   'parent().par.Edgewidth * parent().par.Cellsize',
+                   'parent().par.Smoothing * parent().par.Cellsize')),
         ('uMotion', ('parent().par.Motiongain',
                      '1 if absTime.frame - parent().fetch("Resetframe", -9999) > 2 else 0', '0', '0')),
     ])
@@ -973,11 +1035,12 @@ def build_turing_media(container=None):
 
     seed = _shader(component, 'seed', 'seed_pixel', SEED_SHADER, (-600, 200))
     _set(seed, 'outputresolution', 'custom')
-    _expression(seed, 'resolutionw', CANVAS_WIDTH)
-    _expression(seed, 'resolutionh', CANVAS_HEIGHT)
+    # The seed sets the simulation grid; every state operator downstream follows it.
+    _expression(seed, 'resolutionw', SIM_WIDTH)
+    _expression(seed, 'resolutionh', SIM_HEIGHT)
     _uniforms(seed, [('uSeed', ('parent().par.Seed', 'parent().par.Seedradius',
                                 '0', 'parent().par.Ambient')),
-                     ('uSeedSize', (CANVAS_WIDTH, CANVAS_HEIGHT, '0', '0'))])
+                     ('uSeedSize', (SIM_WIDTH, SIM_HEIGHT, '0', '0'))])
 
     feedback = component.create(feedbackTOP, 'feedback')
     feedback.nodeX, feedback.nodeY = -350, 200
@@ -1062,11 +1125,16 @@ def build_turing_media(container=None):
     display.inputConnectors[0].connect(state)
     display.inputConnectors[1].connect(prepared)
     display.inputConnectors[2].connect(palette)
+    # Upscales the (possibly coarser) state back to the canvas size.
+    _set(display, 'outputresolution', 'custom')
+    _expression(display, 'resolutionw', CANVAS_WIDTH)
+    _expression(display, 'resolutionh', CANVAS_HEIGHT)
     _uniforms(display, [
         ('uDisplay', ('parent().par.Coloramount', 'parent().par.Contrast',
                       'parent().par.Invert', _menu_index('Colormode'))),
-        ('uColor', ('parent().par.Tintspread', 'parent().par.Paletteanchor',
+        ('uColor', ('parent().par.Tintspread * parent().par.Cellsize', 'parent().par.Paletteanchor',
                     'parent().par.Dyesaturation', str(PALETTE_WIDTH))),
+        ('uUpscale', (_menu_index('Upscale'), '0', '0', '0')),
     ])
     _set(display, 'inputfiltertype', 'linear')
 
@@ -1091,7 +1159,7 @@ def build_turing_media(container=None):
     _set(callbacks, 'active', False)
     callbacks.text = CONTROL_CALLBACKS.strip() + '\n'
     _set(callbacks, 'op', '..')
-    _set(callbacks, 'pars', 'Reset Reseed Coral Spots Resolution Rectangle Canvaswidth Canvasheight Seed Seedradius Ambient Moviefile Clipseed Restartclip Transformzero')
+    _set(callbacks, 'pars', 'Reset Reseed Coral Spots Resolution Rectangle Canvaswidth Canvasheight Cellsize Seed Seedradius Ambient Moviefile Clipseed Restartclip Transformzero')
     _set(callbacks, 'custom', True)
     _set(callbacks, 'builtin', False)
     _set(callbacks, 'onpulse', True)
