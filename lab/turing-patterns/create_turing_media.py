@@ -4,7 +4,8 @@ USE
   1. Paste this entire file into a Text DAT in your project.
   2. Right-click the DAT and choose Run Script.
   3. Play the timeline: ambient seed patterns grow immediately (no media).
-  4. Select turing_media. On Media, choose Movie File to load your own clip.
+  4. Select turing_media. On Media, choose Movie File to load your own clip,
+     or drag any TOP into Source TOP to drive it live (camera, generator, etc.).
   5. Explore Influence > Mask Mode, Strength, and Display > Source Overlay.
   6. On Color, switch Color Mode to tint, extract or carry the clip's colors.
      Assign Color > Ramp TOP to replace the built-in teal/gold ramp with your own.
@@ -14,7 +15,7 @@ Re-running creates a new numbered component; existing operators are retained.
 Outputs: out1 = final image, patterns = colored simulation, mask_preview =
 influence mask, source_preview = fitted RGBA source, palette = clip color
 ramp, state = raw A/B concentrations plus carried color.
-Clear Movie File to remove the media influence. No external dependencies.
+Clear Source TOP and Movie File to remove the media influence. No external dependencies.
 
 Default: 512 square, 32-bit float state, 16 simulation steps per frame.
 Turn on Turing > Rectangular Canvas for an independent Width and Height.
@@ -48,6 +49,11 @@ CANVAS_WIDTH = 'parent().par.Canvaswidth if parent().par.Rectangle else parent()
 CANVAS_HEIGHT = 'parent().par.Canvasheight if parent().par.Rectangle else parent().par.Resolution'
 CANVAS_ASPECT = ('parent().par.Canvaswidth / max(1, parent().par.Canvasheight) '
                  'if parent().par.Rectangle else 1')
+
+# Media input: an assigned Source TOP wins over Movie File; neither means no media.
+HAS_SOURCE_TOP = 'parent().par.Sourcetop.eval() is not None'
+HAS_MOVIE = 'parent().par.Moviefile.eval().strip()'
+HAS_MEDIA = '({} or {})'.format(HAS_SOURCE_TOP, HAS_MOVIE)
 
 # The simulation grid: the canvas divided by Cell Size, so each cell spans several pixels.
 SIM_WIDTH = 'max(8, int(round(({}) / parent().par.Cellsize)))'.format(CANVAS_WIDTH)
@@ -592,7 +598,7 @@ def onPulse(par):
 
 def onValueChange(par, prev):
     if par.name in ('Resolution', 'Rectangle', 'Canvaswidth', 'Canvasheight', 'Cellsize',
-                    'Seed', 'Seedradius', 'Ambient', 'Moviefile'):
+                    'Seed', 'Seedradius', 'Ambient', 'Moviefile', 'Sourcetop'):
         resetSimulation(par.owner)
     return
 '''
@@ -602,14 +608,20 @@ NETWORK_HELP = '''TURING MEDIA / REACTION-DIFFUSION WITH MOVING IMAGES
 
 QUICK START
 Play the timeline: ambient seed patterns grow immediately.
-Select the Base COMP > Media > Movie File to load your own clip.
-Leave Movie File blank for no media input. Check that a GIF actually animates in
+Select the Base COMP > Media > Movie File to load your own clip, or drag any
+TOP onto Media > Source TOP to drive it live. Source TOP wins when both are set.
+Leave both blank for no media input. Check that a GIF actually animates in
 Movie File In; if necessary use a PNG sequence or Hap Alpha movie.
 For a PNG sequence, paste the folder path into Movie File. Turn on Override FPS
 and set Sequence FPS to the intended rate. GIFs with unequal frame delays need
 resampling when converted to a fixed-FPS sequence.
 
 MEDIA PAGE
+Source TOP: any TOP (camera, Noise, Text, a render, another network's output)
+replaces Movie File as the source. It is read live through media_top (a Select
+TOP), so playback is controlled wherever that TOP lives; Play Media / Media
+Speed / Restart Clip only affect Movie File. Assigning, changing or clearing it
+resets the simulation. Don't assign this component's own out1 (a cook loop).
 Play Media / Media Speed / Restart Clip control playback. Scale / Offset X/Y /
 Rotation fit and position the source in the simulation's canvas, keeping its
 aspect ratio on square and rectangular canvases. Offsets are fractions of the
@@ -735,9 +747,10 @@ Each GLSL TOP has an Info DAT for compiler messages. Its Pixel Shader parameter
 points to the actual DAT; TD may add a suffix such as _pixel1 during creation.
 movie may report a missing-file error while Movie File is blank; it is unselected
 and the transparent blank branch is used. Selecting a valid file enables that branch.
+media_top: Select TOP of Media > Source TOP (shows blank while it is unassigned).
 
 NETWORK
-movie + blank -> media_source -> media_prepared -> media_cache (2 frames)
+movie + blank + media_top (Select TOP of Source TOP) -> media_source -> media_prepared -> media_cache (2 frames)
 media_previous selects cache index -1. media_mask reads current and previous.
 mask_preview -> reaction_diffusion input 1; feedback remains input 0.
 seed -> feedback -> reaction_diffusion -> state_transform -> state;
@@ -887,6 +900,9 @@ def build_turing_media(container=None):
     movie_file = media_page.appendFile('Moviefile', label='Movie File (blank = none)')[0]
     movie_file.default = ''
     movie_file.val = ''
+    source_top = media_page.appendTOP('Sourcetop', label='Source TOP (overrides Movie File)')[0]
+    source_top.default = ''
+    source_top.val = ''
     _toggle(media_page, 'Mediaplay', 'Play Media', True)
     _number(media_page, 'Mediaspeed', 'Media Speed', 0.5, -2.0, 2.0)
     media_page.appendPulse('Restartclip', label='Restart Clip + Reset')
@@ -985,12 +1001,19 @@ def build_turing_media(container=None):
     movie_info.nodeX, movie_info.nodeY = -1050, 850
     _set(movie_info, 'op', movie.name)
 
+    # Optional Source TOP; falls back to blank so the select never errors when unassigned.
+    source_top = component.create(selectTOP, 'media_top')
+    source_top.nodeX, source_top.nodeY = -1250, 625
+    _expression(source_top, 'top', 'parent().par.Sourcetop.eval() if {} else op("blank")'
+                                   .format(HAS_SOURCE_TOP))
+
     source = component.create(switchTOP, 'media_source')
     source.nodeX, source.nodeY = -950, 400
     source.inputConnectors[0].connect(blank)
     source.inputConnectors[1].connect(movie)
+    source.inputConnectors[2].connect(source_top)
     _set(source, 'blend', False)
-    _expression(source, 'index', '1 if parent().par.Moviefile.eval().strip() else 0')
+    _expression(source, 'index', '2 if {} else 1 if {} else 0'.format(HAS_SOURCE_TOP, HAS_MOVIE))
 
     prepared = _shader(component, 'media_prepared', 'prepare_pixel', PREPARE_SHADER, (-700, 650))
     prepared.inputConnectors[0].connect(source)
@@ -1002,12 +1025,13 @@ def build_turing_media(container=None):
     _uniforms(prepared, [
         ('uTransform', ('parent().par.Mediascale', 'parent().par.Offsetx',
                         'parent().par.Offsety', 'parent().par.Rotation * 0.0174532925199433')),
-        ('uAlpha', ('parent().par.Sourcepremult if parent().par.Moviefile.eval().strip() else 0',
+        ('uAlpha', ('parent().par.Sourcepremult if {} else 0'.format(HAS_MEDIA),
                     # Ignore Alpha would make the blank source an opaque mask.
-                    'parent().par.Ignorealpha if parent().par.Moviefile.eval().strip() else 0',
+                    'parent().par.Ignorealpha if {} else 0'.format(HAS_MEDIA),
                     # The blank is rendered at the canvas size, so it fills the canvas.
-                    'op("movie").width / max(1, op("movie").height) if parent().par.Moviefile.eval().strip() '
-                    'else (' + CANVAS_ASPECT + ')',
+                    'op("media_top").width / max(1, op("media_top").height) if {} '
+                    'else op("movie").width / max(1, op("movie").height) if {} '
+                    'else ({})'.format(HAS_SOURCE_TOP, HAS_MOVIE, CANVAS_ASPECT),
                     CANVAS_ASPECT)),
     ])
 
@@ -1179,7 +1203,7 @@ def build_turing_media(container=None):
     _set(callbacks, 'active', False)
     callbacks.text = CONTROL_CALLBACKS.strip() + '\n'
     _set(callbacks, 'op', '..')
-    _set(callbacks, 'pars', 'Reset Reseed Coral Spots Resolution Rectangle Canvaswidth Canvasheight Cellsize Seed Seedradius Ambient Moviefile Clipseed Restartclip Transformzero')
+    _set(callbacks, 'pars', 'Reset Reseed Coral Spots Resolution Rectangle Canvaswidth Canvasheight Cellsize Seed Seedradius Ambient Moviefile Sourcetop Clipseed Restartclip Transformzero')
     _set(callbacks, 'custom', True)
     _set(callbacks, 'builtin', False)
     _set(callbacks, 'onpulse', True)
@@ -1202,7 +1226,7 @@ def build_turing_media(container=None):
     component.viewer = True
     feedback.par.resetpulse.pulse()
     print('Created {}. Play the timeline; view {}/out1.'.format(component.path, component.path))
-    print('Choose Media > Movie File, or leave it blank for no media input.')
+    print('Choose Media > Movie File or Source TOP, or leave both blank for no media input.')
     print('Explore Influence > Mask Mode and Strength, then Display > Source Overlay.')
     return component
 
