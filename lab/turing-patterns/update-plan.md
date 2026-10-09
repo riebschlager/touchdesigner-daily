@@ -42,6 +42,8 @@ The new version should be **`create_turing_media_v2.py`**, with `create_turing_m
 
 3. **Expand media influence into independent controls**
 
+   **Implemented and live-validated** in `create_turing_media_v2.py` on TouchDesigner 2025.33230 (macOS). Includes Continuous Seed, an explicit Stamp Current Mask pulse, Chemistry Map with feed/kill ranges and alpha-weighted blend, independent Domain Mask TOP with No Flux/Empty Exterior interfaces, and selectable carried-color injection source. See `validation/phase3/README.md` for behavior, boundary contracts, reproducible checks, and recorded results.
+
    Add an Influence Mode menu:
 
    | Mode | Behavior |

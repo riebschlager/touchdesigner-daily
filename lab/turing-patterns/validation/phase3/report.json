@@ -1,0 +1,403 @@
+{
+  "build": "099.2025.33230",
+  "tolerance": 1e-06,
+  "checks": {
+    "stamp_exact_current_mask": {
+      "passed": true,
+      "max_abs": 5.960464477539063e-08
+    },
+    "stamp_no_time_or_history": {
+      "passed": true
+    },
+    "paused_stamp_holds": {
+      "passed": true
+    },
+    "stamp_evolves_without_reinjection": {
+      "passed": true,
+      "max_abs": 0.3249998092651367
+    },
+    "stamp_mode_never_auto_injects": {
+      "passed": true
+    },
+    "continuous_injects_every_tick": {
+      "passed": true
+    },
+    "stamp_noop_other_modes": {
+      "passed": true
+    },
+    "stamp_partial_amount_live_sample": {
+      "passed": true
+    },
+    "chemistry_matches_local_rate_oracle": {
+      "passed": true,
+      "max_abs": 9.309278350966288e-08,
+      "values": [
+        [
+          0.23612213134765625,
+          0.4612865149974823
+        ],
+        [
+          0.6820462346076965,
+          0.14379087090492249
+        ]
+      ]
+    },
+    "chemistry_spatially_different": {
+      "passed": true
+    },
+    "chemistry_zero_blend_uniform_baseline": {
+      "passed": true
+    },
+    "chemistry_no_source_uniform_baseline": {
+      "passed": true
+    },
+    "chemistry_transparent_uniform_baseline": {
+      "passed": true
+    },
+    "chemistry_reversed_ranges_alpha_blend": {
+      "passed": true
+    },
+    "domain_seed_clear_noflux_continuous": {
+      "passed": true
+    },
+    "domain_empty_clear_noflux_continuous": {
+      "passed": true
+    },
+    "domain_seed_clear_noflux_stamp": {
+      "passed": true
+    },
+    "domain_empty_clear_noflux_stamp": {
+      "passed": true
+    },
+    "domain_seed_clear_noflux_chemistry": {
+      "passed": true
+    },
+    "domain_empty_clear_noflux_chemistry": {
+      "passed": true
+    },
+    "domain_seed_clear_empty_continuous": {
+      "passed": true
+    },
+    "domain_empty_clear_empty_continuous": {
+      "passed": true
+    },
+    "domain_seed_clear_empty_stamp": {
+      "passed": true
+    },
+    "domain_empty_clear_empty_stamp": {
+      "passed": true
+    },
+    "domain_seed_clear_empty_chemistry": {
+      "passed": true
+    },
+    "domain_empty_clear_empty_chemistry": {
+      "passed": true
+    },
+    "domain_seed_wrap_noflux_continuous": {
+      "passed": true
+    },
+    "domain_empty_wrap_noflux_continuous": {
+      "passed": true
+    },
+    "domain_seed_wrap_noflux_stamp": {
+      "passed": true
+    },
+    "domain_empty_wrap_noflux_stamp": {
+      "passed": true
+    },
+    "domain_seed_wrap_noflux_chemistry": {
+      "passed": true
+    },
+    "domain_empty_wrap_noflux_chemistry": {
+      "passed": true
+    },
+    "domain_seed_wrap_empty_continuous": {
+      "passed": true
+    },
+    "domain_empty_wrap_empty_continuous": {
+      "passed": true
+    },
+    "domain_seed_wrap_empty_stamp": {
+      "passed": true
+    },
+    "domain_empty_wrap_empty_stamp": {
+      "passed": true
+    },
+    "domain_seed_wrap_empty_chemistry": {
+      "passed": true
+    },
+    "domain_empty_wrap_empty_chemistry": {
+      "passed": true
+    },
+    "barrier_shader_nofluxFalse": {
+      "passed": true
+    },
+    "barrier_fixture_active_nofluxFalse": {
+      "passed": true
+    },
+    "impermeable_noflux_diffusion": {
+      "passed": true,
+      "max_leaked": 0.0
+    },
+    "barrier_shader_nofluxTrue": {
+      "passed": true
+    },
+    "barrier_fixture_active_nofluxTrue": {
+      "passed": true
+    },
+    "impermeable_noflux_moving": {
+      "passed": true,
+      "max_leaked": 0.0
+    },
+    "barrier_shader_emptyFalse": {
+      "passed": true
+    },
+    "barrier_fixture_active_emptyFalse": {
+      "passed": true
+    },
+    "impermeable_empty_diffusion": {
+      "passed": true,
+      "max_leaked": 0.0
+    },
+    "barrier_shader_emptyTrue": {
+      "passed": true
+    },
+    "barrier_fixture_active_emptyTrue": {
+      "passed": true
+    },
+    "impermeable_empty_moving": {
+      "passed": true,
+      "max_leaked": 0.0
+    },
+    "noflux_pure_diffusion_mass": {
+      "passed": true,
+      "before": 708.0001220703125,
+      "after": 708.0001220703125
+    },
+    "empty_exterior_is_sink": {
+      "passed": true,
+      "totals": {
+        "noflux": 708.0001220703125,
+        "empty": 186.18450927734375
+      }
+    },
+    "diagonal_corner_no_leak": {
+      "passed": true
+    },
+    "domain_change_pause_holds": {
+      "passed": true
+    },
+    "domain_rectangular_coarse_inversion": {
+      "passed": true
+    },
+    "color_alpha_independent_injection": {
+      "passed": true,
+      "values": {
+        "alpha_continuous": 0.03149256855249405,
+        "alpha_stamp": 0.03149256855249405,
+        "alpha_chemistry": 0.03149256855249405,
+        "mask_continuous": 0.0,
+        "mask_stamp": 0.0,
+        "mask_chemistry": 0.0
+      }
+    },
+    "color_mask_gate_zero": {
+      "passed": true
+    },
+    "stamp_preserves_carried_color": {
+      "passed": true
+    },
+    "color_mask_injects_with_strength_zero": {
+      "passed": true
+    },
+    "replay_30_60_continuous_alpha": {
+      "passed": true,
+      "max_abs": {
+        "state": 0.0,
+        "palette": 0.0,
+        "out1": 0.0,
+        "patterns": 0.0,
+        "mask_preview": 0.0,
+        "source_preview": 0.0
+      }
+    },
+    "finite_bounded_continuous_alpha": {
+      "passed": true
+    },
+    "replay_30_60_continuous_mask": {
+      "passed": true,
+      "max_abs": {
+        "state": 0.0,
+        "palette": 0.0,
+        "out1": 0.0,
+        "patterns": 0.0,
+        "mask_preview": 0.0,
+        "source_preview": 0.0
+      }
+    },
+    "finite_bounded_continuous_mask": {
+      "passed": true
+    },
+    "replay_30_60_stamp_alpha": {
+      "passed": true,
+      "max_abs": {
+        "state": 0.0,
+        "palette": 0.0,
+        "out1": 0.0,
+        "patterns": 0.0,
+        "mask_preview": 0.0,
+        "source_preview": 0.0
+      }
+    },
+    "finite_bounded_stamp_alpha": {
+      "passed": true
+    },
+    "replay_30_60_stamp_mask": {
+      "passed": true,
+      "max_abs": {
+        "state": 0.0,
+        "palette": 0.0,
+        "out1": 0.0,
+        "patterns": 0.0,
+        "mask_preview": 0.0,
+        "source_preview": 0.0
+      }
+    },
+    "finite_bounded_stamp_mask": {
+      "passed": true
+    },
+    "replay_30_60_chemistry_alpha": {
+      "passed": true,
+      "max_abs": {
+        "state": 0.0,
+        "palette": 0.0,
+        "out1": 0.0,
+        "patterns": 0.0,
+        "mask_preview": 0.0,
+        "source_preview": 0.0
+      }
+    },
+    "finite_bounded_chemistry_alpha": {
+      "passed": true
+    },
+    "replay_30_60_chemistry_mask": {
+      "passed": true,
+      "max_abs": {
+        "state": 0.0,
+        "palette": 0.0,
+        "out1": 0.0,
+        "patterns": 0.0,
+        "mask_preview": 0.0,
+        "source_preview": 0.0
+      }
+    },
+    "finite_bounded_chemistry_mask": {
+      "passed": true
+    },
+    "actual_stamp_pulse_once": {
+      "passed": true
+    },
+    "actual_stamp_pulse_holds": {
+      "passed": true
+    },
+    "no_unexpected_operator_errors": {
+      "passed": true
+    },
+    "all_shaders_compile": {
+      "passed": true
+    }
+  },
+  "replays": [
+    {
+      "mode": "continuous",
+      "color_source": "alpha",
+      "max_abs": {
+        "state": 0.0,
+        "palette": 0.0,
+        "out1": 0.0,
+        "patterns": 0.0,
+        "mask_preview": 0.0,
+        "source_preview": 0.0
+      }
+    },
+    {
+      "mode": "continuous",
+      "color_source": "mask",
+      "max_abs": {
+        "state": 0.0,
+        "palette": 0.0,
+        "out1": 0.0,
+        "patterns": 0.0,
+        "mask_preview": 0.0,
+        "source_preview": 0.0
+      }
+    },
+    {
+      "mode": "stamp",
+      "color_source": "alpha",
+      "max_abs": {
+        "state": 0.0,
+        "palette": 0.0,
+        "out1": 0.0,
+        "patterns": 0.0,
+        "mask_preview": 0.0,
+        "source_preview": 0.0
+      }
+    },
+    {
+      "mode": "stamp",
+      "color_source": "mask",
+      "max_abs": {
+        "state": 0.0,
+        "palette": 0.0,
+        "out1": 0.0,
+        "patterns": 0.0,
+        "mask_preview": 0.0,
+        "source_preview": 0.0
+      }
+    },
+    {
+      "mode": "chemistry",
+      "color_source": "alpha",
+      "max_abs": {
+        "state": 0.0,
+        "palette": 0.0,
+        "out1": 0.0,
+        "patterns": 0.0,
+        "mask_preview": 0.0,
+        "source_preview": 0.0
+      }
+    },
+    {
+      "mode": "chemistry",
+      "color_source": "mask",
+      "max_abs": {
+        "state": 0.0,
+        "palette": 0.0,
+        "out1": 0.0,
+        "patterns": 0.0,
+        "mask_preview": 0.0,
+        "source_preview": 0.0
+      }
+    }
+  ],
+  "errors": {},
+  "shaders": {
+    "seed_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "display_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "colorize_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "composite_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "media_mask_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "simulation_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "stamp_mask_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "state_stamp_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "palette_sort_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "palette_cells_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "domain_prepare_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "media_prepared_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "state_transform_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "influence_prepare_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "reaction_diffusion_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n"
+  },
+  "passed": true
+}

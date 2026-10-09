@@ -1,0 +1,32 @@
+{
+  "build": "099.2025.33230",
+  "component": "/project1/turing_media_v2",
+  "errors": "",
+  "outputs": {
+    "out1": {
+      "width": 512,
+      "height": 512
+    },
+    "patterns": {
+      "width": 512,
+      "height": 512
+    },
+    "mask_preview": {
+      "width": 512,
+      "height": 512
+    },
+    "source_preview": {
+      "width": 512,
+      "height": 512
+    },
+    "palette": {
+      "width": 64,
+      "height": 2
+    },
+    "state": {
+      "width": 512,
+      "height": 512
+    }
+  },
+  "shader_errors": {}
+}
