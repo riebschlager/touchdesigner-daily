@@ -1,0 +1,2034 @@
+{
+  "build": "2025.33230",
+  "checks": {
+    "all_pixels_exact": true,
+    "topology_and_builtin_parameters_equal": true,
+    "custom_parameters_equal": true,
+    "unique_names": true,
+    "no_unexpected_errors": true,
+    "all_finite": true,
+    "all_cases_evolve": true,
+    "pause_exact": true,
+    "reset_matches_seed": true,
+    "chemicals_bounded": true
+  },
+  "comparisons": 288,
+  "results": [
+    {
+      "capture": "coarse_linear_evolved",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_linear_evolved",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_linear_evolved",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_linear_evolved",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_linear_evolved",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_linear_evolved",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_linear_initial",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_linear_initial",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_linear_initial",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_linear_initial",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_linear_initial",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_linear_initial",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_linear_paused",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_linear_paused",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_linear_paused",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_linear_paused",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_linear_paused",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_linear_paused",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_linear_reset",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_linear_reset",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_linear_reset",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_linear_reset",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_linear_reset",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_linear_reset",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_nearest_evolved",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_nearest_evolved",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_nearest_evolved",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_nearest_evolved",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_nearest_evolved",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_nearest_evolved",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_nearest_initial",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_nearest_initial",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_nearest_initial",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_nearest_initial",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_nearest_initial",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_nearest_initial",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_nearest_paused",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_nearest_paused",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_nearest_paused",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_nearest_paused",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_nearest_paused",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_nearest_paused",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_nearest_reset",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_nearest_reset",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_nearest_reset",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_nearest_reset",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_nearest_reset",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_nearest_reset",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_smooth_evolved",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_smooth_evolved",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_smooth_evolved",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_smooth_evolved",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_smooth_evolved",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_smooth_evolved",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_smooth_initial",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_smooth_initial",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_smooth_initial",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_smooth_initial",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_smooth_initial",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_smooth_initial",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_smooth_paused",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_smooth_paused",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_smooth_paused",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_smooth_paused",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_smooth_paused",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_smooth_paused",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_smooth_reset",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_smooth_reset",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_smooth_reset",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_smooth_reset",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_smooth_reset",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coarse_smooth_reset",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coral_evolved",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coral_evolved",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coral_evolved",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coral_evolved",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coral_evolved",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coral_evolved",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coral_initial",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coral_initial",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coral_initial",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coral_initial",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coral_initial",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coral_initial",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coral_paused",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coral_paused",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coral_paused",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coral_paused",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coral_paused",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coral_paused",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coral_reset",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coral_reset",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coral_reset",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coral_reset",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coral_reset",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "coral_reset",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_carried_evolved",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_carried_evolved",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_carried_evolved",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_carried_evolved",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_carried_evolved",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_carried_evolved",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_carried_initial",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_carried_initial",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_carried_initial",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_carried_initial",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_carried_initial",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_carried_initial",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_carried_paused",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_carried_paused",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_carried_paused",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_carried_paused",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_carried_paused",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_carried_paused",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_carried_reset",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_carried_reset",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_carried_reset",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_carried_reset",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_carried_reset",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_carried_reset",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_fixed_evolved",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_fixed_evolved",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_fixed_evolved",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_fixed_evolved",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_fixed_evolved",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_fixed_evolved",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_fixed_initial",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_fixed_initial",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_fixed_initial",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_fixed_initial",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_fixed_initial",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_fixed_initial",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_fixed_paused",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_fixed_paused",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_fixed_paused",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_fixed_paused",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_fixed_paused",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_fixed_paused",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_fixed_reset",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_fixed_reset",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_fixed_reset",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_fixed_reset",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_fixed_reset",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_fixed_reset",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_palette_evolved",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_palette_evolved",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_palette_evolved",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_palette_evolved",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_palette_evolved",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_palette_evolved",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_palette_initial",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_palette_initial",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_palette_initial",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_palette_initial",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_palette_initial",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_palette_initial",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_palette_paused",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_palette_paused",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_palette_paused",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_palette_paused",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_palette_paused",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_palette_paused",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_palette_reset",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_palette_reset",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_palette_reset",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_palette_reset",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_palette_reset",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_palette_reset",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_tint_evolved",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_tint_evolved",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_tint_evolved",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_tint_evolved",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_tint_evolved",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_tint_evolved",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_tint_initial",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_tint_initial",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_tint_initial",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_tint_initial",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_tint_initial",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_tint_initial",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_tint_paused",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_tint_paused",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_tint_paused",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_tint_paused",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_tint_paused",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_tint_paused",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_tint_reset",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_tint_reset",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_tint_reset",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_tint_reset",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_tint_reset",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "media_tint_reset",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "rectangle_evolved",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "rectangle_evolved",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "rectangle_evolved",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "rectangle_evolved",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "rectangle_evolved",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "rectangle_evolved",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "rectangle_initial",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "rectangle_initial",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "rectangle_initial",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "rectangle_initial",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "rectangle_initial",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "rectangle_initial",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "rectangle_paused",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "rectangle_paused",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "rectangle_paused",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "rectangle_paused",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "rectangle_paused",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "rectangle_paused",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "rectangle_reset",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "rectangle_reset",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "rectangle_reset",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "rectangle_reset",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "rectangle_reset",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "rectangle_reset",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "spots_evolved",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "spots_evolved",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "spots_evolved",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "spots_evolved",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "spots_evolved",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "spots_evolved",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "spots_initial",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "spots_initial",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "spots_initial",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "spots_initial",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "spots_initial",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "spots_initial",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "spots_paused",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "spots_paused",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "spots_paused",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "spots_paused",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "spots_paused",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "spots_paused",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "spots_reset",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "spots_reset",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "spots_reset",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "spots_reset",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "spots_reset",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "spots_reset",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_clear_evolved",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_clear_evolved",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_clear_evolved",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_clear_evolved",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_clear_evolved",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_clear_evolved",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_clear_initial",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_clear_initial",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_clear_initial",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_clear_initial",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_clear_initial",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_clear_initial",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_clear_paused",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_clear_paused",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_clear_paused",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_clear_paused",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_clear_paused",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_clear_paused",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_clear_reset",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_clear_reset",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_clear_reset",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_clear_reset",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_clear_reset",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_clear_reset",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_wrap_evolved",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_wrap_evolved",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_wrap_evolved",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_wrap_evolved",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_wrap_evolved",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_wrap_evolved",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_wrap_initial",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_wrap_initial",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_wrap_initial",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_wrap_initial",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_wrap_initial",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_wrap_initial",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_wrap_paused",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_wrap_paused",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_wrap_paused",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_wrap_paused",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_wrap_paused",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_wrap_paused",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_wrap_reset",
+      "output": "out1",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_wrap_reset",
+      "output": "patterns",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_wrap_reset",
+      "output": "mask_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_wrap_reset",
+      "output": "source_preview",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_wrap_reset",
+      "output": "palette",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    },
+    {
+      "capture": "transform_wrap_reset",
+      "output": "state",
+      "shape_equal": true,
+      "max_abs_error": 0.0,
+      "exact": true
+    }
+  ]
+}

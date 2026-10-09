@@ -1,0 +1,4 @@
+# Lossless GPU captures are reproducible, large, and retained locally.
+v1/*.npz
+v2/*.npz
+__pycache__/
