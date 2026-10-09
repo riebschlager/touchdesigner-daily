@@ -1,0 +1,35 @@
+{
+  "build": "099.2025.33230",
+  "checks": {
+    "paused flow and boundary edits retain state": {
+      "passed": true,
+      "max_error": 0.0,
+      "tolerance": 0
+    },
+    "flow and boundary edits cause no reset": {
+      "passed": true
+    },
+    "actual Step pulse one flow tick": {
+      "passed": true
+    },
+    "actual Step uses latest flow and boundary": {
+      "passed": true,
+      "max_error": 2.9802322387695312e-08,
+      "tolerance": 1e-06
+    },
+    "disable flow while paused holds": {
+      "passed": true,
+      "max_error": 0.0,
+      "tolerance": 0
+    },
+    "flow controls keep pause and age": {
+      "passed": true
+    },
+    "real controls no shader errors": {
+      "passed": true,
+      "errors": ""
+    }
+  },
+  "source_sha256": "ed06ed0a48fe9f46ea96a1141fdcf62e00dfaa4f564be07714d4b192a2a7cbd2",
+  "passed": true
+}

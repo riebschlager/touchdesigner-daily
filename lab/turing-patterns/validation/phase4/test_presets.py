@@ -450,7 +450,7 @@ class ApplyTests(unittest.TestCase):
         LIB['on_save'](c)
         bound = LIB['find'](LIB['document'](c), 'bound')
         self.assertEqual(bound['bindings'], {'Moviefile': 'clips/a.mov', 'Sourcetop': '../camera',
-                                             'Domaintop': '', 'Ramptop': ''})
+                                             'Domaintop': '', 'Ramptop': '', 'Velocitytop': ''})
         c.par.Sourcetop.val = ''
         c.par.Presetbindings.val = False
         select(c, 'bound')

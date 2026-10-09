@@ -1,0 +1,22 @@
+{
+  "source_sha256": "ed06ed0a48fe9f46ea96a1141fdcf62e00dfaa4f564be07714d4b192a2a7cbd2",
+  "suites": {
+    "validation/phase6/test_flow_presets.py": {
+      "passed": true,
+      "tests": 5
+    },
+    "validation/phase4/test_presets.py": {
+      "passed": true,
+      "tests": 31
+    },
+    "validation/phase5/test_snapshots.py": {
+      "passed": true,
+      "tests": 15
+    },
+    "validation/phase2/test_clock.py": {
+      "passed": true,
+      "tests": 7
+    }
+  },
+  "passed": true
+}

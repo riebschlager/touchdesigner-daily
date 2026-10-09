@@ -107,6 +107,8 @@ The new version should be **`create_turing_media_v2.py`**, with `create_turing_m
 
 6. **Make boundary and flow behavior explicit**
 
+   **Implemented and live-validated** in `create_turing_media_v2.py` on TouchDesigner 2025.33230 (macOS). Turing-page Wrap / No Flux / Empty Exterior, shared diffusion/transport boundary helpers, separate held-edge display reconstruction, time-based global transforms, and optional bounded signed-RG Velocity TOP transport. Flow settings/binding round-trip through presets and snapshots; Phase 5 snapshots restore with flow disabled. All 159 Phase 6 integration checks, seven real-frame control checks, Phase 2/3/4/5 regression suites, and 58 offline tests pass. See `validation/phase6/README.md` for units, transform order, smoothing, legacy Clear migration, reproducible checks and evidence.
+
    Move boundary settings out of the Transform page into simulation controls.
 
    | Boundary mode | Meaning |

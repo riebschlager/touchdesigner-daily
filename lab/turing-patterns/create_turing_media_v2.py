@@ -14,6 +14,7 @@ USE
   8. On Explorer, press Generate Thumbnails, then view fk_explorer as a panel and
      click the Feed/Kill map or a reference thumbnail.
 
+Phase 6 unifies boundaries and adds bounded, optional Velocity TOP transport.
 Phase 5 adds raw state snapshots, independent resets and safe state resampling.
 Phase 4 adds a versioned preset table, preset import/export and the Feed/Kill explorer.
 Phase 3 adds independent media modes, domain confinement and carried-color sourcing.
@@ -40,7 +41,8 @@ Phase 1 baseline results are in validation/phase1. Phase 2 clock validation and
 reproduction instructions are in validation/phase2. The builder is standalone;
 validation files and TDAPI are not required. Phase 3 validation is in
 validation/phase3; Phase 4 preset/explorer validation is in validation/phase4.
-Phase 5 validation is in validation/phase5. Phases 6–8 are not implemented.
+Phase 5 validation is in validation/phase5; Phase 6 boundary/flow validation is in
+validation/phase6. Phases 7–8 are not implemented.
 """
 
 
@@ -70,6 +72,7 @@ HAS_SOURCE_TOP = 'parent().par.Sourcetop.eval() is not None'
 HAS_MOVIE = 'parent().par.Moviefile.eval().strip()'
 HAS_MEDIA = '({} or {})'.format(HAS_SOURCE_TOP, HAS_MOVIE)
 HAS_DOMAIN = 'parent().par.Domaintop.eval() is not None'
+HAS_VELOCITY = 'parent().par.Velocitytop.eval() is not None'
 SIM_WIDTH = 'parent().fetch("Appliedsize", (512, 512, 512, 512))[2]'
 SIM_HEIGHT = 'parent().fetch("Appliedsize", (512, 512, 512, 512))[3]'
 
@@ -118,18 +121,32 @@ vec3 fixedPalette(float t) {
 """
 
 
-# Shared by solver, stamp, seed and transport. Domain textures are binary and
-# match the simulation grid; Wrap repeats the mask, Clear blocks exterior cells.
-def _domain_glsl(input_index, channel="r"):
-    return r"""
-uniform vec4 uDomain; // enabled, boundary (no flux / empty exterior), unused, unused
+# Canvas addressing is shared by diffusion, transport and display. Display uses
+# boundaryCoord only: both closed modes reconstruct with held edge values.
+BOUNDARY_GLSL = r"""
+uniform vec4 uBoundary; // canvas mode: wrap=0, no flux=1, empty exterior=2
 const vec4 EMPTY_CELL = vec4(1.0, 0.0, 0.0, 0.0);
-bool domainOpen(ivec2 p, ivec2 size, bool clearEdges) {
+bool cellOutside(ivec2 p, ivec2 size) {
+    return any(lessThan(p, ivec2(0))) || any(greaterThanEqual(p, size));
+}
+ivec2 boundaryCoord(ivec2 p, ivec2 size) {
+    return uBoundary.x < 0.5 ? (p % size + size) % size : clamp(p, ivec2(0), size - 1);
+}
+vec4 boundaryState(ivec2 p, ivec2 size) {
+    if (uBoundary.x > 1.5 && cellOutside(p, size)) return EMPTY_CELL;
+    return texelFetch(sTD2DInputs[0], boundaryCoord(p, size), 0);
+}
+"""
+
+
+# Domain walls are independent of the canvas exterior. Wrap repeats their mask;
+# closed canvas modes extend edge mask values and never join opposite sides.
+def _domain_glsl(input_index, channel="r"):
+    return BOUNDARY_GLSL + r"""
+uniform vec4 uDomain; // enabled, wall boundary (no flux / empty exterior), unused, unused
+bool domainOpen(ivec2 p, ivec2 size) {
     if (uDomain.x < 0.5) return true;
-    bool outside = any(lessThan(p, ivec2(0))) || any(greaterThanEqual(p, size));
-    if (clearEdges && outside) return false;
-    p = (p % size + size) % size;
-    return texelFetch(sTD2DInputs[DOMAIN_INPUT], p, 0).DOMAIN_CHANNEL > 0.5;
+    return texelFetch(sTD2DInputs[DOMAIN_INPUT], boundaryCoord(p, size), 0).DOMAIN_CHANNEL > 0.5;
 }
 vec4 domainBoundary(vec4 center) {
     return uDomain.y < 0.5 ? center : EMPTY_CELL;
@@ -167,7 +184,7 @@ float hash(float n) {
 }
 
 void main() {
-    if (!domainOpen(ivec2(gl_FragCoord.xy), ivec2(uSeedSize.xy), true)) {
+    if (!domainOpen(ivec2(gl_FragCoord.xy), ivec2(uSeedSize.xy))) {
         fragColor = TDOutputSwizzle(EMPTY_CELL);
         return;
     }
@@ -196,7 +213,7 @@ void main() {
 SIMULATION_SHADER = r"""
 layout(location = 0) out vec4 fragColor;
 uniform vec4 uRates; // feed, kill, diffusion A, diffusion B
-uniform vec4 uStep;  // chemistry dt, substep seconds, edge mode (wrap, clear), tick seconds
+uniform vec4 uStep;  // chemistry dt, substep seconds, unused, tick seconds
 uniform vec4 uInfluence; // injection and recovery rates / simulation second
 uniform vec4 uDye; // spread, injection, decay rates / simulation second, source (alpha/mask)
 uniform vec4 uInfluenceMode; // continuous/stamp/chemistry, chemistry blend, unused, unused
@@ -206,13 +223,10 @@ const ivec2 OFFSETS[8] = ivec2[8](ivec2(-1, 0), ivec2(1, 0), ivec2(0, -1), ivec2
                                   ivec2(-1, -1), ivec2(1, -1), ivec2(-1, 1), ivec2(1, 1));
 const float WEIGHTS[8] = float[8](0.2, 0.2, 0.2, 0.2, 0.05, 0.05, 0.05, 0.05);
 
-// Integer addressing makes the nine-cell stencil exact. Wrap both axes, or in
-// Clear mode clamp to the edge (zero flux) so opposite edges never interact.
-// R = A, G = B, B/A = carried colour as Oklab a/b.
+// R/G = A/B, blue/alpha = signed Oklab a/b. The shared canvas helper
+// wraps, holds an edge value (No Flux), or supplies empty exterior state.
 vec4 readCell(ivec2 p) {
-    ivec2 size = textureSize(sTD2DInputs[0], 0);
-    p = (uStep.z > 0.5) ? clamp(p, ivec2(0), size - 1) : (p % size + size) % size;
-    return texelFetch(sTD2DInputs[0], p, 0);
+    return boundaryState(p, textureSize(sTD2DInputs[0], 0));
 }
 
 // Colour is weighted by chemical B, so it flows outward with growing pattern.
@@ -224,7 +238,7 @@ vec3 dyeSample(vec4 cell, float weight) {
 void main() {
     ivec2 p = ivec2(gl_FragCoord.xy);
     ivec2 size = textureSize(sTD2DInputs[0], 0);
-    if (!domainOpen(p, size, uStep.z > 0.5)) {
+    if (!domainOpen(p, size)) {
         fragColor = TDOutputSwizzle(EMPTY_CELL);
         return;
     }
@@ -236,13 +250,14 @@ void main() {
     vec3 dye = dyeSample(cell, 1.0);
     for (int i = 0; i < 8; ++i) {
         ivec2 offset = OFFSETS[i];
-        bool open = domainOpen(p + offset, size, uStep.z > 0.5);
+        bool exterior = uBoundary.x > 1.5 && cellOutside(p + offset, size);
+        bool open = domainOpen(p + offset, size);
         // Diagonal taps cannot cut across blocked orthogonal cells at corners.
         if (offset.x != 0 && offset.y != 0) {
-            open = open && domainOpen(p + ivec2(offset.x, 0), size, uStep.z > 0.5)
-                        && domainOpen(p + ivec2(0, offset.y), size, uStep.z > 0.5);
+            open = open && domainOpen(p + ivec2(offset.x, 0), size)
+                        && domainOpen(p + ivec2(0, offset.y), size);
         }
-        vec4 neighbor = open ? readCell(p + offset) : domainBoundary(cell);
+        vec4 neighbor = exterior ? EMPTY_CELL : (open ? readCell(p + offset) : domainBoundary(cell));
         lap += WEIGHTS[i] * (neighbor.rg - ab);
         dye += dyeSample(neighbor, WEIGHTS[i]);
     }
@@ -281,13 +296,13 @@ void main() {
 
 STAMP_SHADER = r"""
 layout(location = 0) out vec4 fragColor;
-uniform vec4 uStamp; // stamp amount, canvas edge mode, unused, unused
+uniform vec4 uStamp; // stamp amount, unused, unused, unused
 """ + _domain_glsl(2) + r"""
 void main() {
     ivec2 p = ivec2(gl_FragCoord.xy);
     ivec2 size = textureSize(sTD2DInputs[0], 0);
     vec4 cell = texelFetch(sTD2DInputs[0], p, 0);
-    if (!domainOpen(p, size, uStamp.y > 0.5)) cell = EMPTY_CELL;
+    if (!domainOpen(p, size)) cell = EMPTY_CELL;
     else {
         float mask = clamp(texture(sTD2DInputs[1], vUV.st).r, 0.0, 1.0);
         cell.rg = mix(cell.rg, vec2(0.5, 0.25), uStamp.x * mask);
@@ -301,17 +316,15 @@ TRANSFORM_SHADER = r"""
 layout(location = 0) out vec4 fragColor;
 uniform vec4 uWarp; // grow, scale X/Y (% / second), rotation radians / second
 uniform vec4 uDrift; // translate X/Y in cells / second, pivot X/Y in UV
-uniform vec4 uWarpMode; // active, edge mode index, tick seconds, unused
+uniform vec4 uWarpMode; // global transform enabled, unused, tick seconds, unused
+uniform vec4 uFlow; // velocity enabled, strength, max displacement cells/tick, unused
 
 """ + _domain_glsl(1) + r"""
-// Manual bilinear over integer texels keeps torus edges exact and avoids
-// relying on 32-bit float texture filtering. Clear mode refills from outside.
+// Explicit bilinear sampling preserves signed float state and canvas semantics.
 vec4 readCell(ivec2 p, ivec2 size, vec4 center) {
-    if (!domainOpen(p, size, uWarpMode.y > 0.5)) return domainBoundary(center);
-    bool outside = any(lessThan(p, ivec2(0))) || any(greaterThanEqual(p, size));
-    if (uWarpMode.y > 0.5 && outside) return EMPTY_CELL;
-    p = (p % size + size) % size;
-    return texelFetch(sTD2DInputs[0], p, 0);
+    if (uBoundary.x > 1.5 && cellOutside(p, size)) return EMPTY_CELL;
+    if (!domainOpen(p, size)) return domainBoundary(center);
+    return boundaryState(p, size);
 }
 
 bool domainPath(ivec2 from, ivec2 to, ivec2 size) {
@@ -320,41 +333,57 @@ bool domainPath(ivec2 from, ivec2 to, ivec2 size) {
     if (count.x + count.y > 1024) return false;
     ivec2 at = from, moved = ivec2(0);
     for (int i = 0; i < 1024; ++i) {
-        if (!domainOpen(at, size, uWarpMode.y > 0.5)) return false;
+        if (uBoundary.x > 0.5 && cellOutside(at, size)) return true;
+        if (!domainOpen(at, size)) return false;
         if (at == to) return true;
         float tx = count.x == 0 ? 1e20 : (float(moved.x) + 0.5) / float(count.x);
         float ty = count.y == 0 ? 1e20 : (float(moved.y) + 0.5) / float(count.y);
         if (abs(tx - ty) < 1e-7) {
-            if (!domainOpen(at + ivec2(direction.x, 0), size, uWarpMode.y > 0.5)
-             || !domainOpen(at + ivec2(0, direction.y), size, uWarpMode.y > 0.5)) return false;
+            if (!domainOpen(at + ivec2(direction.x, 0), size)
+             || !domainOpen(at + ivec2(0, direction.y), size)) return false;
             at += direction;
             moved += ivec2(1);
         } else if (tx < ty) { at.x += direction.x; moved.x += 1; }
         else { at.y += direction.y; moved.y += 1; }
     }
-    return domainOpen(at, size, uWarpMode.y > 0.5) && at == to;
+    return domainOpen(at, size) && at == to;
 }
 
 void main() {
     ivec2 size = textureSize(sTD2DInputs[0], 0);
     ivec2 p = ivec2(gl_FragCoord.xy);
     vec4 center = texelFetch(sTD2DInputs[0], p, 0);
-    if (!domainOpen(p, size, uWarpMode.y > 0.5)) {
+    if (!domainOpen(p, size)) {
         fragColor = TDOutputSwizzle(EMPTY_CELL);
         return;
     }
-    if (uWarpMode.x < 0.5) {
+    vec2 displacement = vec2(0.0);
+    if (uFlow.x > 0.5) {
+        // Prepared RG contains signed cells/second; B/A are ignored.
+        vec2 velocity = texelFetch(sTD2DInputs[2], p, 0).rg;
+        displacement = velocity * uFlow.y * uWarpMode.z;
+        float distance = length(displacement);
+        if (distance > uFlow.z) displacement *= uFlow.z / distance;
+    }
+    bool globalMove = uWarpMode.x > 0.5 &&
+                      (any(notEqual(uWarp, vec4(0.0))) || any(notEqual(uDrift.xy, vec2(0.0))));
+    // A zero field takes precisely the ordinary path; avoid identity resampling.
+    if (!globalMove && all(equal(displacement, vec2(0.0)))) {
         fragColor = TDOutputSwizzle(center);
         return;
     }
-    // Forward move at the end of each fixed tick: scale, rotate about the pivot, then translate.
-    // Each output cell samples the inverse of that move from the previous state.
-    vec2 pivot = uDrift.zw * vec2(size);
-    vec2 q = gl_FragCoord.xy - pivot - uDrift.xy * uWarpMode.z;
-    float c = cos(uWarp.w * uWarpMode.z), s = sin(uWarp.w * uWarpMode.z);
-    q = vec2(c * q.x + s * q.y, -s * q.x + c * q.y);
-    vec2 scale = exp((uWarp.x + uWarp.yz) * 0.01 * uWarpMode.z);
-    vec2 source = pivot + q / max(scale, vec2(0.01)) - 0.5;
+    // Forward order: global scale/rotate/translate, then local flow. Evaluate
+    // velocity at destination centers and backtrace once at the fixed tick boundary.
+    vec2 source = gl_FragCoord.xy - displacement;
+    if (globalMove) {
+        vec2 pivot = uDrift.zw * vec2(size);
+        vec2 q = source - pivot - uDrift.xy * uWarpMode.z;
+        float c = cos(uWarp.w * uWarpMode.z), s = sin(uWarp.w * uWarpMode.z);
+        q = vec2(c * q.x + s * q.y, -s * q.x + c * q.y);
+        vec2 scale = exp((uWarp.x + uWarp.yz) * 0.01 * uWarpMode.z);
+        source = pivot + q / max(scale, vec2(0.01));
+    }
+    source -= 0.5;
     ivec2 base = ivec2(floor(source));
     vec2 f = source - vec2(base);
     if (uDomain.x > 0.5) {
@@ -373,6 +402,29 @@ void main() {
     vec4 bottom = mix(readCell(base, size, center), readCell(base + ivec2(1, 0), size, center), f.x);
     vec4 top = mix(readCell(base + ivec2(0, 1), size, center), readCell(base + ivec2(1, 1), size, center), f.x);
     fragColor = TDOutputSwizzle(mix(bottom, top, f.y));
+}
+"""
+
+
+VELOCITY_SHADER = r"""
+layout(location = 0) out vec4 fragColor;
+""" + BOUNDARY_GLSL + r"""
+vec2 velocityCell(ivec2 p, ivec2 size) {
+    vec2 v = texelFetch(sTD2DInputs[0], boundaryCoord(p, size), 0).rg;
+    // Invalid channels become zero. Finite extremes are bounded before strength
+    // and length calculations so no finite input can overflow the backtrace.
+    if (isnan(v.x) || isinf(v.x)) v.x = 0.0;
+    if (isnan(v.y) || isinf(v.y)) v.y = 0.0;
+    return clamp(v, vec2(-1e6), vec2(1e6));
+}
+void main() {
+    ivec2 size = textureSize(sTD2DInputs[0], 0);
+    vec2 q = vUV.st * vec2(size) - 0.5;
+    ivec2 p = ivec2(floor(q));
+    vec2 f = fract(q);
+    vec2 a = mix(velocityCell(p, size), velocityCell(p+ivec2(1,0), size), f.x);
+    vec2 b = mix(velocityCell(p+ivec2(0,1), size), velocityCell(p+ivec2(1,1), size), f.x);
+    fragColor = TDOutputSwizzle(vec4(mix(a,b,f.y), 0.0, 0.0));
 }
 """
 
@@ -401,7 +453,7 @@ layout(location = 0) out vec4 fragColor;
 void main() {
     ivec2 size = textureSize(sTD2DInputs[0], 0);
     ivec2 dest = textureSize(sTD2DInputs[1], 0);
-    if (!domainOpen(ivec2(gl_FragCoord.xy), dest, true)) {
+    if (!domainOpen(ivec2(gl_FragCoord.xy), dest)) {
         fragColor = TDOutputSwizzle(EMPTY_CELL);
         return;
     }
@@ -551,14 +603,12 @@ DISPLAY_SHADER = r"""
 layout(location = 0) out vec4 fragColor;
 uniform vec4 uDisplay; // color amount, contrast, invert, color mode index
 uniform vec4 uColor; // tint spread in pixels, palette anchoring, carried saturation, ramp width
-uniform vec4 uUpscale; // filter index (smooth, linear, nearest), edge mode index (wrap, clear), unused, unused
-""" + OKLAB_GLSL + _base_palette_glsl(0.75) + r"""
-// The state can be coarser than the output. Integer fetches with wrapping keep
-// the torus seamless and avoid relying on 32-bit float texture filtering.
-// Clear mode clamps instead, so edge pixels never blend in the opposite edge.
+uniform vec4 uUpscale; // filter index (smooth, linear, nearest), unused, unused, unused
+""" + BOUNDARY_GLSL + OKLAB_GLSL + _base_palette_glsl(0.75) + r"""
+// Display reconstruction holds edge texels for BOTH closed boundary modes.
+// It never adds empty padding or interpolates across opposite closed edges.
 vec4 stateCell(ivec2 p, ivec2 size) {
-    p = (uUpscale.y > 0.5) ? clamp(p, ivec2(0), size - 1) : (p % size + size) % size;
-    return texelFetch(sTD2DInputs[0], p, 0);
+    return texelFetch(sTD2DInputs[0], boundaryCoord(p, size), 0);
 }
 
 vec4 catmullRomWeights(float t) {
@@ -982,7 +1032,7 @@ SCHEMA = 'turing_media_v2.presets'
 VERSION = 1
 
 GROUPS = (
-    ('chemistry', ('Feed', 'Kill', 'Diffusiona', 'Diffusionb')),
+    ('chemistry', ('Feed', 'Kill', 'Diffusiona', 'Diffusionb', 'Transformedge')),
     ('seed', ('Seed', 'Seedradius', 'Ambient')),
     ('dimensions', ('Resolution', 'Rectangle', 'Canvaswidth', 'Canvasheight', 'Cellsize', 'Resizebehavior')),
     ('timing', ('Clockmode', 'Speed', 'Solverquality', 'Renderfps', 'Maxcatchup')),
@@ -993,14 +1043,15 @@ GROUPS = (
                    'Smoothing', 'Motiongain', 'Fade')),
     ('domain', ('Domainthreshold', 'Domaininvert', 'Domainboundary')),
     ('transform', ('Transform', 'Grow', 'Scalex', 'Scaley', 'Translatex', 'Translatey',
-                   'Rotate', 'Pivotx', 'Pivoty', 'Transformedge')),
+                   'Rotate', 'Pivotx', 'Pivoty')),
+    ('flow', ('Flow', 'Flowstrength', 'Flowmax')),
     ('display', ('Coloramount', 'Contrast', 'Invert', 'Overlay', 'Clipalpha', 'Viewmode',
                  'Upscale')),
     ('color', ('Colormode', 'Tintspread', 'Palettesmooth', 'Paletteanchor', 'Dyespread',
                'Dyesource', 'Dyeinject', 'Dyedecay', 'Dyesaturation')),
 )
 # Optional bindings: project-specific paths, stored separately so presets stay portable.
-BINDINGS = ('Moviefile', 'Sourcetop', 'Domaintop', 'Ramptop')
+BINDINGS = ('Moviefile', 'Sourcetop', 'Domaintop', 'Ramptop', 'Velocitytop')
 # Requested dimensions commit atomically through clock.ensure_size().
 DIMENSIONS = ('Resolution', 'Rectangle', 'Canvaswidth', 'Canvasheight', 'Cellsize')
 
@@ -1699,7 +1750,15 @@ def restore(c, snapshot):
     m = snapshot['metadata']
     lib = c.op('preset_lib').module
     kinds = lib.spec(c)
-    values = dict(m['settings'], **m['bindings'], Pause=m['pause'])
+    saved_settings, saved_bindings = dict(m['settings']), dict(m['bindings'])
+    # Schema-v1 Phase 5 snapshots predate flow. Only that complete legacy shape
+    # receives safe defaults; partially missing new snapshots remain errors.
+    flow_defaults = {'Flow': False, 'Flowstrength': 1.0, 'Flowmax': 8.0}
+    legacy = not (set(flow_defaults) & set(saved_settings)) and 'Velocitytop' not in saved_bindings
+    if legacy:
+        saved_settings.update(flow_defaults)
+        saved_bindings['Velocitytop'] = ''
+    values = dict(saved_settings, **saved_bindings, Pause=m['pause'])
     # Validate everything before touching parameters, buffers or media position.
     for name, value in values.items():
         if name != 'Pause':
@@ -1717,7 +1776,7 @@ def restore(c, snapshot):
             raise SnapshotError('cannot restore exported parameter ' + name)
     if list(lib.effective_size(values)) != m['dimensions']:
         raise SnapshotError('settings do not match snapshot dimensions')
-    if set(lib.parameter_names()) - set(m['settings']) or set(lib.BINDINGS) != set(m['bindings']):
+    if set(lib.parameter_names()) - set(saved_settings) or set(lib.BINDINGS) != set(saved_bindings):
         raise SnapshotError('incomplete snapshot settings/bindings')
     controls, clock_op = c.op('controls'), c.op('clock')
     controls_active, clock_active = bool(controls.par.active), bool(clock_op.par.active)
@@ -2246,6 +2305,8 @@ def tick(c, sample=None):
     c.store('Motionready', True)
 
     c.op('domain_mask').cook(force=True)
+    if c.par.Flow and c.par.Velocitytop.eval() is not None:
+        c.op('velocity_field').cook(force=True)
     c.op('influence_field').cook(force=True)
     c.op('state_read').cook(force=True)
     c.op('reaction_diffusion').cook(force=True)
@@ -2578,6 +2639,10 @@ def build_turing_media_v2(container=None):
     _number(page, 'Kill', 'Kill', 0.062, 0.0, 0.1)
     _number(page, 'Diffusiona', 'Diffusion A', 1.0, 0.0, 1.0)
     _number(page, 'Diffusionb', 'Diffusion B', 0.5, 0.0, 1.0)
+    # Retain the parameter name and 'clear' token for existing presets/snapshots.
+    _menu(page, 'Transformedge', 'Boundary', [
+        ('wrap', 'Wrap'), ('noflux', 'No Flux'), ('clear', 'Empty Exterior'),
+    ], 'wrap')
     _number(page, 'Seed', 'Seed', 1, 0, 1000000, True)
     _number(page, 'Seedradius', 'Seed Radius (cells)', 9.0, 3.0, 32.0)
     _toggle(page, 'Ambient', 'Ambient Seeds', True)
@@ -2723,10 +2788,15 @@ def build_turing_media_v2(container=None):
     _number(transform_page, 'Rotate', 'Rotate (degrees / second)', 6.0, -600.0, 600.0)
     _number(transform_page, 'Pivotx', 'Pivot X', 0.5, 0.0, 1.0)
     _number(transform_page, 'Pivoty', 'Pivot Y', 0.5, 0.0, 1.0)
-    _menu(transform_page, 'Transformedge', 'Edges', [
-        ('wrap', 'Wrap'), ('clear', 'Clear'),
-    ], 'wrap')
     transform_page.appendPulse('Transformzero', label='Zero Motion')
+
+    flow_page = component.appendCustomPage('Flow')
+    _toggle(flow_page, 'Flow', 'Enable Velocity', False)
+    velocity_top = flow_page.appendTOP('Velocitytop', label='Velocity TOP (RG cells / second)')[0]
+    velocity_top.default = ''
+    velocity_top.val = ''
+    _number(flow_page, 'Flowstrength', 'Velocity Strength', 1.0, 0.0, 100.0)
+    _number(flow_page, 'Flowmax', 'Max Displacement (cells / tick)', 8.0, 0.0, 64.0)
 
     color_page = component.appendCustomPage('Color')
     _menu(color_page, 'Colormode', 'Color Mode', [
@@ -2860,6 +2930,19 @@ def build_turing_media_v2(container=None):
     domain.nodeX, domain.nodeY = -700, -750
     domain.inputConnectors[0].connect(domain_mask)
     domain_uniform = ('uDomain', (HAS_DOMAIN, _menu_index('Domainboundary'), '0', '0'))
+    boundary_uniform = ('uBoundary', (_menu_index('Transformedge'), '0', '0', '0'))
+
+    velocity_top = _reader(component, 'velocity_top', 'blank', (-1250, -1750))
+    _expression(velocity_top, 'top', 'parent().par.Velocitytop.eval() if parent().par.Flow and {} else op("blank")'.format(HAS_VELOCITY))
+    velocity = _shader(component, 'velocity_prepare', 'velocity_pixel', VELOCITY_SHADER, (-950, -1750))
+    velocity.inputConnectors[0].connect(velocity_top)
+    _set(velocity, 'outputresolution', 'custom')
+    _expression(velocity, 'resolutionw', SIM_WIDTH)
+    _expression(velocity, 'resolutionh', SIM_HEIGHT)
+    _uniforms(velocity, [boundary_uniform])
+    velocity_field = component.create(nullTOP, 'velocity_field')
+    velocity_field.nodeX, velocity_field.nodeY = -700, -1750
+    velocity_field.inputConnectors[0].connect(velocity)
 
     # GLSL TOP has three inputs: pack influence R and domain G into one field.
     field = _shader(component, 'influence_prepare', 'influence_pixel', INFLUENCE_FIELD_SHADER, (-450, -750))
@@ -2892,7 +2975,7 @@ def build_turing_media_v2(container=None):
     _expression(seed, 'resolutionh', SIM_HEIGHT)
     _uniforms(seed, [('uSeed', ('parent().par.Seed', 'parent().par.Seedradius',
                                 '0', 'parent().par.Ambient')),
-                     ('uSeedSize', (SIM_WIDTH, SIM_HEIGHT, '0', '0')), domain_uniform])
+                     ('uSeedSize', (SIM_WIDTH, SIM_HEIGHT, '0', '0')), domain_uniform, boundary_uniform])
 
     # Explicit texture ping-pong; frame-based Feedback TOPs cannot advance here.
     for index, name in enumerate(('state_a', 'state_b')):
@@ -2913,7 +2996,7 @@ def build_turing_media_v2(container=None):
     _set(resize, 'outputresolution', 'custom')
     _expression(resize, 'resolutionw', SIM_WIDTH)
     _expression(resize, 'resolutionh', SIM_HEIGHT)
-    _uniforms(resize, [domain_uniform])
+    _uniforms(resize, [domain_uniform, boundary_uniform])
     reset_node = _shader(component, 'state_reset', 'reset_pixel', STATE_RESET_SHADER, (-800, -1100))
     reset_node.inputConnectors[0].connect(state_read)
     reset_node.inputConnectors[1].connect(seed)
@@ -2931,14 +3014,14 @@ def build_turing_media_v2(container=None):
         ('uRates', ('parent().par.Feed', 'parent().par.Kill',
                     'parent().par.Diffusiona', 'parent().par.Diffusionb')),
         ('uStep', ('1.0 / parent().par.Solverquality', '1.0 / (960.0 * parent().par.Solverquality)',
-                   _menu_index('Transformedge'), repr(TICK_SECONDS))),
+                   '0', repr(TICK_SECONDS))),
         ('uInfluence', ('parent().par.Strength', 'parent().par.Fade', '0', '0')),
         ('uDye', ('parent().par.Dyespread', 'parent().par.Dyeinject',
                   'parent().par.Dyedecay', _menu_index('Dyesource'))),
         ('uInfluenceMode', (_menu_index('Influencemode'), 'parent().par.Chemistryblend', '0', '0')),
         ('uChemistry', ('parent().par.Feedmin', 'parent().par.Feedmax',
                         'parent().par.Killmin', 'parent().par.Killmax')),
-        domain_uniform,
+        domain_uniform, boundary_uniform,
     ])
 
     # Applied once at the tick boundary, after every numerical substep.
@@ -2946,14 +3029,17 @@ def build_turing_media_v2(container=None):
                         TRANSFORM_SHADER, (150, 200))
     transform.inputConnectors[0].connect(simulation)
     transform.inputConnectors[1].connect(domain)
+    transform.inputConnectors[2].connect(velocity_field)
     _uniforms(transform, [
         ('uWarp', ('parent().par.Grow', 'parent().par.Scalex', 'parent().par.Scaley',
                    'parent().par.Rotate * 0.0174532925199433')),
         ('uDrift', ('parent().par.Translatex', 'parent().par.Translatey',
                     'parent().par.Pivotx', 'parent().par.Pivoty')),
+        ('uFlow', ('parent().par.Flow and {}'.format(HAS_VELOCITY),
+                   'parent().par.Flowstrength', 'parent().par.Flowmax', '0')),
         ('uWarpMode', ('parent().par.Transform',
-                       _menu_index('Transformedge'), repr(TICK_SECONDS), '0')),
-        domain_uniform,
+                       '0', repr(TICK_SECONDS), '0')),
+        domain_uniform, boundary_uniform,
     ])
 
     stamp_node = _shader(component, 'state_stamp', 'stamp_pixel', STAMP_SHADER, (150, -550))
@@ -2961,8 +3047,8 @@ def build_turing_media_v2(container=None):
     stamp_node.inputConnectors[1].connect(stamp_mask)
     stamp_node.inputConnectors[2].connect(domain)
     _uniforms(stamp_node, [
-        ('uStamp', ('parent().par.Stampamount', _menu_index('Transformedge'), '0', '0')),
-        domain_uniform,
+        ('uStamp', ('parent().par.Stampamount', '0', '0', '0')),
+        domain_uniform, boundary_uniform,
     ])
 
     state = component.create(nullTOP, 'state')
@@ -3029,7 +3115,8 @@ def build_turing_media_v2(container=None):
                       'parent().par.Invert', _menu_index('Colormode'))),
         ('uColor', ('parent().par.Tintspread * parent().par.Cellsize', 'parent().par.Paletteanchor',
                     'parent().par.Dyesaturation', str(PALETTE_WIDTH))),
-        ('uUpscale', (_menu_index('Upscale'), _menu_index('Transformedge'), '0', '0')),
+        ('uUpscale', (_menu_index('Upscale'), '0', '0', '0')),
+        boundary_uniform,
         ramp_uniform,
     ])
     _set(display, 'inputfiltertype', 'linear')
@@ -3111,7 +3198,7 @@ def build_turing_media_v2(container=None):
 # 9. Embedded help
 # =============================================================================
 
-NETWORK_HELP = '''TURING MEDIA V2 / PHASE 5 — SNAPSHOTS AND DELIBERATE RESETS
+NETWORK_HELP = '''TURING MEDIA V2 / PHASE 6 — EXPLICIT BOUNDARIES AND FLOW
 
 QUICK START
 Paste the entire builder into a Text DAT and Run Script. Play the timeline.
@@ -3236,15 +3323,16 @@ cells instead of smoothly sliding along the wall. Domain changes during Pause
 are pending until Step/resume/Stamp/Reset; they never silently evolve state.
 Domain confinement controls raw state, not output opacity. Display reconstruction
 can soften a boundary on coarse grids; Clip Patterns to Alpha remains display-only.
-Without a domain, canvas edges retain the Phase 2 contract. With a domain, Wrap
-repeats its mask across seams; Clear treats out-of-canvas cells as blocked, so
-Domain Boundary also governs that interface. Full boundary unification is Phase 6.
+Canvas Boundary is on the Turing page and applies independently of Domain Boundary.
+Wrap repeats the domain mask across seams; both closed modes hold its edge values.
+Canvas Empty Exterior always supplies empty state outside the canvas, even when
+Domain Boundary is No Flux. Walls inside the canvas retain their own policy.
 
 PRESETS PAGE
 Presets live in the 'presets' Text DAT as a versioned JSON table (schema
 turing_media_v2.presets, version 1), saved with the TOE/TOX. Each preset holds
 a name, description and COMPLETE settings grouped as chemistry, seed,
-dimensions, timing, media fitting, influence, domain, transform, display and
+dimensions, timing, media fitting, influence, domain, transform, flow, display and
 color (including Resize Behavior and Reset on Source Change). Pause, diagnostics,
 snapshot file/status and the Presets/Explorer controls are not preset data.
 Built-in presets (read-only) are rebuilt from defaults on every build:
@@ -3293,7 +3381,7 @@ movie position while clearing chemistry/color/age/histories, as in Phase 4.
 Save State (memory) saves one snapshot in component storage; Restore State reuses
 it without consuming it. Saves are independent of Pause. Snapshots include all
 six float32 ping-pong textures, active readers, dimensions, tick count and clock
-debt, all 72 preset settings, four media/TOP bindings, Pause, motion readiness,
+debt, all 75 preset settings, five media/TOP bindings, Pause, motion readiness,
 palette readiness, movie position/mode/index and schema version. Settings restore
 as constants; exported settings are refused before anything changes. Presets and
 explorer thumbnails are not part of the evolving simulation snapshot.
@@ -3382,10 +3470,48 @@ scale = exp((grow + axis_scale)*.01*tick_seconds). Positive values expand.
 Translate X/Y uses cells/second; Rotate uses degrees/second. Pivot X/Y is UV.
 Motion stays undistorted on rectangular grids. Default Grow ~6 and Rotate 6
 reproduce the old .1% and .1 degree/frame at 60 FPS. Try Grow 6..30, Rotate 6..60.
-Zero Motion clears rates without resetting. Bilinear transport slightly softens
-state each tick. Wrap connects opposite edges; inherited Clear transport fills
-exterior with A=1/B=0/colorless, while the diffusion stencil clamps edges.
-Full boundary unification belongs to Phase 6. Shrink+Clear needs seeds/influence.
+Zero Motion clears global rates without resetting. Bilinear transport smooths
+sub-cell features; exact zero motion bypasses resampling.
+
+TURING > BOUNDARY
+Wrap connects opposite edges for diffusion and state transport.
+No Flux holds the nearest edge cell for exterior samples: no chemical/color
+diffusion across the canvas boundary, and backtraces hold edge values.
+Empty Exterior supplies A=1/B=0/colorless for exterior stencil and transport taps.
+This acts as a sink; shrink/translation can refill the exposed area with empty state.
+All modes use explicit integer addressing and transport interpolates all raw channels.
+Display cubic/linear reconstruction wraps only in Wrap; BOTH closed modes hold
+edge values so coarse reconstruction cannot connect opposite edges or add a visual
+empty border. Resizing remains normalized bilinear with held edges, independently.
+The legacy parameter name Transformedge and token 'clear' remain portable. Old
+Clear presets now mean consistent Empty Exterior, including diffusion; choose
+No Flux to retain the old clamped diffusion behavior. Wrap is unchanged.
+
+FLOW PAGE
+Enable Velocity and assign Velocity TOP. Blank/disabled/Strength=0 means no flow.
+Red = signed X velocity, green = signed Y velocity in simulation cells/second;
+positive X goes right, positive Y goes up (bottom-left UV origin). Zero RG is still.
+Blue/alpha are ignored; use a floating-point TOP for negative values. No 0.5 bias,
+color conversion, premultiplication or media fitting is applied. Different TOP sizes
+fill normalized canvas UV, with explicit bilinear interpolation at cell centers.
+Wrap repeats the velocity input; closed modes hold its edges. Nonfinite channels
+become zero; finite channels clamp to +/-1,000,000 cells/second before interpolation.
+Strength multiplies velocity. Each fixed tick backtraces destination velocity *
+Strength * tick_seconds, clamping vector length to Max Displacement (default 8
+cells/tick, maximum 64; zero disables displacement). This limit slows oversized
+inputs instead of dropping ticks or skipping barriers. At Cell Size > 1 units
+still mean simulation cells, not output pixels. Solver Quality does not change flow.
+Forward order is global scale/rotate/translate, then flow. Velocity is sampled
+once per tick at destination centers; the inverse global transform follows local
+backtracing. This is first-order semi-Lagrangian transport, not a fluid solver.
+Bilinear transport smooths small features and is not mass conserving; repeated
+fractional motion can blur patterns. Domain supercover traversal tests every
+nonzero tap and rejects wall crossings, including wrap seams and diagonal corners.
+Pause freezes flow; Step moves one tick. Zero velocity reproduces the ordinary
+path exactly. Presets capture flow settings; Velocity TOP is an optional binding.
+Snapshots save settings/binding, not external field contents or its producer history.
+Replay requires the same velocity samples at each tick, as with live media. Phase 5
+snapshots restore with flow disabled; partially missing new flow metadata is refused.
 
 MIGRATION FROM V1 / PHASE 1
 Passes, Timestep and Running are replaced by Clock controls. At 60 FPS, old

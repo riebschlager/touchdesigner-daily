@@ -1,0 +1,32 @@
+{
+  "report.json": {
+    "passed": true,
+    "checks": 159,
+    "failed": []
+  },
+  "clock_regression/report.json": {
+    "passed": true,
+    "checks": 20,
+    "failed": []
+  },
+  "phase3_regression/report.json": {
+    "passed": true,
+    "checks": 75,
+    "failed": []
+  },
+  "presets_regression/report.json": {
+    "passed": true,
+    "checks": 44,
+    "failed": []
+  },
+  "snapshots_regression/report.json": {
+    "passed": true,
+    "checks": 104,
+    "failed": []
+  },
+  "frame_report.json": {
+    "passed": true,
+    "checks": 7,
+    "failed": []
+  }
+}
