@@ -1,4 +1,4 @@
-"""Build the V2 baseline media-driven reaction-diffusion network in TouchDesigner.
+"""Build the V2 fixed-clock media-driven reaction-diffusion network in TouchDesigner.
 
 USE
   1. Paste this entire file into a Text DAT in your project.
@@ -10,18 +10,18 @@ USE
   6. On Color, switch Color Mode to tint, extract or carry the clip's colors.
      Assign Color > Ramp TOP to replace the built-in teal/gold ramp with your own.
 
-Phase 1 preserves V1 simulation and display behavior. No external Python packages or shader files.
+Phase 2 adds a fixed simulation clock and explicit GPU state storage. No external Python packages or shader files.
 Re-running creates turing_media_v2, turing_media_v2_2, and so on; existing operators are retained.
 Outputs: out1 = final image, patterns = colored simulation, mask_preview =
 influence mask, source_preview = fitted RGBA source, palette = clip color
 ramp, state = raw A/B concentrations plus carried color.
 Clear Source TOP and Movie File to remove the media influence. No external dependencies.
 
-Default: 512 square, 32-bit float state, 16 simulation steps per frame.
+Default: 512 square, RGBA32F state, 60 ticks/second, 16 solver updates/tick.
 Turn on Turing > Rectangular Canvas for an independent Width and Height.
 Turing > Cell Size runs the simulation on a coarser grid (canvas / Cell Size)
 and upscales it for display: larger cells give thicker lines at any canvas size.
-Simulation speed therefore depends on frame rate. Passes costs GPU time.
+Clock > Speed controls elapsed simulation time; Solver Quality controls accuracy.
 Save the .toe or save this component as a .tox to keep the generated network.
 
 References:
@@ -29,12 +29,9 @@ References:
   https://derivative.ca/UserGuide/GLSL_TOP
   https://derivative.ca/UserGuide/Feedback_TOP
 
-Validation: TouchDesigner 2025.33230 on macOS; 12 live baseline cases,
-288 pixel-exact output comparisons against V1, matching network/parameters,
-and passing shader, pause, reset, and finite-concentration checks. Other builds
-have not been live-validated. See validation/phase1 for the harness and results.
-This builder remains standalone; validation files are not required to run it.
-Later V2 phases are not implemented.
+Phase 1 baseline results are in validation/phase1. Phase 2 clock validation and
+reproduction instructions are in validation/phase2. The builder is standalone;
+validation files and TDAPI are not required. Later phases are not implemented.
 """
 
 
@@ -42,7 +39,14 @@ Later V2 phases are not implemented.
 # 1. Configuration
 # =============================================================================
 
+import math
+
 COMPONENT_BASENAME = 'turing_media_v2'
+TICK_SECONDS = 1.0 / 60.0
+
+def _rate(blend, frequency=60.0):
+    return -math.log1p(-blend) * frequency
+
 
 # The clip palette is built from a square grid of averaged cells, sorted into a ramp.
 PALETTE_CELLS = 8
@@ -162,9 +166,9 @@ void main() {
 SIMULATION_SHADER = r"""
 layout(location = 0) out vec4 fragColor;
 uniform vec4 uRates; // feed, kill, diffusion A, diffusion B
-uniform vec4 uStep;  // timestep, running, edge mode index (wrap, clear), unused
-uniform vec4 uInfluence; // strength per frame, fade per frame, unused, unused
-uniform vec4 uDye; // colour spread per pass, injection per frame, decay per frame, unused
+uniform vec4 uStep;  // chemistry dt, substep seconds, edge mode (wrap, clear), tick seconds
+uniform vec4 uInfluence; // injection and recovery rates / simulation second
+uniform vec4 uDye; // spread, injection, decay rates / simulation second, unused
 """ + OKLAB_GLSL + r"""
 const ivec2 OFFSETS[8] = ivec2[8](ivec2(-1, 0), ivec2(1, 0), ivec2(0, -1), ivec2(0, 1),
                                   ivec2(-1, -1), ivec2(1, -1), ivec2(-1, 1), ivec2(1, 1));
@@ -189,10 +193,6 @@ void main() {
     ivec2 p = ivec2(gl_FragCoord.xy);
     vec4 cell = readCell(p);
     vec2 ab = cell.rg;
-    if (uStep.y < 0.5) {
-        fragColor = TDOutputSwizzle(cell);
-        return;
-    }
 
     vec2 lap = -ab;
     vec3 dye = dyeSample(cell, 1.0);
@@ -201,7 +201,7 @@ void main() {
         lap += WEIGHTS[i] * neighbor.rg;
         dye += dyeSample(neighbor, WEIGHTS[i]);
     }
-    vec2 chroma = mix(cell.ba, dye.xy / dye.z, uDye.x);
+    vec2 chroma = mix(cell.ba, dye.xy / dye.z, 1.0 - exp(-uDye.x * uStep.y));
 
     float reaction = ab.x * ab.y * ab.y;
     vec2 change;
@@ -210,14 +210,14 @@ void main() {
     vec2 nextState = clamp(ab + uStep.x * change, 0.0, 1.0);
     if (uTDPass == 0) {
         // Recovery/fade is explicit, rather than multiplying the state by black.
-        nextState = mix(nextState, vec2(1.0, 0.0), uInfluence.y);
+        nextState = mix(nextState, vec2(1.0, 0.0), 1.0 - exp(-uInfluence.y * uStep.w));
         float maskValue = clamp(texture(sTD2DInputs[1], vUV.st).r, 0.0, 1.0);
-        nextState = mix(nextState, vec2(0.5, 0.25), uInfluence.x * maskValue);
+        nextState = mix(nextState, vec2(0.5, 0.25), 1.0 - exp(-uInfluence.x * maskValue * uStep.w));
         // Visible source pixels stain the carried colour toward their own chroma.
         vec4 source = texture(sTD2DInputs[2], vUV.st); // prepared straight RGBA
         vec2 sourceChroma = linearToOklab(toLinear(source.rgb)).yz;
-        chroma = mix(chroma, sourceChroma, uDye.y * clamp(source.a, 0.0, 1.0));
-        chroma *= 1.0 - uDye.z;
+        chroma = mix(chroma, sourceChroma, 1.0 - exp(-uDye.y * clamp(source.a, 0.0, 1.0) * uStep.w));
+        chroma *= exp(-uDye.z * uStep.w);
     }
     fragColor = TDOutputSwizzle(vec4(nextState, chroma));
 }
@@ -226,9 +226,9 @@ void main() {
 
 TRANSFORM_SHADER = r"""
 layout(location = 0) out vec4 fragColor;
-uniform vec4 uWarp; // grow %, scale X %, scale Y %, rotation radians (all per frame)
-uniform vec4 uDrift; // translate X/Y in cells per frame, pivot X/Y in UV
-uniform vec4 uWarpMode; // active, edge mode index, unused, unused
+uniform vec4 uWarp; // grow, scale X/Y (% / second), rotation radians / second
+uniform vec4 uDrift; // translate X/Y in cells / second, pivot X/Y in UV
+uniform vec4 uWarpMode; // active, edge mode index, tick seconds, unused
 
 const vec4 EMPTY_CELL = vec4(1.0, 0.0, 0.0, 0.0); // A=1, B=0, colourless
 
@@ -247,13 +247,13 @@ void main() {
         fragColor = TDOutputSwizzle(texelFetch(sTD2DInputs[0], ivec2(gl_FragCoord.xy), 0));
         return;
     }
-    // Forward move per frame: scale, rotate about the pivot, then translate.
+    // Forward move at the end of each fixed tick: scale, rotate about the pivot, then translate.
     // Each output cell samples the inverse of that move from the previous state.
     vec2 pivot = uDrift.zw * vec2(size);
-    vec2 q = gl_FragCoord.xy - pivot - uDrift.xy;
-    float c = cos(uWarp.w), s = sin(uWarp.w);
+    vec2 q = gl_FragCoord.xy - pivot - uDrift.xy * uWarpMode.z;
+    float c = cos(uWarp.w * uWarpMode.z), s = sin(uWarp.w * uWarpMode.z);
     q = vec2(c * q.x + s * q.y, -s * q.x + c * q.y);
-    vec2 scale = (1.0 + uWarp.x * 0.01) * (1.0 + uWarp.yz * 0.01);
+    vec2 scale = exp((uWarp.x + uWarp.yz) * 0.01 * uWarpMode.z);
     vec2 source = pivot + q / max(scale, vec2(0.01)) - 0.5;
     ivec2 base = ivec2(floor(source));
     vec2 f = source - vec2(base);
@@ -582,26 +582,28 @@ void main() {
 # 6. Presets
 # =============================================================================
 
-# Legacy pulse clauses, embedded unchanged in CONTROL_CALLBACKS below.
+# Legacy preset pulses adapted to the new timing units.
 # A versioned preset table is deferred to phase 4.
 PRESET_PULSE_HANDLERS = '''    elif par.name == 'Coral':
         component.par.Feed = 0.0545
         component.par.Kill = 0.062
         component.par.Diffusiona = 1.0
         component.par.Diffusionb = 0.5
-        component.par.Timestep = 1.0
+        component.par.Speed = 1.0
+        component.par.Solverquality = 1
         component.par.Seedradius = 9.0
     elif par.name == 'Spots':
         component.par.Feed = 0.0367
         component.par.Kill = 0.0649
         component.par.Diffusiona = 1.0
         component.par.Diffusionb = 0.5
-        component.par.Timestep = 1.0
+        component.par.Speed = 1.0
+        component.par.Solverquality = 1
         component.par.Seedradius = 5.0
     elif par.name == 'Clipseed':
         component.par.Ambient = False
         component.par.Maskmode = 'alpha'
-        component.par.Strength = 1.0
+        component.par.Strength = 600.0
         component.par.Fade = 0.0
 '''
 
@@ -612,12 +614,14 @@ PRESET_PULSE_HANDLERS = '''    elif par.name == 'Coral':
 
 CONTROL_CALLBACKS = '''
 def resetSimulation(component):
-    component.store('Resetframe', absTime.frame)
-    component.op('feedback').par.resetpulse.pulse()
+    component.op('clock').module.reset(component)
     return
 
 def onPulse(par):
     component = par.owner
+    if par.name == 'Step':
+        component.op('clock').module.step(component)
+        return
     if par.name == 'Reseed':
         component.par.Seed = component.par.Seed.eval() + 1
 ''' + PRESET_PULSE_HANDLERS + '''    elif par.name == 'Restartclip':
@@ -630,9 +634,192 @@ def onPulse(par):
     return
 
 def onValueChange(par, prev):
+    if par.name in ('Pause', 'Clockmode', 'Speed'):
+        par.owner.op('clock').module.rebase(par.owner, clear_debt=par.name == 'Clockmode')
+        return
     if par.name in ('Resolution', 'Rectangle', 'Canvaswidth', 'Canvasheight', 'Cellsize',
                     'Seed', 'Seedradius', 'Ambient', 'Moviefile', 'Sourcetop'):
         resetSimulation(par.owner)
+    return
+'''
+
+
+CLOCK_CALLBACKS = r'''
+import math
+import time
+
+TICK_SECONDS = 1.0 / 60.0
+UPDATES_PER_TICK = 16
+
+
+def plan_ticks(remainder, elapsed, speed, realtime, limit):
+    """Keep fractional ticks and real-time debt; deterministic work is never dropped."""
+    debt = max(0.0, remainder) + max(0.0, elapsed) * max(0.0, speed)
+    ticks = int(math.floor(debt / TICK_SECONDS + 1e-9))
+    if realtime:
+        ticks = min(ticks, max(1, int(limit)))
+    return ticks, max(0.0, debt - ticks * TICK_SECONDS)
+
+
+def capture(target, source):
+    """Explicit GPU copy, verified to replace repeatedly within one TD frame."""
+    source.cook(force=True)
+    target.inputConnectors[0].connect(source)
+    target.par.replace = True
+    try:
+        target.cook(force=True)
+    finally:
+        target.par.replace = False
+
+
+def _clock(c):
+    state = c.fetch('Clockstate', None)
+    if state is None:
+        state = dict(ticks=0, debt=0.0, buffer=0, media=0, ready=False,
+                     last=time.perf_counter(), mode=c.par.Clockmode.eval(), frame=None)
+        c.store('Clockstate', state)
+    return state
+
+
+def rebase(c, clear_debt=False):
+    state = _clock(c)
+    state['last'] = time.perf_counter()
+    if clear_debt:
+        state['debt'] = 0.0
+    state['mode'] = c.par.Clockmode.eval()
+    _status(c, 0)
+
+
+def _status(c, count):
+    state = _clock(c)
+    c.par.Simtime = state['ticks'] * TICK_SECONDS
+    c.par.Simlag = state['debt']
+    c.par.Tickcount = count
+    c.par.Substeps = UPDATES_PER_TICK * int(c.par.Solverquality)
+
+
+def reset(c):
+    state = _clock(c)
+    # Break old capture inputs before resizing/reinitializing the buffers.
+    for name in ('state_a', 'state_b'):
+        c.op(name).inputConnectors[0].connect(c.op('seed'))
+        c.op(name).par.resetpulse.pulse()
+        capture(c.op(name), c.op('seed'))
+    c.op('state_read').par.top = 'state_a'
+    for name in ('media_a', 'media_b'):
+        c.op(name).par.resetpulse.pulse()
+        capture(c.op(name), c.op('media_prepared'))
+    c.op('media_cache').par.top = 'media_a'
+    c.op('media_previous').par.top = 'media_b'
+    c.store('Paletteready', False)
+    for name in ('palette_a', 'palette_b'):
+        c.op(name).inputConnectors[0].connect(c.op('palette_init'))
+        c.op(name).par.resetpulse.pulse()
+        capture(c.op(name), c.op('palette_init'))
+    c.op('palette_read').par.top = 'palette_a'
+    c.op('palette_sort').cook(force=True)
+    for name in ('palette_a', 'palette_b'):
+        capture(c.op(name), c.op('palette_sort'))
+    c.op('palette_read').par.top = 'palette_a'
+    c.store('Paletteready', True)
+    state.update(ticks=0, debt=0.0, buffer=0, media=0, ready=True,
+                 last=time.perf_counter(), mode=c.par.Clockmode.eval(), frame=None)
+    for name in ('state_read', 'palette_read', 'media_cache', 'media_previous',
+                 'media_mask', 'mask_preview', 'state', 'palette'):
+        c.op(name).cook(force=True)
+    _status(c, 0)
+
+
+def tick(c, sample=None):
+    state = _clock(c)
+    if not state['ready']:
+        reset(c)
+    # A controlled source can provide one sample per tick for offline replay.
+    if sample is not None:
+        sample(c, state['ticks'], state['ticks'] * TICK_SECONDS)
+    media = 1 - state['media']
+    capture(c.op(('media_a', 'media_b')[media]), c.op('media_prepared'))
+    c.op('media_cache').par.top = ('media_a', 'media_b')[media]
+    c.op('media_previous').par.top = ('media_a', 'media_b')[state['media']]
+    c.op('media_cache').cook(force=True)
+    c.op('media_previous').cook(force=True)
+    c.op('media_mask').cook(force=True)
+    c.op('mask_preview').cook(force=True)
+    state['media'] = media
+
+    c.op('state_read').cook(force=True)
+    c.op('reaction_diffusion').cook(force=True)
+    dest = 1 - state['buffer']
+    capture(c.op(('state_a', 'state_b')[dest]), c.op('state_transform'))
+
+    c.op('palette_read').cook(force=True)
+    c.op('palette_cells').cook(force=True)
+    capture(c.op(('palette_a', 'palette_b')[dest]), c.op('palette_sort'))
+    c.op('state_read').par.top = ('state_a', 'state_b')[dest]
+    c.op('palette_read').par.top = ('palette_a', 'palette_b')[dest]
+    state['buffer'] = dest
+    state['ticks'] += 1
+
+
+def advance(c, elapsed=None, sample=None):
+    """One output frame; explicit elapsed seconds supports reproducible validation."""
+    state = _clock(c)
+    if not state['ready']:
+        reset(c)
+    now = time.perf_counter()
+    measured = max(0.0, now - state['last'])
+    state['last'] = now
+    if state['mode'] != c.par.Clockmode.eval():
+        rebase(c, clear_debt=True)
+        measured = 0.0
+    if c.par.Pause or float(c.par.Speed) <= 0.0:
+        _status(c, 0)
+        return 0
+    realtime = c.par.Clockmode.eval() == 'realtime'
+    if elapsed is None:
+        elapsed = measured if realtime else 1.0 / float(c.par.Renderfps)
+    count, debt = plan_ticks(state['debt'], elapsed, float(c.par.Speed),
+                             realtime, int(c.par.Maxcatchup))
+    # Commit debt per completed tick so a failed GPU cook does not lose time.
+    state['debt'] = debt + count * TICK_SECONDS
+    for _ in range(count):
+        tick(c, sample)
+        state['debt'] = max(0.0, state['debt'] - TICK_SECONDS)
+    _status(c, count)
+    return count
+
+
+def step(c):
+    if c.par.Pause:
+        tick(c)
+        rebase(c)
+        _status(c, 1)
+
+
+def onFrameStart(frame):
+    c = me.parent()
+    state = _clock(c)
+    # An output frame may be demanded by several viewers/consumers.
+    if state['frame'] != absTime.frame:
+        advance(c)
+        state['frame'] = absTime.frame
+    return
+
+
+def onPlayStateChange(state):
+    rebase(me.parent())
+    return
+
+
+def onStart():
+    reset(me.parent())
+    return
+
+
+def onCreate():
+    # Loading a TOX does not restore GPU cache textures. Reset on its first frame.
+    c = me.parent()
+    c.unstore('Clockstate')
     return
 '''
 
@@ -704,6 +891,27 @@ def _shader(component, name, dat_name, code, position):
     return node
 
 
+def _buffer(component, name, initial, position):
+    node = component.create(cacheTOP, name)
+    node.nodeX, node.nodeY = position
+    node.inputConnectors[0].connect(initial)
+    for key, value in (('cachesize', 1), ('active', False), ('cacheonce', False),
+                       ('alwayscook', False), ('replace', False), ('replaceindex', 0),
+                       ('outputindex', 0), ('format', 'rgba32float'), ('resmult', False),
+                       ('inputfiltertype', 'nearest')):
+        _set(node, key, value)
+    return node
+
+
+def _reader(component, name, source, position):
+    node = component.create(selectTOP, name)
+    node.nodeX, node.nodeY = position
+    _set(node, 'top', source)
+    _set(node, 'inputfiltertype', 'nearest')
+    _set(node, 'format', 'rgba32float')
+    return node
+
+
 def _toggle(page, name, label, default):
     parameter = page.appendToggle(name, label=label)[0]
     parameter.default = default
@@ -749,17 +957,30 @@ def build_turing_media_v2(container=None):
     _number(page, 'Kill', 'Kill', 0.062, 0.0, 0.1)
     _number(page, 'Diffusiona', 'Diffusion A', 1.0, 0.0, 1.0)
     _number(page, 'Diffusionb', 'Diffusion B', 0.5, 0.0, 1.0)
-    _number(page, 'Timestep', 'Timestep', 1.0, 0.0, 1.0)
-    _number(page, 'Passes', 'Passes / frame', 16, 1, 128, True)
-    running = page.appendToggle('Running', label='Running')[0]
-    running.default = True
-    running.val = True
     _number(page, 'Seed', 'Seed', 1, 0, 1000000, True)
     _number(page, 'Seedradius', 'Seed Radius (cells)', 9.0, 3.0, 32.0)
     _toggle(page, 'Ambient', 'Ambient Seeds', True)
     for name, label in (('Reset', 'Reset'), ('Reseed', 'Reseed'),
                         ('Coral', 'Coral Preset'), ('Spots', 'Dividing Spots Preset')):
         page.appendPulse(name, label=label)
+    clock_page = component.appendCustomPage('Clock')
+    _menu(clock_page, 'Clockmode', 'Clock Mode', [
+        ('realtime', 'Real Time'), ('framestepped', 'Frame Stepped')], 'realtime')
+    _number(clock_page, 'Speed', 'Speed', 1.0, 0.0, 8.0)
+    _number(clock_page, 'Solverquality', 'Solver Quality', 1, 1, 4, True)
+    fps = _number(clock_page, 'Renderfps', 'Render FPS', 60.0, 1.0, 240.0)
+    fps.enableExpr = "me.par.Clockmode == 'framestepped'"
+    _toggle(clock_page, 'Pause', 'Pause', False)
+    clock_page.appendPulse('Step', label='Step (one tick)')
+    limit = _number(clock_page, 'Maxcatchup', 'Max Catch-up Ticks / Frame', 4, 1, 32, True)
+    limit.enableExpr = "me.par.Clockmode == 'realtime'"
+    for name, label, integer in (('Simtime', 'Simulation Time (seconds)', False),
+                                  ('Simlag', 'Simulation Lag (seconds)', False),
+                                  ('Tickcount', 'Ticks Last Frame', True),
+                                  ('Substeps', 'Substeps / Tick', True)):
+        parameter = _number(clock_page, name, label, 0, 0, 1000000000, integer)
+        parameter.readOnly = True
+
     media_page = component.appendCustomPage('Media')
     movie_file = media_page.appendFile('Moviefile', label='Movie File (blank = none)')[0]
     movie_file.default = ''
@@ -784,12 +1005,12 @@ def build_turing_media_v2(container=None):
         ('alpha', 'Silhouette'), ('bright', 'Bright Texture'), ('dark', 'Dark Texture'),
         ('edgealpha', 'Silhouette Edges'), ('edgetexture', 'Texture Edges'), ('motion', 'Motion'),
     ], 'edgealpha')
-    _number(influence_page, 'Strength', 'Strength', 0.08, 0.0, 1.0)
+    _number(influence_page, 'Strength', 'Injection Rate (1 / second)', _rate(0.08), 0.0, 600.0)
     _number(influence_page, 'Maskgain', 'Mask Gain', 1.0, 0.0, 8.0)
     _number(influence_page, 'Edgewidth', 'Edge Width (cells)', 3.0, 1.0, 12.0)
     _number(influence_page, 'Smoothing', 'Mask Smoothing (cells)', 1.0, 0.0, 8.0)
     _number(influence_page, 'Motiongain', 'Motion Gain', 4.0, 0.1, 20.0)
-    _number(influence_page, 'Fade', 'Fade / frame', 0.0, 0.0, 0.1)
+    _number(influence_page, 'Fade', 'Recovery Rate (1 / second)', 0.0, 0.0, 60.0)
     influence_page.appendPulse('Clipseed', label='Seed From Clip Only')
 
     page = component.appendCustomPage('Display')
@@ -811,12 +1032,12 @@ def build_turing_media_v2(container=None):
 
     transform_page = component.appendCustomPage('Transform')
     _toggle(transform_page, 'Transform', 'Enable Transform', False)
-    _number(transform_page, 'Grow', 'Grow / Shrink (% / frame)', 0.1, -5.0, 5.0)
-    _number(transform_page, 'Scalex', 'Scale X (% / frame)', 0.0, -5.0, 5.0)
-    _number(transform_page, 'Scaley', 'Scale Y (% / frame)', 0.0, -5.0, 5.0)
-    _number(transform_page, 'Translatex', 'Translate X (cells / frame)', 0.0, -8.0, 8.0)
-    _number(transform_page, 'Translatey', 'Translate Y (cells / frame)', 0.0, -8.0, 8.0)
-    _number(transform_page, 'Rotate', 'Rotate (degrees / frame)', 0.1, -10.0, 10.0)
+    _number(transform_page, 'Grow', 'Grow / Shrink (% / second)', 6000.0 * math.log1p(0.001), -300.0, 300.0)
+    _number(transform_page, 'Scalex', 'Scale X (% / second)', 0.0, -300.0, 300.0)
+    _number(transform_page, 'Scaley', 'Scale Y (% / second)', 0.0, -300.0, 300.0)
+    _number(transform_page, 'Translatex', 'Translate X (cells / second)', 0.0, -480.0, 480.0)
+    _number(transform_page, 'Translatey', 'Translate Y (cells / second)', 0.0, -480.0, 480.0)
+    _number(transform_page, 'Rotate', 'Rotate (degrees / second)', 6.0, -600.0, 600.0)
     _number(transform_page, 'Pivotx', 'Pivot X', 0.5, 0.0, 1.0)
     _number(transform_page, 'Pivoty', 'Pivot Y', 0.5, 0.0, 1.0)
     _menu(transform_page, 'Transformedge', 'Edges', [
@@ -833,14 +1054,13 @@ def build_turing_media_v2(container=None):
     ramp_top.default = ''
     ramp_top.val = ''
     _number(color_page, 'Tintspread', 'Tint Spread (cells)', 6.0, 0.0, 24.0)
-    _number(color_page, 'Palettesmooth', 'Palette Smoothing', 0.9, 0.0, 0.99)
+    _number(color_page, 'Palettesmooth', 'Palette Smoothing (seconds)', -1.0 / (60.0 * math.log(0.9)), 0.0, 10.0)
     _number(color_page, 'Paletteanchor', 'Palette Anchoring', 0.5, 0.0, 1.0)
-    _number(color_page, 'Dyespread', 'Color Spread / pass', 0.5, 0.0, 1.0)
-    _number(color_page, 'Dyeinject', 'Color Injection / frame', 0.05, 0.0, 1.0)
-    _number(color_page, 'Dyedecay', 'Color Decay / frame', 0.0, 0.0, 0.05)
+    _number(color_page, 'Dyespread', 'Color Spread Rate (1 / second)', _rate(0.5, 960.0), 0.0, 4000.0)
+    _number(color_page, 'Dyeinject', 'Color Injection Rate (1 / second)', _rate(0.05), 0.0, 600.0)
+    _number(color_page, 'Dyedecay', 'Color Decay Rate (1 / second)', 0.0, 0.0, 60.0)
     _number(color_page, 'Dyesaturation', 'Color Saturation', 1.5, 0.0, 4.0)
 
-    component.store('Resetframe', absTime.frame)
     # A transparent canvas-sized source: no media means no influence at all.
     blank = component.create(constantTOP, 'blank')
     blank.nodeX, blank.nodeY = -1250, 400
@@ -899,17 +1119,11 @@ def build_turing_media_v2(container=None):
                     CANVAS_ASPECT)),
     ])
 
-    cache = component.create(cacheTOP, 'media_cache')
-    cache.nodeX, cache.nodeY = -400, 650
-    cache.inputConnectors[0].connect(prepared)
-    _set(cache, 'cachesize', 2)
-    _set(cache, 'active', True)
-    _set(cache, 'step', 1)
-    _set(cache, 'format', 'rgba32float')
-    previous = component.create(cacheselectTOP, 'media_previous')
-    previous.nodeX, previous.nodeY = -150, 900
-    _set(previous, 'cachetop', cache.name)
-    _set(previous, 'index', -1)
+    # Manual sample history advances with ticks, including while single-stepping.
+    for index, name in enumerate(('media_a', 'media_b')):
+        _buffer(component, name, prepared, (-650, 1150 + index * 150))
+    cache = _reader(component, 'media_cache', 'media_a', (-400, 650))
+    previous = _reader(component, 'media_previous', 'media_b', (-150, 900))
 
     mask = _shader(component, 'media_mask', 'mask_pixel', MASK_SHADER, (100, 650))
     mask.inputConnectors[0].connect(cache)
@@ -922,7 +1136,7 @@ def build_turing_media_v2(container=None):
                    'parent().par.Edgewidth * parent().par.Cellsize',
                    'parent().par.Smoothing * parent().par.Cellsize')),
         ('uMotion', ('parent().par.Motiongain',
-                     '1 if absTime.frame - parent().fetch("Resetframe", -9999) > 2 else 0', '0', '0')),
+                     '1', '0', '0')),
     ])
     mask_preview = component.create(nullTOP, 'mask_preview')
     mask_preview.nodeX, mask_preview.nodeY = 350, 650
@@ -940,28 +1154,28 @@ def build_turing_media_v2(container=None):
                                 '0', 'parent().par.Ambient')),
                      ('uSeedSize', (SIM_WIDTH, SIM_HEIGHT, '0', '0'))])
 
-    feedback = component.create(feedbackTOP, 'feedback')
-    feedback.nodeX, feedback.nodeY = -350, 200
-    feedback.inputConnectors[0].connect(seed)
-    _set(feedback, 'format', 'rgba32float')
-    _set(feedback, 'reset', False)
+    # Explicit texture ping-pong; frame-based Feedback TOPs cannot advance here.
+    for index, name in enumerate(('state_a', 'state_b')):
+        _buffer(component, name, seed, (-850, -250 - index * 150))
+    state_read = _reader(component, 'state_read', 'state_a', (-350, 200))
 
     simulation = _shader(component, 'reaction_diffusion', 'simulation_pixel',
                          SIMULATION_SHADER, (-100, 200))
-    simulation.inputConnectors[0].connect(feedback)
+    simulation.inputConnectors[0].connect(state_read)
     simulation.inputConnectors[1].connect(mask_preview)
-    simulation.inputConnectors[2].connect(prepared)
-    _expression(simulation, 'npasses', 'parent().par.Passes')
+    simulation.inputConnectors[2].connect(cache)
+    _expression(simulation, 'npasses', '16 * parent().par.Solverquality')
     _uniforms(simulation, [
         ('uRates', ('parent().par.Feed', 'parent().par.Kill',
                     'parent().par.Diffusiona', 'parent().par.Diffusionb')),
-        ('uStep', ('parent().par.Timestep', 'parent().par.Running', _menu_index('Transformedge'), '0')),
+        ('uStep', ('1.0 / parent().par.Solverquality', '1.0 / (960.0 * parent().par.Solverquality)',
+                   _menu_index('Transformedge'), repr(TICK_SECONDS))),
         ('uInfluence', ('parent().par.Strength', 'parent().par.Fade', '0', '0')),
         ('uDye', ('parent().par.Dyespread', 'parent().par.Dyeinject',
                   'parent().par.Dyedecay', '0')),
     ])
 
-    # Applied once per frame after all passes, so the move compounds through feedback.
+    # Applied once at the tick boundary, after every numerical substep.
     transform = _shader(component, 'state_transform', 'transform_pixel',
                         TRANSFORM_SHADER, (150, 200))
     transform.inputConnectors[0].connect(simulation)
@@ -970,23 +1184,23 @@ def build_turing_media_v2(container=None):
                    'parent().par.Rotate * 0.0174532925199433')),
         ('uDrift', ('parent().par.Translatex', 'parent().par.Translatey',
                     'parent().par.Pivotx', 'parent().par.Pivoty')),
-        ('uWarpMode', ('1 if parent().par.Transform and parent().par.Running else 0',
-                       _menu_index('Transformedge'), '0', '0')),
+        ('uWarpMode', ('parent().par.Transform',
+                       _menu_index('Transformedge'), repr(TICK_SECONDS), '0')),
     ])
 
     state = component.create(nullTOP, 'state')
     state.nodeX, state.nodeY = 150, 420
-    state.inputConnectors[0].connect(transform)
+    state.inputConnectors[0].connect(state_read)
     _set(state, 'format', 'rgba32float')
-    _set(feedback, 'top', state.name)
 
-    # Clip palette: averaged cells -> luminance-sorted ramp, eased through feedback.
-    palette_uniforms = [('uPalette', (str(PALETTE_CELLS), 'parent().par.Palettesmooth',
-                                      '1 if absTime.frame - parent().fetch("Resetframe", -9999) > 2 else 0',
+    # Clip palette history uses the same explicit tick commits as chemical state.
+    palette_uniforms = [('uPalette', (str(PALETTE_CELLS),
+                                      'math.exp(-1.0 / (60.0 * parent().par.Palettesmooth)) if parent().par.Palettesmooth > 0 else 0',
+                                      'parent().fetch("Paletteready", False)',
                                       str(PALETTE_WIDTH)))]
     palette_cells = _shader(component, 'palette_cells', 'palette_cells_pixel',
                             PALETTE_CELLS_SHADER, (-150, 1350))
-    palette_cells.inputConnectors[0].connect(prepared)
+    palette_cells.inputConnectors[0].connect(cache)
     _set(palette_cells, 'outputresolution', 'custom')
     _set(palette_cells, 'resolutionw', PALETTE_CELLS)
     _set(palette_cells, 'resolutionh', PALETTE_CELLS)
@@ -1000,11 +1214,9 @@ def build_turing_media_v2(container=None):
     _set(palette_init, 'resolutionw', PALETTE_WIDTH)
     _set(palette_init, 'resolutionh', 2)
     _set(palette_init, 'format', 'rgba32float')
-    palette_feedback = component.create(feedbackTOP, 'palette_feedback')
-    palette_feedback.nodeX, palette_feedback.nodeY = 350, 1550
-    palette_feedback.inputConnectors[0].connect(palette_init)
-    _set(palette_feedback, 'format', 'rgba32float')
-    _set(palette_feedback, 'reset', False)
+    for index, name in enumerate(('palette_a', 'palette_b')):
+        _buffer(component, name, palette_init, (350 + index * 220, 1750))
+    palette_read = _reader(component, 'palette_read', 'palette_a', (350, 1550))
 
     # Optional Ramp TOP; falls back to palette_init so the select never errors when blank.
     ramp = component.create(selectTOP, 'ramp')
@@ -1016,7 +1228,7 @@ def build_turing_media_v2(container=None):
     palette_sort = _shader(component, 'palette_sort', 'palette_sort_pixel',
                            PALETTE_SORT_SHADER, (350, 1350))
     palette_sort.inputConnectors[0].connect(palette_cells)
-    palette_sort.inputConnectors[1].connect(palette_feedback)
+    palette_sort.inputConnectors[1].connect(palette_read)
     palette_sort.inputConnectors[2].connect(ramp)
     _set(palette_sort, 'outputresolution', 'custom')
     _set(palette_sort, 'resolutionw', PALETTE_WIDTH)
@@ -1025,8 +1237,7 @@ def build_turing_media_v2(container=None):
     _uniforms(palette_sort, palette_uniforms + [ramp_uniform])
     palette = component.create(nullTOP, 'palette')
     palette.nodeX, palette.nodeY = 600, 1350
-    palette.inputConnectors[0].connect(palette_sort)
-    _set(palette_feedback, 'top', palette.name)
+    palette.inputConnectors[0].connect(palette_read)
 
     display = _shader(component, 'colorize', 'display_pixel', DISPLAY_SHADER, (400, 200))
     display.inputConnectors[0].connect(state)
@@ -1062,12 +1273,20 @@ def build_turing_media_v2(container=None):
     out.inputConnectors[0].connect(composite)
     out.viewer = True
 
+    clock = component.create(executeDAT, 'clock')
+    clock.nodeX, clock.nodeY = -100, -160
+    _set(clock, 'active', False)
+    clock.text = CLOCK_CALLBACKS.strip() + '\n'
+    for name in ('framestart', 'playstatechange', 'start', 'create'):
+        _set(clock, name, True)
+    _set(clock, 'frameend', False)
+
     callbacks = component.create(parameterexecuteDAT, 'controls')
     callbacks.nodeX, callbacks.nodeY = -350, -160
     _set(callbacks, 'active', False)
     callbacks.text = CONTROL_CALLBACKS.strip() + '\n'
     _set(callbacks, 'op', '..')
-    _set(callbacks, 'pars', 'Reset Reseed Coral Spots Resolution Rectangle Canvaswidth Canvasheight Cellsize Seed Seedradius Ambient Moviefile Sourcetop Clipseed Restartclip Transformzero')
+    _set(callbacks, 'pars', 'Step Pause Clockmode Speed Reset Reseed Coral Spots Resolution Rectangle Canvaswidth Canvasheight Cellsize Seed Seedradius Ambient Moviefile Sourcetop Clipseed Restartclip Transformzero')
     _set(callbacks, 'custom', True)
     _set(callbacks, 'builtin', False)
     _set(callbacks, 'onpulse', True)
@@ -1077,6 +1296,7 @@ def build_turing_media_v2(container=None):
         if parameter is not None:
             parameter.val = False
     _set(callbacks, 'active', True)
+    callbacks.cook(force=True)  # Register custom parameter monitoring immediately.
 
     help_dat = component.create(textDAT, 'README')
     help_dat.text = NETWORK_HELP
@@ -1088,7 +1308,8 @@ def build_turing_media_v2(container=None):
     if nodeview is not None:
         nodeview.val = 'opviewer'
     component.viewer = True
-    feedback.par.resetpulse.pulse()
+    clock.module.reset(component)
+    _set(clock, 'active', True)
     print('Created {}. Play the timeline; view {}/out1.'.format(component.path, component.path))
     print('Choose Media > Movie File or Source TOP, or leave both blank for no media input.')
     print('Explore Influence > Mask Mode and Strength, then Display > Source Overlay.')
@@ -1099,182 +1320,150 @@ def build_turing_media_v2(container=None):
 # 9. Embedded help
 # =============================================================================
 
-NETWORK_HELP = '''TURING MEDIA V2 / PHASE 1 BASELINE
-
-PHASE 1
-This standalone V2 preserves the V1 controls, GLSL, defaults, and output names.
-Timing is still frame-dependent. The new clock, influence modes, preset storage,
-snapshots, and boundary changes belong to later phases.
-Each run creates turing_media_v2 (or the next available numbered suffix).
+NETWORK_HELP = '''TURING MEDIA V2 / PHASE 2 — FIXED SIMULATION CLOCK
 
 QUICK START
-Play the timeline: ambient seed patterns grow immediately.
-Select the Base COMP > Media > Movie File to load your own clip, or drag any
-TOP onto Media > Source TOP to drive it live. Source TOP wins when both are set.
-Leave both blank for no media input. Check that a GIF actually animates in
-Movie File In; if necessary use a PNG sequence or Hap Alpha movie.
-For a PNG sequence, paste the folder path into Movie File. Turn on Override FPS
-and set Sequence FPS to the intended rate. GIFs with unequal frame delays need
-resampling when converted to a fixed-FPS sequence.
+Paste the entire builder into a Text DAT and Run Script. Play the timeline.
+Each run creates a uniquely named turing_media_v2 component. No external
+packages, shader files, or TDAPI component are required. Save as a TOX to reuse.
+Leave Media > Movie File and Source TOP blank for ambient patterns, or assign
+media. Source TOP overrides Movie File. Use Clock > Pause and Step to inspect.
 
-MEDIA PAGE
-Source TOP: any TOP (camera, Noise, Text, a render, another network's output)
-replaces Movie File as the source. It is read live through media_top (a Select
-TOP), so playback is controlled wherever that TOP lives; Play Media / Media
-Speed / Restart Clip only affect Movie File. Assigning, changing or clearing it
-resets the simulation. Don't assign this component's own out1 (a cook loop).
-Play Media / Media Speed / Restart Clip control playback. Scale / Offset X/Y /
-Rotation fit and position the source in the simulation's canvas, keeping its
-aspect ratio on square and rectangular canvases. Offsets are fractions of the
-canvas width/height.
-Ignore Source Alpha lets opaque video use its whole fitted rectangle.
-Source Premultiplied: turn on only if the decoded RGB is already multiplied by
-alpha. The Movie File In premultiply option is Off; this toggle unpremultiplies
-existing source data.
-Transparent padding stays transparent, even with Ignore Source Alpha on.
-The fitting shader normalizes source RGB into straight RGBA for mask/composite.
+CLOCK PAGE / UNITS
+One tick is 1/60 simulation second. Speed 1 advances one simulation second per
+elapsed second. The reference is V1 at 60 FPS: 16 chemistry updates with dt=1
+per tick (960 chemistry time units per simulation second).
+Real Time uses monotonic wall time. Max Catch-up Ticks / Frame bounds the work
+per output frame. Unprocessed time is retained as Simulation Lag, not dropped.
+A sustained overload increases lag: lower resolution/Speed or increase Cell Size.
+Frame Stepped advances Speed / Render FPS simulation seconds per output frame.
+It executes ALL required ticks, regardless of the catch-up limit or wall time.
+Fractional ticks accumulate; 120 FPS at Speed 1 alternates zero and one tick.
+Solver Quality 1..4 uses 16*quality substeps per tick, with chemistry dt=1/quality
+(always <=1). Quality changes numerical accuracy and cost, not elapsed time.
+Nonlinear patterns can differ with numerical accuracy, especially at long ages.
+Pause freezes chemistry, carried color, palette history, and sampled motion
+history. Live source previews/overlay can still change; media playback has its
+own controls. Speed zero also freezes state and holds existing time debt.
+Step advances exactly one 1/60-second tick while paused, even at Speed zero.
+Step does nothing while running. It leaves Pause on and preserves time debt.
+Pause/resume rebases wall time, so paused time is never caught up. Changing
+Clock Mode clears fractional time and catch-up debt, preserving state/age.
+Reset restores seed, colorless state and initial palette/media samples, resets
+age/debt, and preserves Pause. Startup/load reinitializes GPU history.
+Simulation Time, Simulation Lag, Ticks Last Frame, and Substeps / Tick are
+read-only diagnostics. Viewer recooks do not advance the clock.
 
-INFLUENCE PAGE
-Silhouette = alpha; Bright Texture = alpha times luminance;
-Dark Texture = alpha times inverted luminance.
-Silhouette Edges traces the outer contour. Texture Edges includes internal detail.
-Motion uses differences in BOTH alpha and alpha-weighted luminance against the
-previous cached project frame. This is frame difference, not optical flow.
-The two-frame cache keeps capturing when playback is paused, so motion settles
-back to zero. Source changes can produce a brief transient.
-Mask Gain, Edge Width and Mask Smoothing shape the input. Preview it via Display
-> Output View > Influence Mask, or view mask_preview directly.
-Strength blends concentrations toward A=.5, B=.25 ONCE per project frame.
-Start around .03-.15 with ambient patterns already present. Higher strengths
-pin the source into the pattern. Weak sources may not ignite an empty field,
-especially at high passes. Seed From Clip Only turns off Ambient Seeds, selects
-Silhouette, sets Strength=1 and Fade=0, and resets for a clear comparison.
-Reduce Strength afterward to let stamped shapes evolve more freely.
-Fade gently recovers toward A=1, B=0 once per frame. Default zero. Try .001-.005;
-even small values can suppress growth, especially with weak influence.
+SOURCE SAMPLING / DETERMINISM
+Each tick samples the available prepared source, then computes the influence
+mask against the previous tick sample. It runs solver substeps, transforms
+state once at the end of the tick, and commits state and palette history.
+Several ticks in one output frame reuse the available live/movie source unless
+an offline caller supplies per-tick samples. Equal ticks/settings/source samples
+produce the same results at 30 and 60 output FPS (tolerance 1e-6 in validation).
+A live camera or ordinarily playing movie sampled at different output FPS can
+supply DIFFERENT samples. Frame Stepped does not resample or seek movies; movie
+position/snapshot controls are later work. For controlled offline input, the
+clock DAT exposes advance(component, sample=callback); callback receives
+(component, tick_index, simulation_seconds) before each tick's source capture.
+Motion measures alpha and alpha-weighted luminance changes per tick, not optical
+flow. It settles to zero on the next unchanged tick; while paused history holds.
 
 TURING PAGE
-Feed, Kill, diffusion, timestep, passes, reset and presets match the original.
-Ambient Seeds adds the original ten seed patches; enabled by default.
-Running freezes the chemical state. Media playback is controlled separately.
-Reset keeps media position. Restart Clip cues media and resets simulation.
-Resolution sets a square canvas. Rectangular Canvas switches to independent
-Width and Height (cells); seeds and source fit follow the new shape.
-Cell Size (pixels) decouples the simulation grid from the canvas: the state is
-canvas / Cell Size cells and is upscaled for display (Display > Upscale Filter).
-Line width is fixed in cells, so Cell Size 4 makes lines four times thicker on
-screen, and the simulation is ~16x cheaper, which leaves room for more Passes.
-Seed Radius, Edge Width, Mask Smoothing, Tint Spread and Translate stay in cells.
-Changing canvas size/shape, Cell Size, Seed, Seed Radius, Ambient Seeds or Movie
-File resets state.
-Speed, influence and fade depend on project FPS. Changing resolution changes
-pattern scale. Parameters do not automatically keep the output in a loop:
-a looping clip can keep developing a different chemical history on each loop.
+Feed/Kill and Diffusion A/B control chemistry. Coral and Dividing Spots set
+chemistry, Speed=1, Quality=1 and seed radius, then reset. Ambient Seeds adds
+ten initial patches. Seed, Seed Radius, Ambient Seeds, dimensions, and source
+binding changes still reset in Phase 2. Reset keeps the current media position;
+Restart Clip cues the movie and resets. Reseed increments the random seed.
+Resolution controls a square canvas; Rectangular Canvas enables Width/Height.
+Cell Size divides the canvas dimensions for a coarser simulation, upscaled by
+Display > Upscale Filter. Larger cells make thicker lines and lower GPU cost.
+Seed Radius, Edge Width, Mask Smoothing, Tint Spread and Translate use cells.
 
-DISPLAY PAGE
-Source Overlay composites the original clip over the patterns.
-Clip Patterns to Alpha confines DISPLAYED patterns to the current silhouette.
-It does not restrict the simulation. At 1, out1 has alpha for downstream compositing.
-Output View: Final / Patterns / Influence Mask / Source on Checkerboard.
-Checkerboard is a diagnostic background only, never a simulation input.
-The final composite uses premultiplied alpha; source_preview uses straight RGBA.
-Color Amount: 0 = grayscale, 1 = the selected Color Mode. Contrast/Invert apply
-to every mode.
-Upscale Filter (only visible with Cell Size above 1): Smooth = Catmull-Rom cubic,
-round contours; Linear = bilinear, slightly faceted; Nearest = visible square cells.
+MEDIA PAGE
+Movie File supports clips and image sequences; Source TOP supports generators,
+cameras, renders, etc. Do not reference this component's own output (cook loop).
+Play Media/Media Speed/Restart Clip affect only the movie. Override FPS and
+Sequence FPS are for image sequences. Scale, Offset X/Y and Rotation position
+the media while preserving its aspect. Offsets are fractions of canvas size.
+Prepared media is straight RGBA. Source Premultiplied unpremultiplies incoming
+RGB when required; movie input premultiplication is off. Ignore Source Alpha
+makes the fitted media rectangle opaque; transparent padding stays transparent.
 
-COLOR PAGE
-Color Mode chooses where pattern colors come from. Switching never resets.
-Ramp TOP (optional): drag a Ramp TOP (or any TOP) here to replace the built-in
-  teal/gold ramp everywhere it is used: Fixed Palette, the Tint dark end and
-  transparent fallback, Clip Palette anchoring/fallback, and Carried Color
-  lightness. It is read horizontally along its middle row: left = background
-  (low B), right = pattern peaks. Use a horizontal ramp; it is resampled to
-  64 steps, so very hard color stops soften slightly.
-  Contrast/Invert still choose where on the ramp each pixel lands. Clear it to
-  return to teal/gold.
-Fixed Palette: the base ramp (teal/gold, or the Ramp TOP when assigned).
-Source Tint: the clip's local color becomes the middle of the ramp; dark stays
-  dark, peaks lighten toward white. Tint Spread blurs the source (in cells) so
-  color bleeds past the silhouette. Transparent areas fall back to Fixed Palette.
-Clip Palette: the clip is averaged into an 8x8 grid, sorted dark->light into a
-  64-pixel ramp (view palette), and used in place of the fixed ramp everywhere.
-  Cells under 25% coverage are ignored; nothing visible = base ramp.
-  Palette Smoothing eases the ramp per frame (0 = instant, .99 = very slow).
-  Palette Anchoring borrows lightness from the base ramp (keeping the clip's
-  hue/chroma) so backgrounds stay dark and peaks bright. 0 = pure clip ramp.
-Carried Color: hue/chroma travel INSIDE the simulation (state blue/alpha, Oklab
-  a/b). Visible source pixels stain it once per frame by Color Injection; each
-  pass it spreads to neighbors weighted by chemical B, so color rides outward
-  with growing pattern and stays after the clip moves. Lightness still comes
-  from the base ramp. Color Spread: per-pass mixing (0 freezes). Color Decay:
-  per-frame fade toward gray (0 = permanent). Color Saturation: display boost,
-  since averaging desaturates. Uncolored areas read as gray. Reset clears color.
-  The carried color always runs, so it has history when you switch to it.
+INFLUENCE PAGE
+Mask Mode: Silhouette=alpha, Bright/Dark Texture=alpha*brightness/darkness,
+Silhouette Edges=outline, Texture Edges=internal detail, Motion=tick difference.
+Mask Gain, Edge Width, Mask Smoothing and Motion Gain shape the mask.
+Injection Rate blends toward A=.5/B=.25 once per tick; Recovery Rate blends
+toward A=1/B=0. Rates are inverse simulation seconds, with exponential blending:
+amount = 1-exp(-rate*mask*elapsed_seconds); recovery uses mask=1.
+Zero disables a rate. Default injection is about 5/second; try 2..10.
+Recovery is zero by default; try .06..3. Weak influence may not ignite patterns.
+Seed From Clip Only disables ambient seeds, selects Silhouette, sets injection
+to 600/second and recovery to zero, then resets. Reduce injection afterward for
+independent evolution. Influence modes/domain masks remain later work.
+
+COLOR / DISPLAY
+All four color modes remain: Fixed Palette, Source Tint, Clip Palette, Carried
+Color. Ramp TOP optionally replaces the teal/gold ramp (horizontal middle row).
+Tint Spread blurs source color. Clip Palette sorts averaged 8x8 cells into a
+64-step ramp; cells below 25% alpha coverage are ignored. Palette Smoothing is
+a time constant in simulation seconds: 0=instant, default ~.158 seconds.
+History retention per tick is exp(-tick_seconds / smoothing_seconds).
+Palette Anchoring borrows base-ramp lightness. Color Amount, Contrast and
+Invert affect display; changing color mode never resets simulation.
+Carried Color stores signed Oklab a/b in state blue/alpha. Color Spread Rate
+mixes toward B-weighted neighbors each substep by 1-exp(-rate*substep_seconds).
+Color Injection Rate blends toward source chroma using source alpha in the
+exponent; Color Decay Rate fades toward gray by exp(-rate*tick_seconds).
+Default spread ~665.42/second, injection ~3.08/second, decay 0. Saturation only
+affects display. Color history is maintained in every color mode.
+Source Overlay adds live media over patterns. Clip Patterns to Alpha clips
+display only; it does not confine simulation. Output is premultiplied RGBA.
+Output View selects final/patterns/mask/source-on-checkerboard. Upscale Filter
+selects cubic, linear or nearest reconstruction for coarse simulations.
 
 TRANSFORM PAGE
-Moves the chemical state (and carried color) a little every frame, inside the
-feedback loop, so the move compounds: patterns spiral, zoom and drift forever
-while the reaction keeps re-forming them. Applied once per frame after all
-passes, so its speed depends on project FPS, not Passes. Off by default; also
-frozen while Running is off.
-Grow / Shrink: uniform zoom about the pivot (+ grows outward, - pulls inward).
-Scale X / Y: extra per-axis stretch on top of Grow (+/- for shear-like flows).
-Translate X / Y: drift in cells per frame. Rotate: degrees per frame.
-Pivot X / Y: the center for scale and rotation (0-1 across the canvas).
-Rotation works in cells, so it stays undistorted on a rectangular canvas.
-Edges: Wrap keeps the torus (shrinking tiles the field); Clear refills the
-border with empty field (A=1, B=0) so the influence or seeds must re-grow it.
-Edges applies even with Transform off: Clear also stops the reaction and the
-display upscale from wrapping, so opposite edges never bleed into each other.
-Zero Motion clears every rate without resetting. Sampling is bilinear, which
-slightly softens each frame; the reaction re-sharpens it. Small values go a long
-way: try Grow .1-.5, Rotate .1-1. Pair with a nonzero Strength or Ambient Seeds
-so Shrink + Clear never empties the field.
+Enable Transform to move chemical and color state after every tick's solver.
+Grow and Scale X/Y are continuous percent rates per simulation second:
+scale = exp((grow + axis_scale)*.01*tick_seconds). Positive values expand.
+Translate X/Y uses cells/second; Rotate uses degrees/second. Pivot X/Y is UV.
+Motion stays undistorted on rectangular grids. Default Grow ~6 and Rotate 6
+reproduce the old .1% and .1 degree/frame at 60 FPS. Try Grow 6..30, Rotate 6..60.
+Zero Motion clears rates without resetting. Bilinear transport slightly softens
+state each tick. Wrap connects opposite edges; inherited Clear transport fills
+exterior with A=1/B=0/colorless, while the diffusion stencil clamps edges.
+Full boundary unification belongs to Phase 6. Shrink+Clear needs seeds/influence.
 
-USEFUL OPERATORS
-out1: final image (or the selected diagnostic view).
-patterns: colored simulation before clipping/overlay.
-mask_preview: grayscale influence; its alpha intentionally stays 1.
-source_preview: fitted source with actual alpha, no baked checkerboard.
-state: red=A, green=B, blue/alpha=carried color (Oklab a/b), 32-bit float, at
-  the simulation grid size (canvas / Cell Size), not the canvas size.
-  Its alpha is not opacity; the TD viewer may show it as transparent.
-palette: 64x2; row 0 = clip color ramp, row 1 = base ramp (Ramp TOP or
-  teal/gold, resampled to 64 steps). palette_cells: the 8x8 averaged colors/coverage.
-ramp: Select TOP of Color > Ramp TOP (shows palette_init while it is blank).
-movie_info: length, current index, sample rate and decode info.
-Each GLSL TOP has an Info DAT for compiler messages. Its Pixel Shader parameter
-points to the actual DAT; TD may add a suffix such as _pixel1 during creation.
-movie may report a missing-file error while Movie File is blank; it is unselected
-and the transparent blank branch is used. Selecting a valid file enables that branch.
-media_top: Select TOP of Media > Source TOP (shows blank while it is unassigned).
+MIGRATION FROM V1 / PHASE 1
+Passes, Timestep and Running are replaced by Clock controls. At 60 FPS, old
+speed passes*timestep/16 corresponds to Speed; Solver Quality is independent.
+Convert an old per-frame blend p to rate=-60*ln(1-p). Color Spread used per-pass
+p: rate=-960*ln(1-p). A rate of 600 approximates old full injection; finite rates
+approach the target exponentially. Partial alpha/mask now scales rate inside
+the exponent, so intermediate masks may differ from V1 at the reference FPS.
+Convert old palette retention s to smoothing_seconds=-1/(60*ln(s)); s=0 is instant.
+Translation/rotation: multiply old per-frame rates by 60. Grow/scale percentage
+p: continuous_percent_per_second=6000*ln(1+p/100).
+Default no-media chemistry remains the 16-update dt=1 reference. Phase 1 reports
+are historical baseline evidence; Phase 2 intentionally changes controls/network.
 
-NETWORK
-movie + blank + media_top (Select TOP of Source TOP) -> media_source -> media_prepared -> media_cache (2 frames)
-media_previous selects cache index -1. media_mask reads current and previous.
-mask_preview -> reaction_diffusion input 1; feedback remains input 0.
-seed -> feedback -> reaction_diffusion -> state_transform -> state;
-Feedback Target TOP = state.
-media_prepared -> reaction_diffusion input 2 (carried color injection).
-media_prepared -> palette_cells -> palette_sort -> palette; palette_feedback
-(Target TOP = palette, initialized by palette_init) feeds palette_sort input 1.
-ramp (Select TOP of Color > Ramp TOP) -> palette_sort input 2 -> palette row 1.
-state + media_prepared + palette -> colorize (upscales to canvas) -> patterns.
-composite reads patterns, prepared source and mask.
-Injection/fade/color stain use uTDPass==0, not every simulation pass.
-
-EXPERIMENTS
-Default: Silhouette Edges, Strength=.08, Source Overlay=.2, ambient seeds on.
-Bright Texture: animate internal detail. Motion: try slower media and higher gain.
-Clip Patterns to Alpha=1 + Source Overlay=0: a silhouette filled with live patterns.
-Seed From Clip Only: stamp the clip into an initially empty field; lower Strength
-or set it to zero afterward to watch the seeded pattern evolve independently.
-Carried Color + Seed From Clip Only + Color Injection=.2: patterns grow out of the
-clip wearing its colors; lower Strength to let them roam. Color Decay=.002 keeps
-older trails fading. Clip Palette with a colorful video and Smoothing=.97 gives
-a slowly drifting palette that follows the edit.
-Save the Base COMP as .tox for reuse. This script always creates a new component.
+NETWORK / OUTPUTS
+state_a/b, palette_a/b, media_a/b are RGBA32F GPU Cache TOPs. Automatic capture
+is disabled. The clock explicitly replaces the inactive buffer and switches
+the reader only after completing the tick. Repeated Feedback TOP cooks are not
+used. No CPU texture download/upload or external packages run in the product.
+clock: Execute DAT scheduler and callable reset/step/advance API.
+state_read -> reaction_diffusion -> state_transform -> inactive state buffer.
+media_prepared -> inactive media buffer -> media_cache/media_previous -> mask.
+media_cache -> palette_cells -> palette_sort -> inactive palette buffer.
+out1=final display; patterns=colored simulation before overlay/clipping;
+mask_preview=last tick mask; source_preview=live fitted straight RGBA;
+palette=64x2 (clip ramp row 0, base ramp row 1); state=raw A/B + signed Oklab a/b.
+State alpha is DATA, not opacity. Do not premultiply or color-convert it.
+Each shader has a compiler Info DAT. The unselected blank movie may report an
+empty-file diagnostic; the transparent fallback is used until media is assigned.
+Validation scripts/results: validation/phase2, TouchDesigner 2025.33230 on macOS.
 '''
 
 

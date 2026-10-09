@@ -17,6 +17,8 @@ The new version should be **`create_turing_media_v2.py`**, with `create_turing_m
 
 2. **Introduce a consistent simulation clock**
 
+   **Implemented and live-validated** in `create_turing_media_v2.py` on TouchDesigner 2025.33230 (macOS). See `validation/phase2/README.md` for the clock contract, migration units, reproducible checks, and controlled-source limitations. All 30/60 FPS comparisons are pixel-exact (acceptance tolerance 1e-6).
+
    Replace the mixture of per-pass and per-frame controls with an explicit simulation clock.
 
    | Control | Intended behavior |

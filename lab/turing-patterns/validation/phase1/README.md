@@ -1,5 +1,9 @@
 # Phase 1 baseline
 
+Historical baseline: current V2 implements Phase 2 and intentionally no longer
+matches this phase's source/structure assertions. Use `../phase2` for current
+validation; retain these captures as the V1 reference.
+
 **Passed on TouchDesigner 2025.33230, macOS.** V2 reproduces V1 exactly in
 12 live cases, with 288 exact floating-point output comparisons. No tolerance
 was needed. The unchanged reference file has SHA-256
