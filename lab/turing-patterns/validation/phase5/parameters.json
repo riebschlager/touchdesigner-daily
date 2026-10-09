@@ -1,0 +1,1521 @@
+{
+  "build": "099.2025.33230",
+  "tdapi": false,
+  "scriptTOP": {
+    "pageindex": {
+      "value": "0",
+      "menus": []
+    },
+    "callbacks": {
+      "value": "/project1/phase5_probe2/probe_scriptTOP_callbacks",
+      "menus": []
+    },
+    "setuppars": {
+      "value": "False",
+      "menus": []
+    },
+    "modoutsidecook": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "outputresolution": {
+      "value": "custom",
+      "menus": [
+        "useinput",
+        "eighth",
+        "quarter",
+        "half",
+        "2x",
+        "4x",
+        "8x",
+        "fit",
+        "limit",
+        "custom",
+        "parpanel"
+      ]
+    },
+    "resolutionw": {
+      "value": "256",
+      "menus": [
+        "400 300",
+        "640 480",
+        "800 600",
+        "1024 768",
+        "1280 720",
+        "1920 1080",
+        "1920 1200",
+        "3840 2160",
+        "4096 2160",
+        "256 256",
+        "512 512",
+        "1024 1024",
+        "2048 2048",
+        "4096 4096"
+      ]
+    },
+    "resolutionh": {
+      "value": "256",
+      "menus": [
+        "400 300",
+        "640 480",
+        "800 600",
+        "1024 768",
+        "1280 720",
+        "1920 1080",
+        "1920 1200",
+        "3840 2160",
+        "4096 2160",
+        "256 256",
+        "512 512",
+        "1024 1024",
+        "2048 2048",
+        "4096 4096"
+      ]
+    },
+    "resmult": {
+      "value": "True",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "outputaspect": {
+      "value": "resolution",
+      "menus": [
+        "useinput",
+        "resolution",
+        "custom"
+      ]
+    },
+    "aspect1": {
+      "value": "1.0",
+      "menus": [
+        "1 1",
+        "4 3",
+        "16 9",
+        "16 10"
+      ]
+    },
+    "aspect2": {
+      "value": "1.0",
+      "menus": [
+        "1 1",
+        "4 3",
+        "16 9",
+        "16 10"
+      ]
+    },
+    "inputfiltertype": {
+      "value": "linear",
+      "menus": [
+        "nearest",
+        "linear",
+        "mipmap"
+      ]
+    },
+    "fillmode": {
+      "value": "best",
+      "menus": [
+        "useinput",
+        "fill",
+        "width",
+        "height",
+        "best",
+        "outside",
+        "nativeres"
+      ]
+    },
+    "filtertype": {
+      "value": "linear",
+      "menus": [
+        "useinput",
+        "nearest",
+        "linear",
+        "mipmap"
+      ]
+    },
+    "npasses": {
+      "value": "1",
+      "menus": []
+    },
+    "chanmask": {
+      "value": "15",
+      "menus": []
+    },
+    "format": {
+      "value": "rgba8fixed",
+      "menus": [
+        "useinput",
+        "rgba8fixed",
+        "rgba16float",
+        "rgba32float",
+        "rgb10a2fixed",
+        "rgba16fixed",
+        "rgba11float",
+        "mono8fixed",
+        "mono16fixed",
+        "mono16float",
+        "mono32float",
+        "rg8fixed",
+        "rg16fixed",
+        "rg16float",
+        "rg32float",
+        "a8fixed",
+        "a16fixed",
+        "a16float",
+        "a32float",
+        "monoalpha8fixed",
+        "monoalpha16fixed",
+        "monoalpha16float",
+        "monoalpha32float"
+      ]
+    },
+    "parmcolorspace": {
+      "value": "srgb",
+      "menus": [
+        "srgb",
+        "srgblinear",
+        "rec601ntsc",
+        "rec709",
+        "rec2020",
+        "dcip3",
+        "dcip3d60",
+        "displayp3d65",
+        "aces2065-1",
+        "acescg",
+        "passthrough"
+      ]
+    },
+    "parmreferencewhite": {
+      "value": "default",
+      "menus": [
+        "default",
+        "useparent",
+        "sdr",
+        "hdr",
+        "ui"
+      ]
+    }
+  },
+  "cacheTOP": {
+    "pageindex": {
+      "value": "0",
+      "menus": []
+    },
+    "active": {
+      "value": "True",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "activepulse": {
+      "value": "False",
+      "menus": []
+    },
+    "cacheonce": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "replace": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "replacespulse": {
+      "value": "False",
+      "menus": []
+    },
+    "replaceindex": {
+      "value": "0",
+      "menus": []
+    },
+    "prefill": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "prefillpulse": {
+      "value": "False",
+      "menus": []
+    },
+    "cachesize": {
+      "value": "32",
+      "menus": []
+    },
+    "step": {
+      "value": "1",
+      "menus": []
+    },
+    "outputindex": {
+      "value": "0.0",
+      "menus": []
+    },
+    "outputindexunit": {
+      "value": "indices",
+      "menus": [
+        "indices",
+        "frames",
+        "seconds",
+        "fraction"
+      ]
+    },
+    "interp": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "alwayscook": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "reset": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "resetpulse": {
+      "value": "False",
+      "menus": []
+    },
+    "outputresolution": {
+      "value": "useinput",
+      "menus": [
+        "useinput",
+        "eighth",
+        "quarter",
+        "half",
+        "2x",
+        "4x",
+        "8x",
+        "fit",
+        "limit",
+        "custom",
+        "parpanel"
+      ]
+    },
+    "resolutionw": {
+      "value": "256",
+      "menus": [
+        "400 300",
+        "640 480",
+        "800 600",
+        "1024 768",
+        "1280 720",
+        "1920 1080",
+        "1920 1200",
+        "3840 2160",
+        "4096 2160",
+        "256 256",
+        "512 512",
+        "1024 1024",
+        "2048 2048",
+        "4096 4096"
+      ]
+    },
+    "resolutionh": {
+      "value": "256",
+      "menus": [
+        "400 300",
+        "640 480",
+        "800 600",
+        "1024 768",
+        "1280 720",
+        "1920 1080",
+        "1920 1200",
+        "3840 2160",
+        "4096 2160",
+        "256 256",
+        "512 512",
+        "1024 1024",
+        "2048 2048",
+        "4096 4096"
+      ]
+    },
+    "resmult": {
+      "value": "True",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "outputaspect": {
+      "value": "useinput",
+      "menus": [
+        "useinput",
+        "resolution",
+        "custom"
+      ]
+    },
+    "aspect1": {
+      "value": "1.0",
+      "menus": [
+        "1 1",
+        "4 3",
+        "16 9",
+        "16 10"
+      ]
+    },
+    "aspect2": {
+      "value": "1.0",
+      "menus": [
+        "1 1",
+        "4 3",
+        "16 9",
+        "16 10"
+      ]
+    },
+    "inputfiltertype": {
+      "value": "linear",
+      "menus": [
+        "nearest",
+        "linear",
+        "mipmap"
+      ]
+    },
+    "fillmode": {
+      "value": "best",
+      "menus": [
+        "useinput",
+        "fill",
+        "width",
+        "height",
+        "best",
+        "outside",
+        "nativeres"
+      ]
+    },
+    "filtertype": {
+      "value": "linear",
+      "menus": [
+        "useinput",
+        "nearest",
+        "linear",
+        "mipmap"
+      ]
+    },
+    "npasses": {
+      "value": "1",
+      "menus": []
+    },
+    "chanmask": {
+      "value": "15",
+      "menus": []
+    },
+    "format": {
+      "value": "useinput",
+      "menus": [
+        "useinput",
+        "rgba8fixed",
+        "rgba16float",
+        "rgba32float",
+        "rgb10a2fixed",
+        "rgba16fixed",
+        "rgba11float",
+        "mono8fixed",
+        "mono16fixed",
+        "mono16float",
+        "mono32float",
+        "rg8fixed",
+        "rg16fixed",
+        "rg16float",
+        "rg32float",
+        "a8fixed",
+        "a16fixed",
+        "a16float",
+        "a32float",
+        "monoalpha8fixed",
+        "monoalpha16fixed",
+        "monoalpha16float",
+        "monoalpha32float"
+      ]
+    },
+    "parmcolorspace": {
+      "value": "srgb",
+      "menus": [
+        "srgb",
+        "srgblinear",
+        "rec601ntsc",
+        "rec709",
+        "rec2020",
+        "dcip3",
+        "dcip3d60",
+        "displayp3d65",
+        "aces2065-1",
+        "acescg",
+        "passthrough"
+      ]
+    },
+    "parmreferencewhite": {
+      "value": "default",
+      "menus": [
+        "default",
+        "useparent",
+        "sdr",
+        "hdr",
+        "ui"
+      ]
+    }
+  },
+  "moviefileinTOP": {
+    "pageindex": {
+      "value": "0",
+      "menus": []
+    },
+    "file": {
+      "value": "/Applications/TouchDesigner.app/Contents/Resources/tfs/Samples/Map/Banana.tif",
+      "menus": []
+    },
+    "reload": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "reloadpulse": {
+      "value": "False",
+      "menus": []
+    },
+    "playmode": {
+      "value": "sequential",
+      "menus": [
+        "locked",
+        "specify",
+        "sequential",
+        "timecodeop"
+      ]
+    },
+    "play": {
+      "value": "True",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "speed": {
+      "value": "1.0",
+      "menus": []
+    },
+    "cue": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "cuepulse": {
+      "value": "False",
+      "menus": []
+    },
+    "cuepoint": {
+      "value": "0.0",
+      "menus": []
+    },
+    "cuepointunit": {
+      "value": "fraction",
+      "menus": [
+        "indices",
+        "frames",
+        "seconds",
+        "fraction"
+      ]
+    },
+    "cuebehavior": {
+      "value": "play",
+      "menus": [
+        "repeat",
+        "play"
+      ]
+    },
+    "index": {
+      "value": "115.0",
+      "menus": []
+    },
+    "indexunit": {
+      "value": "frames",
+      "menus": [
+        "indices",
+        "frames",
+        "seconds",
+        "fraction"
+      ]
+    },
+    "loopcrossfade": {
+      "value": "0.0",
+      "menus": []
+    },
+    "loopcrossfadeunit": {
+      "value": "fraction",
+      "menus": [
+        "indices",
+        "frames",
+        "seconds",
+        "fraction"
+      ]
+    },
+    "stepsize": {
+      "value": "1",
+      "menus": []
+    },
+    "audioloop": {
+      "value": "fade",
+      "menus": [
+        "silence",
+        "fade",
+        "match"
+      ]
+    },
+    "imageindexing": {
+      "value": "zero",
+      "menus": [
+        "zero",
+        "filename"
+      ]
+    },
+    "timecodemode": {
+      "value": "absolute",
+      "menus": [
+        "absolute",
+        "usefiletimecode"
+      ]
+    },
+    "timecodeop": {
+      "value": "None",
+      "menus": []
+    },
+    "interp": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "deinterlace": {
+      "value": "off",
+      "menus": [
+        "off",
+        "even",
+        "odd",
+        "bob"
+      ]
+    },
+    "precedence": {
+      "value": "odd",
+      "menus": [
+        "even",
+        "odd"
+      ]
+    },
+    "bottomhalfalpha": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "premultrgbbyalpha": {
+      "value": "automatic",
+      "menus": [
+        "off",
+        "on",
+        "automatic"
+      ]
+    },
+    "inputcolorspace": {
+      "value": "automatic",
+      "menus": [
+        "automatic",
+        "srgb",
+        "srgblinear",
+        "rec601ntsc",
+        "rec709",
+        "rec709gamma24",
+        "rec2020",
+        "rec2020st2084pq",
+        "rec2020hlg",
+        "dcip3",
+        "dcip3d60",
+        "displayp3d65",
+        "displayp3d65linear",
+        "aces2065-1",
+        "acescg",
+        "acesproxy",
+        "passthrough"
+      ]
+    },
+    "inputreferencewhite": {
+      "value": "default",
+      "menus": [
+        "default",
+        "sdr",
+        "hdr",
+        "ui"
+      ]
+    },
+    "hlgpeaknits": {
+      "value": "300.0",
+      "menus": []
+    },
+    "loadingerrorimage": {
+      "value": "coloredbottomright",
+      "menus": [
+        "coloredbottomright",
+        "zero"
+      ]
+    },
+    "decodepixelformat": {
+      "value": "fastest",
+      "menus": [
+        "fastest",
+        "best"
+      ]
+    },
+    "trim": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "tstart": {
+      "value": "0.0",
+      "menus": []
+    },
+    "tstartunit": {
+      "value": "fraction",
+      "menus": [
+        "indices",
+        "frames",
+        "seconds",
+        "fraction"
+      ]
+    },
+    "tend": {
+      "value": "1.0",
+      "menus": []
+    },
+    "tendunit": {
+      "value": "fraction",
+      "menus": [
+        "indices",
+        "frames",
+        "seconds",
+        "fraction"
+      ]
+    },
+    "textendleft": {
+      "value": "cycle",
+      "menus": [
+        "hold",
+        "cycle",
+        "mirror",
+        "black",
+        "zero"
+      ]
+    },
+    "textendright": {
+      "value": "cycle",
+      "menus": [
+        "hold",
+        "cycle",
+        "mirror",
+        "black",
+        "zero"
+      ]
+    },
+    "overridesample": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "samplerate": {
+      "value": "30.0",
+      "menus": []
+    },
+    "prereadframes": {
+      "value": "3",
+      "menus": []
+    },
+    "frametimeout": {
+      "value": "10000000",
+      "menus": []
+    },
+    "frametimeoutstrat": {
+      "value": "keep",
+      "menus": [
+        "keep",
+        "playback",
+        "seeking"
+      ]
+    },
+    "alwaysloadinitial": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "opentimeout": {
+      "value": "10000000",
+      "menus": []
+    },
+    "predownloadhttp": {
+      "value": "True",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "updateimage": {
+      "value": "True",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "maxdecodecpus": {
+      "value": "4",
+      "menus": []
+    },
+    "highperfread": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "highperfreadfactor": {
+      "value": "1.0",
+      "menus": []
+    },
+    "hwdecode": {
+      "value": "True",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "callbacks": {
+      "value": "None",
+      "menus": []
+    },
+    "outputresolution": {
+      "value": "useinput",
+      "menus": [
+        "useinput",
+        "eighth",
+        "quarter",
+        "half",
+        "2x",
+        "4x",
+        "8x",
+        "fit",
+        "limit",
+        "custom",
+        "parpanel"
+      ]
+    },
+    "resolutionw": {
+      "value": "256",
+      "menus": [
+        "400 300",
+        "640 480",
+        "800 600",
+        "1024 768",
+        "1280 720",
+        "1920 1080",
+        "1920 1200",
+        "3840 2160",
+        "4096 2160",
+        "256 256",
+        "512 512",
+        "1024 1024",
+        "2048 2048",
+        "4096 4096"
+      ]
+    },
+    "resolutionh": {
+      "value": "256",
+      "menus": [
+        "400 300",
+        "640 480",
+        "800 600",
+        "1024 768",
+        "1280 720",
+        "1920 1080",
+        "1920 1200",
+        "3840 2160",
+        "4096 2160",
+        "256 256",
+        "512 512",
+        "1024 1024",
+        "2048 2048",
+        "4096 4096"
+      ]
+    },
+    "resmult": {
+      "value": "True",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "outputaspect": {
+      "value": "resolution",
+      "menus": [
+        "useinput",
+        "resolution",
+        "custom"
+      ]
+    },
+    "aspect1": {
+      "value": "1.0",
+      "menus": [
+        "1 1",
+        "4 3",
+        "16 9",
+        "16 10"
+      ]
+    },
+    "aspect2": {
+      "value": "1.0",
+      "menus": [
+        "1 1",
+        "4 3",
+        "16 9",
+        "16 10"
+      ]
+    },
+    "inputfiltertype": {
+      "value": "linear",
+      "menus": [
+        "nearest",
+        "linear",
+        "mipmap"
+      ]
+    },
+    "fillmode": {
+      "value": "best",
+      "menus": [
+        "useinput",
+        "fill",
+        "width",
+        "height",
+        "best",
+        "outside",
+        "nativeres"
+      ]
+    },
+    "filtertype": {
+      "value": "linear",
+      "menus": [
+        "useinput",
+        "nearest",
+        "linear",
+        "mipmap"
+      ]
+    },
+    "npasses": {
+      "value": "1",
+      "menus": []
+    },
+    "chanmask": {
+      "value": "15",
+      "menus": []
+    },
+    "format": {
+      "value": "useinput",
+      "menus": [
+        "useinput",
+        "rgba8fixed",
+        "rgba16float",
+        "rgba32float",
+        "rgb10a2fixed",
+        "rgba16fixed",
+        "rgba11float",
+        "mono8fixed",
+        "mono16fixed",
+        "mono16float",
+        "mono32float",
+        "rg8fixed",
+        "rg16fixed",
+        "rg16float",
+        "rg32float",
+        "a8fixed",
+        "a16fixed",
+        "a16float",
+        "a32float",
+        "monoalpha8fixed",
+        "monoalpha16fixed",
+        "monoalpha16float",
+        "monoalpha32float"
+      ]
+    },
+    "parmcolorspace": {
+      "value": "srgb",
+      "menus": [
+        "srgb",
+        "srgblinear",
+        "rec601ntsc",
+        "rec709",
+        "rec2020",
+        "dcip3",
+        "dcip3d60",
+        "displayp3d65",
+        "aces2065-1",
+        "acescg",
+        "passthrough"
+      ]
+    },
+    "parmreferencewhite": {
+      "value": "default",
+      "menus": [
+        "default",
+        "useparent",
+        "sdr",
+        "hdr",
+        "ui"
+      ]
+    }
+  },
+  "movie_members": [
+    "childrenCPUCookAbsFrame",
+    "childrenCookAbsFrame",
+    "childrenGPUCookAbsFrame",
+    "cookAbsFrame",
+    "cookFrame",
+    "cookedPreviousFrame",
+    "cookedThisFrame",
+    "index",
+    "indexFraction",
+    "isLastFrame",
+    "isLoopFrame",
+    "lastIndexUploaded",
+    "numFrames",
+    "trueIndex"
+  ],
+  "glslTOP": {
+    "pageindex": {
+      "value": "0",
+      "menus": []
+    },
+    "glslversion": {
+      "value": "glsl430",
+      "menus": [
+        "glsl120",
+        "glsl430",
+        "glsl440",
+        "glsl450",
+        "glsl460"
+      ]
+    },
+    "mode": {
+      "value": "vertexpixel",
+      "menus": [
+        "vertexpixel",
+        "compute"
+      ]
+    },
+    "predat": {
+      "value": "None",
+      "menus": []
+    },
+    "vertexdat": {
+      "value": "None",
+      "menus": []
+    },
+    "pixeldat": {
+      "value": "/project1/phase5_probe2/probe_glslTOP_pixel",
+      "menus": []
+    },
+    "computedat": {
+      "value": "/project1/phase5_probe2/probe_glslTOP_compute",
+      "menus": []
+    },
+    "compilebehavior": {
+      "value": "stalluntildone",
+      "menus": [
+        "stalluntildone",
+        "threadedcheckerboard",
+        "threadedblack",
+        "threadedprevious"
+      ]
+    },
+    "errorbehavior": {
+      "value": "showcheckerboard",
+      "menus": [
+        "showcheckerboard",
+        "showblack",
+        "showprevious"
+      ]
+    },
+    "loaduniformnames": {
+      "value": "False",
+      "menus": []
+    },
+    "autodispatchsize": {
+      "value": "True",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "dispatchsizex": {
+      "value": "64",
+      "menus": []
+    },
+    "dispatchsizey": {
+      "value": "64",
+      "menus": []
+    },
+    "dispatchsizez": {
+      "value": "1",
+      "menus": []
+    },
+    "outputaccess": {
+      "value": "writeonly",
+      "menus": [
+        "writeonly",
+        "readwrite"
+      ]
+    },
+    "type": {
+      "value": "texture2d",
+      "menus": [
+        "texture2d",
+        "texture2darray",
+        "texture3d"
+      ]
+    },
+    "depth": {
+      "value": "input",
+      "menus": [
+        "input",
+        "custom"
+      ]
+    },
+    "customdepth": {
+      "value": "32",
+      "menus": []
+    },
+    "clearoutputs": {
+      "value": "True",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "clearvaluer": {
+      "value": "0.0",
+      "menus": []
+    },
+    "clearvalueg": {
+      "value": "0.0",
+      "menus": []
+    },
+    "clearvalueb": {
+      "value": "0.0",
+      "menus": []
+    },
+    "clearvaluea": {
+      "value": "0.0",
+      "menus": []
+    },
+    "inputmapping": {
+      "value": "all",
+      "menus": [
+        "all",
+        "ninputs"
+      ]
+    },
+    "nval": {
+      "value": "1",
+      "menus": []
+    },
+    "inputextenduv": {
+      "value": "zero",
+      "menus": [
+        "hold",
+        "zero",
+        "repeat",
+        "mirror"
+      ]
+    },
+    "inputextendw": {
+      "value": "repeat",
+      "menus": [
+        "hold",
+        "zero",
+        "repeat",
+        "mirror"
+      ]
+    },
+    "numcolorbufs": {
+      "value": "1",
+      "menus": []
+    },
+    "tops": {
+      "value": "None",
+      "menus": []
+    },
+    "simplexnoise": {
+      "value": "performance",
+      "menus": [
+        "performance",
+        "quality"
+      ]
+    },
+    "premultrgbbyalpha": {
+      "value": "True",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "color": {
+      "value": "0",
+      "menus": []
+    },
+    "color0name": {
+      "value": "",
+      "menus": []
+    },
+    "color0rgbr": {
+      "value": "1.0",
+      "menus": []
+    },
+    "color0rgbg": {
+      "value": "1.0",
+      "menus": []
+    },
+    "color0rgbb": {
+      "value": "1.0",
+      "menus": []
+    },
+    "color0alpha": {
+      "value": "1.0",
+      "menus": []
+    },
+    "vec": {
+      "value": "0",
+      "menus": []
+    },
+    "vec0name": {
+      "value": "",
+      "menus": []
+    },
+    "vec0valuex": {
+      "value": "0.5",
+      "menus": []
+    },
+    "vec0valuey": {
+      "value": "0.0",
+      "menus": []
+    },
+    "vec0valuez": {
+      "value": "0.0",
+      "menus": []
+    },
+    "vec0valuew": {
+      "value": "0.0",
+      "menus": []
+    },
+    "array": {
+      "value": "0",
+      "menus": []
+    },
+    "array0name": {
+      "value": "",
+      "menus": []
+    },
+    "array0type": {
+      "value": "float",
+      "menus": [
+        "float",
+        "vec2",
+        "vec3",
+        "vec4"
+      ]
+    },
+    "array0chop": {
+      "value": "None",
+      "menus": []
+    },
+    "array0arraytype": {
+      "value": "uniformarray",
+      "menus": [
+        "uniformarray",
+        "texturebuffer"
+      ]
+    },
+    "matrix": {
+      "value": "0",
+      "menus": []
+    },
+    "matrix0name": {
+      "value": "",
+      "menus": []
+    },
+    "matrix0value": {
+      "value": "None",
+      "menus": []
+    },
+    "ac": {
+      "value": "0",
+      "menus": []
+    },
+    "ac0name": {
+      "value": "",
+      "menus": []
+    },
+    "ac0initvalue": {
+      "value": "val",
+      "menus": [
+        "val",
+        "chop"
+      ]
+    },
+    "ac0singlevalue": {
+      "value": "0",
+      "menus": []
+    },
+    "ac0chopvalue": {
+      "value": "None",
+      "menus": []
+    },
+    "const": {
+      "value": "0",
+      "menus": []
+    },
+    "const0name": {
+      "value": "",
+      "menus": []
+    },
+    "const0value": {
+      "value": "0.0",
+      "menus": []
+    },
+    "buffer": {
+      "value": "0",
+      "menus": []
+    },
+    "buffer0pop": {
+      "value": "None",
+      "menus": []
+    },
+    "buffer0attrclass": {
+      "value": "point",
+      "menus": [
+        "point",
+        "primitive",
+        "vertex"
+      ]
+    },
+    "buffer0attr": {
+      "value": "",
+      "menus": []
+    },
+    "buffer0name": {
+      "value": "",
+      "menus": []
+    },
+    "outputresolution": {
+      "value": "useinput",
+      "menus": [
+        "useinput",
+        "eighth",
+        "quarter",
+        "half",
+        "2x",
+        "4x",
+        "8x",
+        "fit",
+        "limit",
+        "custom",
+        "parpanel"
+      ]
+    },
+    "resolutionw": {
+      "value": "256",
+      "menus": [
+        "400 300",
+        "640 480",
+        "800 600",
+        "1024 768",
+        "1280 720",
+        "1920 1080",
+        "1920 1200",
+        "3840 2160",
+        "4096 2160",
+        "256 256",
+        "512 512",
+        "1024 1024",
+        "2048 2048",
+        "4096 4096"
+      ]
+    },
+    "resolutionh": {
+      "value": "256",
+      "menus": [
+        "400 300",
+        "640 480",
+        "800 600",
+        "1024 768",
+        "1280 720",
+        "1920 1080",
+        "1920 1200",
+        "3840 2160",
+        "4096 2160",
+        "256 256",
+        "512 512",
+        "1024 1024",
+        "2048 2048",
+        "4096 4096"
+      ]
+    },
+    "resmult": {
+      "value": "True",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "outputaspect": {
+      "value": "resolution",
+      "menus": [
+        "useinput",
+        "resolution",
+        "custom"
+      ]
+    },
+    "aspect1": {
+      "value": "1.0",
+      "menus": [
+        "1 1",
+        "4 3",
+        "16 9",
+        "16 10"
+      ]
+    },
+    "aspect2": {
+      "value": "1.0",
+      "menus": [
+        "1 1",
+        "4 3",
+        "16 9",
+        "16 10"
+      ]
+    },
+    "inputfiltertype": {
+      "value": "linear",
+      "menus": [
+        "nearest",
+        "linear",
+        "mipmap"
+      ]
+    },
+    "fillmode": {
+      "value": "best",
+      "menus": [
+        "useinput",
+        "fill",
+        "width",
+        "height",
+        "best",
+        "outside",
+        "nativeres"
+      ]
+    },
+    "filtertype": {
+      "value": "linear",
+      "menus": [
+        "useinput",
+        "nearest",
+        "linear",
+        "mipmap"
+      ]
+    },
+    "npasses": {
+      "value": "1",
+      "menus": []
+    },
+    "chanmask": {
+      "value": "15",
+      "menus": []
+    },
+    "format": {
+      "value": "useinput",
+      "menus": [
+        "useinput",
+        "rgba8fixed",
+        "rgba16float",
+        "rgba32float",
+        "rgb10a2fixed",
+        "rgba16fixed",
+        "rgba11float",
+        "mono8fixed",
+        "mono16fixed",
+        "mono16float",
+        "mono32float",
+        "rg8fixed",
+        "rg16fixed",
+        "rg16float",
+        "rg32float",
+        "a8fixed",
+        "a16fixed",
+        "a16float",
+        "a32float",
+        "monoalpha8fixed",
+        "monoalpha16fixed",
+        "monoalpha16float",
+        "monoalpha32float"
+      ]
+    },
+    "parmcolorspace": {
+      "value": "srgb",
+      "menus": [
+        "srgb",
+        "srgblinear",
+        "rec601ntsc",
+        "rec709",
+        "rec2020",
+        "dcip3",
+        "dcip3d60",
+        "displayp3d65",
+        "aces2065-1",
+        "acescg",
+        "passthrough"
+      ]
+    },
+    "parmreferencewhite": {
+      "value": "default",
+      "menus": [
+        "default",
+        "useparent",
+        "sdr",
+        "hdr",
+        "ui"
+      ]
+    }
+  }
+}

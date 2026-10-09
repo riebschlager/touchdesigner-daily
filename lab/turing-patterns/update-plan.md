@@ -83,6 +83,8 @@ The new version should be **`create_turing_media_v2.py`**, with `create_turing_m
 
 5. **Add state snapshots and deliberate reset behavior**
 
+   **Implemented and live-validated** in `create_turing_media_v2.py` on TouchDesigner 2025.33230 (macOS). Independent Reset Chemistry / Clear Carried Color / Restart Media / Reset All, in-memory snapshots and verified raw float32 `.tstate` disk persistence, movie position plus both palette/motion histories, source-change policy and history invalidation, deferred seed edits, and atomic Reset / Resample State resizing. All 104 Phase 5 integration checks, 12 real-frame control checks, Phase 2/3/4 regressions, and 53 offline tests pass. See `validation/phase5/README.md` for reset contracts, format, reproducible checks and replay/resize limitations.
+
    Separate the current reset operation into:
    - Reset Chemistry.
    - Clear Carried Color.

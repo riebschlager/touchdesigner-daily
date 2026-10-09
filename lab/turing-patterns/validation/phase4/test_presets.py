@@ -131,9 +131,21 @@ class Pars:
 class Clock:
     def __init__(self, owner):
         self.owner, self.resets, self.rebases = owner, 0, []
+        self.size = LIB['effective_size'](LIB['current_values'](owner, LIB['spec'](owner)))
 
     def reset(self, c):
         self.resets += 1
+        self.size = LIB['effective_size'](LIB['current_values'](c, LIB['spec'](c)))
+
+    def ensure_size(self, c):
+        size = LIB['effective_size'](LIB['current_values'](c, LIB['spec'](c)))
+        if self.size != size:
+            self.reset(c)
+            return True
+        return False
+
+    def ensure_source(self, c):
+        return False
 
     def rebase(self, c, clear_debt=False):
         self.rebases.append(clear_debt)

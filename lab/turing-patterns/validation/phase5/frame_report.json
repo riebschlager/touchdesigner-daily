@@ -1,0 +1,18 @@
+{
+  "checks": {
+    "hand seed edits keep state age reset count": true,
+    "save state pulse creates snapshot": true,
+    "step pulse advances exactly once while paused": true,
+    "restore pulse exact state age pause no reset": true,
+    "clear color pulse preserves chemistry age": true,
+    "reset chemistry pulse keeps color one reset": true,
+    "restart media pulse retains state and reset count": true,
+    "hand source removal keeps chemistry by default": true,
+    "opt in source change resets once across frames": true,
+    "automatic frame handles matching resized buffers": true,
+    "step after automatic resize finite": true,
+    "reset all pulse clears color age one reset": true
+  },
+  "passed": true,
+  "errors": ""
+}

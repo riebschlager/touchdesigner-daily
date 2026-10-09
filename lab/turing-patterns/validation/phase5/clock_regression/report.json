@@ -1,0 +1,268 @@
+{
+  "build": "099.2025.33230",
+  "tolerance": 1e-06,
+  "duration_seconds": 2,
+  "cases": [
+    {
+      "name": "coral",
+      "fps30": {
+        "ticks": 120,
+        "seconds": 2.0,
+        "evolved": true,
+        "finite": true,
+        "bounded": true
+      },
+      "fps60": {
+        "ticks": 120,
+        "seconds": 2.0,
+        "evolved": true,
+        "finite": true,
+        "bounded": true
+      },
+      "max_abs": {
+        "state": 0.0,
+        "palette": 0.0,
+        "out1": 0.0,
+        "patterns": 0.0,
+        "mask_preview": 0.0,
+        "source_preview": 0.0
+      },
+      "passed": true
+    },
+    {
+      "name": "spots",
+      "fps30": {
+        "ticks": 120,
+        "seconds": 2.0,
+        "evolved": true,
+        "finite": true,
+        "bounded": true
+      },
+      "fps60": {
+        "ticks": 120,
+        "seconds": 2.0,
+        "evolved": true,
+        "finite": true,
+        "bounded": true
+      },
+      "max_abs": {
+        "state": 0.0,
+        "palette": 0.0,
+        "out1": 0.0,
+        "patterns": 0.0,
+        "mask_preview": 0.0,
+        "source_preview": 0.0
+      },
+      "passed": true
+    },
+    {
+      "name": "fixed",
+      "fps30": {
+        "ticks": 120,
+        "seconds": 2.0,
+        "evolved": true,
+        "finite": true,
+        "bounded": true
+      },
+      "fps60": {
+        "ticks": 120,
+        "seconds": 2.0,
+        "evolved": true,
+        "finite": true,
+        "bounded": true
+      },
+      "max_abs": {
+        "state": 0.0,
+        "palette": 0.0,
+        "out1": 0.0,
+        "patterns": 0.0,
+        "mask_preview": 0.0,
+        "source_preview": 0.0
+      },
+      "passed": true
+    },
+    {
+      "name": "tint",
+      "fps30": {
+        "ticks": 120,
+        "seconds": 2.0,
+        "evolved": true,
+        "finite": true,
+        "bounded": true
+      },
+      "fps60": {
+        "ticks": 120,
+        "seconds": 2.0,
+        "evolved": true,
+        "finite": true,
+        "bounded": true
+      },
+      "max_abs": {
+        "state": 0.0,
+        "palette": 0.0,
+        "out1": 0.0,
+        "patterns": 0.0,
+        "mask_preview": 0.0,
+        "source_preview": 0.0
+      },
+      "passed": true
+    },
+    {
+      "name": "ramp",
+      "fps30": {
+        "ticks": 120,
+        "seconds": 2.0,
+        "evolved": true,
+        "finite": true,
+        "bounded": true
+      },
+      "fps60": {
+        "ticks": 120,
+        "seconds": 2.0,
+        "evolved": true,
+        "finite": true,
+        "bounded": true
+      },
+      "max_abs": {
+        "state": 0.0,
+        "palette": 0.0,
+        "out1": 0.0,
+        "patterns": 0.0,
+        "mask_preview": 0.0,
+        "source_preview": 0.0
+      },
+      "passed": true
+    },
+    {
+      "name": "dye",
+      "fps30": {
+        "ticks": 120,
+        "seconds": 2.0,
+        "evolved": true,
+        "finite": true,
+        "bounded": true
+      },
+      "fps60": {
+        "ticks": 120,
+        "seconds": 2.0,
+        "evolved": true,
+        "finite": true,
+        "bounded": true
+      },
+      "max_abs": {
+        "state": 0.0,
+        "palette": 0.0,
+        "out1": 0.0,
+        "patterns": 0.0,
+        "mask_preview": 0.0,
+        "source_preview": 0.0
+      },
+      "passed": true
+    },
+    {
+      "name": "motion",
+      "fps30": {
+        "ticks": 120,
+        "seconds": 2.0,
+        "evolved": true,
+        "finite": true,
+        "bounded": true
+      },
+      "fps60": {
+        "ticks": 120,
+        "seconds": 2.0,
+        "evolved": true,
+        "finite": true,
+        "bounded": true
+      },
+      "max_abs": {
+        "state": 0.0,
+        "palette": 0.0,
+        "out1": 0.0,
+        "patterns": 0.0,
+        "mask_preview": 0.0,
+        "source_preview": 0.0
+      },
+      "passed": true
+    }
+  ],
+  "checks": {
+    "pause_state": true,
+    "pause_palette": true,
+    "pause_media_cache": true,
+    "pause_media_previous": true,
+    "step_exactly_one_tick": true,
+    "step_evolves": true,
+    "step_stays_paused": true,
+    "step_then_holds": true,
+    "realtime_capped": true,
+    "lag_retained": true,
+    "zero_speed_freezes_debt_and_state": true,
+    "deterministic_uncapped": true,
+    "fractional_tick": true,
+    "reset_matches_seed": true,
+    "empty_stable": true,
+    "quality_same_elapsed_time": true,
+    "quality_decay_matches_analytic": true,
+    "step_pulse_one_tick": true,
+    "step_pulse_evolves": true,
+    "no_unexpected_errors": true
+  },
+  "quality": [
+    {
+      "quality": 1,
+      "ticks": 60,
+      "value": [
+        0.0,
+        0.20000000298023224,
+        -0.06703177094459534,
+        0.03351588547229767
+      ]
+    },
+    {
+      "quality": 2,
+      "ticks": 60,
+      "value": [
+        0.0,
+        0.20000000298023224,
+        -0.06703177094459534,
+        0.03351588547229767
+      ]
+    },
+    {
+      "quality": 4,
+      "ticks": 60,
+      "value": [
+        0.0,
+        0.20000000298023224,
+        -0.06703177094459534,
+        0.03351588547229767
+      ]
+    }
+  ],
+  "errors": {},
+  "shaders": {
+    "seed_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "fk_sim_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "display_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "fk_seed_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "colorize_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "fk_panel_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "composite_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "media_mask_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "simulation_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "stamp_mask_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "state_reset_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "state_stamp_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "palette_sort_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "state_resize_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "palette_cells_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "domain_prepare_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "media_prepared_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "state_transform_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "influence_prepare_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "state_clear_color_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "reaction_diffusion_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n"
+  },
+  "passed": true
+}

@@ -14,6 +14,7 @@ USE
   8. On Explorer, press Generate Thumbnails, then view fk_explorer as a panel and
      click the Feed/Kill map or a reference thumbnail.
 
+Phase 5 adds raw state snapshots, independent resets and safe state resampling.
 Phase 4 adds a versioned preset table, preset import/export and the Feed/Kill explorer.
 Phase 3 adds independent media modes, domain confinement and carried-color sourcing.
 Phase 2 provides the fixed simulation clock and explicit GPU state storage. No external Python packages or shader files.
@@ -39,7 +40,7 @@ Phase 1 baseline results are in validation/phase1. Phase 2 clock validation and
 reproduction instructions are in validation/phase2. The builder is standalone;
 validation files and TDAPI are not required. Phase 3 validation is in
 validation/phase3; Phase 4 preset/explorer validation is in validation/phase4.
-Phases 5–8 are not implemented.
+Phase 5 validation is in validation/phase5. Phases 6–8 are not implemented.
 """
 
 
@@ -61,20 +62,16 @@ PALETTE_CELLS = 8
 PALETTE_WIDTH = 64
 
 # Canvas size in cells: square Resolution, or independent Width/Height when Rectangle is on.
-CANVAS_WIDTH = 'parent().par.Canvaswidth if parent().par.Rectangle else parent().par.Resolution'
-CANVAS_HEIGHT = 'parent().par.Canvasheight if parent().par.Rectangle else parent().par.Resolution'
-CANVAS_ASPECT = ('parent().par.Canvaswidth / max(1, parent().par.Canvasheight) '
-                 'if parent().par.Rectangle else 1')
+CANVAS_WIDTH = 'parent().fetch("Appliedsize", (512, 512, 512, 512))[0]'
+CANVAS_HEIGHT = 'parent().fetch("Appliedsize", (512, 512, 512, 512))[1]'
+CANVAS_ASPECT = '({}) / max(1, ({}))'.format(CANVAS_WIDTH, CANVAS_HEIGHT)
 
-# Media input: an assigned Source TOP wins over Movie File; neither means no media.
 HAS_SOURCE_TOP = 'parent().par.Sourcetop.eval() is not None'
 HAS_MOVIE = 'parent().par.Moviefile.eval().strip()'
 HAS_MEDIA = '({} or {})'.format(HAS_SOURCE_TOP, HAS_MOVIE)
 HAS_DOMAIN = 'parent().par.Domaintop.eval() is not None'
-
-# The simulation grid: the canvas divided by Cell Size, so each cell spans several pixels.
-SIM_WIDTH = 'max(8, int(round(({}) / parent().par.Cellsize)))'.format(CANVAS_WIDTH)
-SIM_HEIGHT = 'max(8, int(round(({}) / parent().par.Cellsize)))'.format(CANVAS_HEIGHT)
+SIM_WIDTH = 'parent().fetch("Appliedsize", (512, 512, 512, 512))[2]'
+SIM_HEIGHT = 'parent().fetch("Appliedsize", (512, 512, 512, 512))[3]'
 
 
 # =============================================================================
@@ -380,6 +377,55 @@ void main() {
 """
 
 
+STATE_RESET_SHADER = r"""
+layout(location = 0) out vec4 fragColor;
+void main() {
+    ivec2 p = ivec2(gl_FragCoord.xy);
+    vec4 old = texelFetch(sTD2DInputs[0], p, 0);
+    vec4 seed = texelFetch(sTD2DInputs[1], p, 0);
+    fragColor = TDOutputSwizzle(vec4(seed.rg, old.ba));
+}
+"""
+
+CLEAR_COLOR_SHADER = r"""
+layout(location = 0) out vec4 fragColor;
+void main() {
+    vec4 state = texelFetch(sTD2DInputs[0], ivec2(gl_FragCoord.xy), 0);
+    fragColor = TDOutputSwizzle(vec4(state.rg, 0.0, 0.0));
+}
+"""
+
+RESIZE_STATE_SHADER = r"""
+layout(location = 0) out vec4 fragColor;
+""" + _domain_glsl(1) + r"""
+void main() {
+    ivec2 size = textureSize(sTD2DInputs[0], 0);
+    ivec2 dest = textureSize(sTD2DInputs[1], 0);
+    if (!domainOpen(ivec2(gl_FragCoord.xy), dest, true)) {
+        fragColor = TDOutputSwizzle(EMPTY_CELL);
+        return;
+    }
+    vec2 q = vUV.st * vec2(size) - 0.5;
+    ivec2 p = ivec2(floor(q));
+    vec2 f = fract(q);
+    vec4 a = texelFetch(sTD2DInputs[0], clamp(p, ivec2(0), size-1), 0);
+    vec4 b = texelFetch(sTD2DInputs[0], clamp(p+ivec2(1,0), ivec2(0), size-1), 0);
+    vec4 c = texelFetch(sTD2DInputs[0], clamp(p+ivec2(0,1), ivec2(0), size-1), 0);
+    vec4 d = texelFetch(sTD2DInputs[0], clamp(p+ivec2(1,1), ivec2(0), size-1), 0);
+    fragColor = TDOutputSwizzle(mix(mix(a,b,f.x), mix(c,d,f.x), f.y));
+}
+"""
+
+UPLOAD_CALLBACKS = r'''
+def onCook(scriptOp):
+    import numpy as np
+    array = scriptOp.parent().fetch('Uploadarray', None)
+    if array is None:
+        array = np.zeros((8, 8, 4), dtype=np.float32)
+    scriptOp.copyNumpyArray(array.copy())
+'''
+
+
 # =============================================================================
 # 4. Media processing
 # =============================================================================
@@ -476,7 +522,8 @@ float rawMask(vec2 uv) {
     vec4 previous = texture(sTD2DInputs[1], clamp(uv, vec2(0.0), vec2(1.0)));
     float change = max(abs(rgba.a - previous.a),
                        abs(bright - previous.a * luminance(previous.rgb)));
-    return clamp(change * uMotion.x, 0.0, 1.0);
+    // Identical float textures can differ by a few ULPs after luminance math.
+    return change <= 1e-6 ? 0.0 : clamp(change * uMotion.x, 0.0, 1.0);
 }
 void main() {
     vec2 uv = vUV.st;
@@ -906,7 +953,7 @@ BUILTIN_PRESETS = (
      {'Influencemode': 'chemistry', 'Maskmode': 'bright', 'Colormode': 'tint'}),
     ('Color Swirl', 'Carried media color with slow growth and rotation.',
      {'Colormode': 'dye', 'Transform': True, 'Rotate': 30.0}),
-    ('Wide Coarse', 'A 768x432 canvas on a 3-pixel grid with thick lines. Resets when applied.',
+    ('Wide Coarse', 'A 768x432 canvas on a 3-pixel grid with thick lines; uses Resize Behavior Reset.',
      {'Rectangle': True, 'Canvaswidth': 768, 'Canvasheight': 432, 'Cellsize': 3.0}),
 )
 
@@ -916,7 +963,7 @@ BUILTIN_PRESETS = (
 PRESET_EXCLUDED = ('Pause', 'Simtime', 'Simlag', 'Tickcount', 'Substeps',
                    'Preset', 'Presetname', 'Presetbindings', 'Presetfile', 'Importmode',
                    'Presetstatus', 'Explorerclick', 'Explorerreset', 'Fkfeedmin', 'Fkfeedmax',
-                   'Fkkillmin', 'Fkkillmax', 'Thumbseed', 'Thumbage', 'Explorerstatus')
+                   'Fkkillmin', 'Fkkillmax', 'Thumbseed', 'Thumbage', 'Explorerstatus', 'Statefile', 'Statestatus')
 
 
 PRESETS_MODULE = r'''
@@ -937,9 +984,9 @@ VERSION = 1
 GROUPS = (
     ('chemistry', ('Feed', 'Kill', 'Diffusiona', 'Diffusionb')),
     ('seed', ('Seed', 'Seedradius', 'Ambient')),
-    ('dimensions', ('Resolution', 'Rectangle', 'Canvaswidth', 'Canvasheight', 'Cellsize')),
+    ('dimensions', ('Resolution', 'Rectangle', 'Canvaswidth', 'Canvasheight', 'Cellsize', 'Resizebehavior')),
     ('timing', ('Clockmode', 'Speed', 'Solverquality', 'Renderfps', 'Maxcatchup')),
-    ('media', ('Mediaplay', 'Mediaspeed', 'Overridefps', 'Sequencefps', 'Mediascale',
+    ('media', ('Resetonsource', 'Mediaplay', 'Mediaspeed', 'Overridefps', 'Sequencefps', 'Mediascale',
                'Offsetx', 'Offsety', 'Rotation', 'Sourcepremult', 'Ignorealpha')),
     ('influence', ('Influencemode', 'Stampamount', 'Feedmin', 'Feedmax', 'Killmin', 'Killmax',
                    'Chemistryblend', 'Maskmode', 'Strength', 'Maskgain', 'Edgewidth',
@@ -954,7 +1001,7 @@ GROUPS = (
 )
 # Optional bindings: project-specific paths, stored separately so presets stay portable.
 BINDINGS = ('Moviefile', 'Sourcetop', 'Domaintop', 'Ramptop')
-# State buffers cannot survive a size change until resampling exists (Phase 5).
+# Requested dimensions commit atomically through clock.ensure_size().
 DIMENSIONS = ('Resolution', 'Rectangle', 'Canvaswidth', 'Canvasheight', 'Cellsize')
 
 
@@ -1313,10 +1360,13 @@ def apply(c, preset, reset=False, include_bindings=False):
         clock.rebase(c, clear_debt='Clockmode' in changes)
     if reset:
         report['reset'] = 'requested'
-    elif report['resized']:
-        report['reset'] = 'dimensions changed'
-    if report['reset']:
         clock.reset(c)
+    else:
+        if clock.ensure_size(c):
+            report['reset'] = 'dimensions changed'
+        source_reset = clock.ensure_source(c)
+        if source_reset and not report['reset']:
+            report['reset'] = 'source changed'
     return report
 
 
@@ -1448,13 +1498,314 @@ def clip_seed(c):
 '''
 
 
+SNAPSHOT_MODULE = r'''
+"""Raw float32 snapshots. ZIP/JSON/raw bytes: no image codecs or pickle."""
+import copy
+import hashlib
+import json
+import math
+import os
+import struct
+import tempfile
+import zipfile
+from pathlib import Path
+
+SCHEMA = 'turing_media_v2.state'
+VERSION = 1
+TEXTURES = ('state_a', 'state_b', 'media_a', 'media_b', 'palette_a', 'palette_b')
+MAX_BYTES = 1024 * 1024 * 1024
+
+
+class SnapshotError(ValueError):
+    pass
+
+
+def validate(snapshot):
+    if not isinstance(snapshot, dict) or not isinstance(snapshot.get('metadata'), dict):
+        raise SnapshotError('missing snapshot metadata')
+    m = snapshot['metadata']
+    if m.get('schema') != SCHEMA or type(m.get('version')) is not int or m['version'] != VERSION:
+        raise SnapshotError('unsupported state schema/version')
+    if m.get('encoding') != 'float32-le-rgba-bottom-up':
+        raise SnapshotError('unsupported texture encoding')
+    size = m.get('dimensions')
+    if (not isinstance(size, list) or len(size) != 4 or
+            any(type(n) is not int or n < 8 or n > 4096 for n in size)):
+        raise SnapshotError('invalid dimensions')
+    clock = m.get('clock', {})
+    if (not isinstance(clock, dict) or type(clock.get('ticks')) is not int or clock['ticks'] < 0 or
+            type(clock.get('debt')) not in (int, float) or
+            not math.isfinite(clock['debt']) or clock['debt'] < 0 or
+            type(clock.get('buffer')) is not int or clock['buffer'] not in (0, 1) or
+            type(clock.get('media')) is not int or clock['media'] not in (0, 1)):
+        raise SnapshotError('invalid simulation clock')
+    if (m.get('simulation_seconds') != clock['ticks'] / 60.0 or
+            not isinstance(m.get('settings'), dict) or not isinstance(m.get('bindings'), dict) or
+            type(m.get('pause')) is not bool or type(m.get('palette_ready')) is not bool or
+            type(m.get('motion_ready')) is not bool or type(m.get('motion_tick_ready')) is not bool or m.get('palette_reader') not in ('palette_a', 'palette_b')):
+        raise SnapshotError('invalid settings/history metadata')
+    movie = m.get('movie')
+    if (not isinstance(movie, dict) or movie.get('playmode') not in
+            ('locked', 'specify', 'sequential', 'timecodeop') or
+            movie.get('indexunit') not in ('indices', 'frames', 'seconds', 'fraction') or
+            movie.get('cuepointunit') not in ('indices', 'frames', 'seconds', 'fraction') or
+            any(type(movie.get(k)) not in (int, float) or not math.isfinite(movie[k])
+                for k in ('position', 'index', 'cuepoint'))):
+        raise SnapshotError('invalid movie position')
+    textures = snapshot.get('textures', {})
+    records = m.get('textures', {})
+    if (not isinstance(textures, dict) or not isinstance(records, dict) or
+            set(textures) != set(TEXTURES) or set(records) != set(TEXTURES)):
+        raise SnapshotError('missing or unexpected texture')
+    total = 0
+    for name in TEXTURES:
+        rec = records[name]
+        if not isinstance(rec, dict):
+            raise SnapshotError('invalid texture record ' + name)
+        expected = ([size[3], size[2], 4] if name.startswith('state') else
+                    [size[1], size[0], 4] if name.startswith('media') else [2, 64, 4])
+        raw = textures[name]
+        length = math.prod(expected) * 4
+        if (rec.get('shape') != expected or not isinstance(raw, bytes) or len(raw) != length or
+                rec.get('sha256') != hashlib.sha256(raw).hexdigest()):
+            raise SnapshotError('invalid/corrupt texture {}'.format(name))
+        if any(not math.isfinite(v[0]) for v in struct.iter_unpack('<f', raw)):
+            raise SnapshotError('non-finite texture {}'.format(name))
+        total += length
+    if total > MAX_BYTES:
+        raise SnapshotError('snapshot exceeds supported size')
+    # JSON also rejects non-finite settings; no executable objects are persisted.
+    try:
+        json.dumps(m, allow_nan=False)
+    except (ValueError, TypeError) as error:
+        raise SnapshotError('invalid metadata: {}'.format(error))
+    return snapshot
+
+
+def write_file(path, snapshot):
+    validate(snapshot)
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(dir=path.parent, prefix=path.name + '.',
+                                         suffix='.tmp', delete=False) as file:
+            temporary = file.name
+        with zipfile.ZipFile(temporary, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
+            archive.writestr('metadata.json', json.dumps(snapshot['metadata'], allow_nan=False))
+            for name in TEXTURES:
+                archive.writestr(name + '.f32', snapshot['textures'][name])
+        # Verify the bytes from disk before atomically replacing the destination.
+        verified = read_file(temporary)
+        if verified != snapshot:
+            raise SnapshotError('disk verification failed')
+        os.replace(temporary, path)
+        temporary = None
+    finally:
+        if temporary is not None:
+            os.unlink(temporary)
+    return path
+
+
+def read_file(path):
+    try:
+        with zipfile.ZipFile(path, 'r') as archive:
+            expected = {'metadata.json'} | {name + '.f32' for name in TEXTURES}
+            entries = archive.infolist()
+            if (len(entries) != len(expected) or {e.filename for e in entries} != expected or
+                    sum(e.file_size for e in entries) > MAX_BYTES + 1024 * 1024 or
+                    archive.getinfo('metadata.json').file_size > 1024 * 1024):
+                raise SnapshotError('invalid archive contents/size')
+            metadata = json.loads(archive.read('metadata.json'))
+            textures = {name: archive.read(name + '.f32') for name in TEXTURES}
+        return validate(dict(metadata=metadata, textures=textures))
+    except (OSError, ValueError, KeyError, zipfile.BadZipFile, RuntimeError) as error:
+        raise SnapshotError('cannot read state: {}'.format(error))
+
+
+def upload(c, raw, shape):
+    # NumPy ships with TD; imported only for manual upload/snapshot operations.
+    import numpy as np
+    array = np.frombuffer(raw, dtype='<f4').reshape(shape).astype(np.float32, copy=True)
+    c.store('Uploadarray', array)
+    node = c.op('state_upload')
+    node.cook(force=True)
+    return node
+
+
+def download(node):
+    node.cook(force=True)
+    array = node.numpyArray(delayed=False)
+    if array is None:
+        raise SnapshotError('texture download failed: ' + node.path)
+    raw = array.astype('<f4', copy=True).tobytes(order='C')
+    return raw, list(array.shape)
+
+
+def _movie(c):
+    movie = c.op('movie')
+    if c.par.Moviefile.eval().strip():
+        movie.cook(force=True)
+    return dict(position=float(movie.index), playmode=movie.par.playmode.eval(),
+                index=float(movie.par.index.eval()), indexunit=movie.par.indexunit.eval(),
+                cuepoint=float(movie.par.cuepoint.eval()), cuepointunit=movie.par.cuepointunit.eval())
+
+
+def capture(c):
+    clock = c.op('clock').module
+    clock.ensure_size(c)
+    clock.ensure_source(c)
+    if not clock._clock(c)['ready']:
+        clock.reset(c)
+    lib = c.op('preset_lib').module
+    settings, bindings = lib.capture(c, include_bindings=True)
+    state = clock._clock(c)
+    m = dict(schema=SCHEMA, version=VERSION, encoding='float32-le-rgba-bottom-up',
+             dimensions=list(c.fetch('Appliedsize')), simulation_seconds=state['ticks'] / 60.0,
+             settings=settings, bindings=bindings, pause=bool(c.par.Pause),
+             clock={k: state[k] for k in ('ticks', 'debt', 'buffer', 'media')},
+             palette_ready=bool(c.fetch('Paletteready', False)),
+             motion_ready=bool(c.fetch('Motionready', False)),
+             motion_tick_ready=bool(c.fetch('Motiontickready', False)), movie=_movie(c), textures={},
+             palette_reader=c.op('palette_read').par.top.eval().name,
+             build=str(app.version) + '.' + str(app.build),
+             replay='Equal settings, ticks and source samples reproduce state. External live '
+                    'sources cannot rewind; sequential movie scheduling depends on output timing.')
+    textures = {}
+    for name in TEXTURES:
+        raw, shape = download(c.op(name))
+        textures[name] = raw
+        m['textures'][name] = dict(shape=shape, sha256=hashlib.sha256(raw).hexdigest())
+    return validate(dict(metadata=m, textures=textures))
+
+
+def _seek_movie(c, data):
+    movie = c.op('movie')
+    movie.par.playmode = data['playmode']
+    movie.par.indexunit = data['indexunit']
+    movie.par.index = data['index']
+    if c.par.Moviefile.eval().strip() and data['playmode'] == 'sequential':
+        movie.par.cuepointunit = 'indices'
+        movie.par.cuepoint = data['position']
+        movie.par.cue = True
+        movie.cook(force=True)
+        movie.par.cue = False
+    movie.par.cuepointunit = data['cuepointunit']
+    movie.par.cuepoint = data['cuepoint']
+
+
+def restore(c, snapshot):
+    validate(snapshot)
+    m = snapshot['metadata']
+    lib = c.op('preset_lib').module
+    kinds = lib.spec(c)
+    values = dict(m['settings'], **m['bindings'], Pause=m['pause'])
+    # Validate everything before touching parameters, buffers or media position.
+    for name, value in values.items():
+        if name != 'Pause':
+            if name not in kinds:
+                raise SnapshotError('unsupported snapshot setting ' + name)
+            try:
+                lib.coerce(kinds[name], value)
+            except ValueError as error:
+                raise SnapshotError('invalid setting {}: {}'.format(name, error))
+        par = c.par[name]
+        if type(value) in (int, float) and (
+                (par.clampMin and value < par.min) or (par.clampMax and value > par.max)):
+            raise SnapshotError('out-of-range snapshot setting ' + name)
+        if par.mode == ParMode.EXPORT:
+            raise SnapshotError('cannot restore exported parameter ' + name)
+    if list(lib.effective_size(values)) != m['dimensions']:
+        raise SnapshotError('settings do not match snapshot dimensions')
+    if set(lib.parameter_names()) - set(m['settings']) or set(lib.BINDINGS) != set(m['bindings']):
+        raise SnapshotError('incomplete snapshot settings/bindings')
+    controls, clock_op = c.op('controls'), c.op('clock')
+    controls_active, clock_active = bool(controls.par.active), bool(clock_op.par.active)
+    controls.par.active = False
+    clock_op.par.active = False
+    controls.cook(force=True)
+    try:
+        # Detach old simulation dependencies before any dimension/settings change.
+        # Cache buffers are held; this avoids cooking a resized solver on old state.
+        initial = upload(c, snapshot['textures']['state_a'], m['textures']['state_a']['shape'])
+        for name in TEXTURES:
+            c.op(name).inputConnectors[0].connect(initial)
+        lib.set_quietly(c, values)
+        c.store('Appliedsize', tuple(m['dimensions']))
+        _seek_movie(c, m['movie'])
+        clock = clock_op.module
+        # Each buffer gets an independent copy; all six histories/parities survive.
+        for name in TEXTURES:
+            source = upload(c, snapshot['textures'][name], m['textures'][name]['shape'])
+            clock.capture(c.op(name), source)
+        state = clock._clock(c)
+        state.update(m['clock'], ready=True, frame=None)
+        c.op('state_read').par.top = ('state_a', 'state_b')[state['buffer']]
+        c.op('palette_read').par.top = ('palette_a', 'palette_b')[state['buffer']]
+        # Stamp/clear can move the state buffer without moving palette history.
+        c.op('palette_read').par.top = m['palette_reader']
+        c.op('media_cache').par.top = ('media_a', 'media_b')[state['media']]
+        c.op('media_previous').par.top = ('media_a', 'media_b')[1 - state['media']]
+        c.store('Paletteready', m['palette_ready'])
+        c.store('Motionready', m['motion_ready'])
+        c.store('Motiontickready', m['motion_tick_ready'])
+        c.store('Sourcesignature', clock.source_signature(c))
+        clock.rebase(c)
+        for name in ('state', 'palette', 'media_mask', 'mask_preview'):
+            c.op(name).cook(force=True)
+    finally:
+        controls.par.active = controls_active
+        controls.cook(force=True)
+        clock_op.par.active = clock_active
+    return True
+
+
+def status(c, text):
+    c.par.Statestatus.val = text
+    print('{} state: {}'.format(c.path, text))
+
+
+def _path(c):
+    value = c.par.Statefile.eval().strip()
+    if not value:
+        raise SnapshotError('set State File first')
+    path = Path(value)
+    return path if path.is_absolute() else Path(project.folder) / path
+
+
+def action(c, name):
+    try:
+        if name == 'Savestate':
+            snapshot = capture(c)
+            c.store('Snapshot', snapshot)
+            status(c, 'Saved in memory at {:.6f} s'.format(snapshot['metadata']['simulation_seconds']))
+        elif name == 'Restorestate':
+            snapshot = c.fetch('Snapshot', None)
+            if snapshot is None:
+                raise SnapshotError('save an in-memory state first')
+            restore(c, snapshot)
+            status(c, 'Restored in-memory state')
+        elif name == 'Exportstate':
+            path = write_file(_path(c), capture(c))
+            status(c, 'Saved verified float32 state to {}'.format(path))
+        elif name == 'Importstate':
+            snapshot = read_file(_path(c))
+            restore(c, snapshot)
+            c.store('Snapshot', snapshot)
+            status(c, 'Restored disk state')
+    except (SnapshotError, OSError, RuntimeError) as error:
+        status(c, 'Error: {}'.format(error))
+        return False
+    return True
+'''
+
+
 # =============================================================================
 # 7. Callbacks
 # =============================================================================
 
 CONTROL_CALLBACKS = r'''
-RESET_PARAMETERS = ('Resolution', 'Rectangle', 'Canvaswidth', 'Canvasheight', 'Cellsize',
-                    'Seed', 'Seedradius', 'Ambient', 'Moviefile', 'Sourcetop')
+SIZE_PARAMETERS = ('Resolution', 'Rectangle', 'Canvaswidth', 'Canvasheight', 'Cellsize')
 
 
 def resetSimulation(component):
@@ -1471,15 +1822,20 @@ def onPulse(par):
         clock.stamp(c)
     elif name == 'Step':
         clock.step(c)
-    elif name == 'Reset':
-        resetSimulation(c)
+    elif name in ('Reset', 'Resetall'):
+        clock.reset_all(c)
+    elif name == 'Resetchemistry':
+        clock.reset_chemistry(c)
+    elif name == 'Clearcolor':
+        clock.clear_color(c)
+    elif name in ('Savestate', 'Restorestate', 'Exportstate', 'Importstate'):
+        c.op('snapshot_lib').module.action(c, name)
     elif name == 'Reseed':
         # One reset: the Seed change itself is batched, not a second trigger.
         presets.set_quietly(c, {'Seed': c.par.Seed.eval() + 1})
-        resetSimulation(c)
+        clock.reset_chemistry(c)
     elif name == 'Restartclip':
-        c.op('movie').par.cuepulse.pulse()
-        resetSimulation(c)
+        clock.restart_media(c)
     elif name == 'Transformzero':
         for key in ('Grow', 'Scalex', 'Scaley', 'Translatex', 'Translatey', 'Rotate'):
             c.par[key].val = 0.0
@@ -1510,8 +1866,10 @@ def onValueChange(par, prev):
     if par.name in ('Pause', 'Clockmode', 'Speed'):
         c.op('clock').module.rebase(c, clear_debt=par.name == 'Clockmode')
         return
-    if par.name in RESET_PARAMETERS:
-        resetSimulation(c)
+    if par.name in SIZE_PARAMETERS:
+        c.op('clock').module.ensure_size(c)
+    elif par.name in ('Moviefile', 'Sourcetop'):
+        c.op('clock').module.ensure_source(c)
     return
 '''
 
@@ -1671,7 +2029,12 @@ def plan_ticks(remainder, elapsed, speed, realtime, limit):
 def capture(target, source):
     """Explicit GPU copy, verified to replace repeatedly within one TD frame."""
     source.cook(force=True)
+    resized = (target.width, target.height) != (source.width, source.height)
     target.inputConnectors[0].connect(source)
+    if resized:
+        # Cache TOP otherwise resamples its old texture during a size transition,
+        # even when Replace is enabled. Clear first to make this a raw new copy.
+        target.par.resetpulse.pulse()
     target.par.replace = True
     try:
         target.cook(force=True)
@@ -1705,8 +2068,127 @@ def _status(c, count):
     c.par.Substeps = UPDATES_PER_TICK * int(c.par.Solverquality)
 
 
+def desired_size(c):
+    return c.op('preset_lib').module.effective_size({
+        key: c.par[key].eval() for key in ('Resolution', 'Rectangle', 'Canvaswidth',
+                                         'Canvasheight', 'Cellsize')})
+
+
+def source_signature(c):
+    source = c.par.Sourcetop.eval()
+    return (c.par.Moviefile.eval(), getattr(source, 'id', None), getattr(source, 'path', None))
+
+
+def invalidate_motion(c):
+    # New source / canvas starts from two identical samples, including during pause.
+    for name in ('media_a', 'media_b'):
+        capture(c.op(name), c.op('media_prepared'))
+    state = _clock(c)
+    state['media'] = 0
+    c.op('media_cache').par.top = 'media_a'
+    c.op('media_previous').par.top = 'media_b'
+    c.store('Motionready', False)
+    c.store('Motiontickready', False)
+    for name in ('media_cache', 'media_previous', 'media_mask', 'mask_preview'):
+        c.op(name).cook(force=True)
+    c.store('Sourcesignature', source_signature(c))
+
+
+def ensure_source(c):
+    signature = source_signature(c)
+    if signature != c.fetch('Sourcesignature', None):
+        if _clock(c)['ready'] and c.par.Resetonsource:
+            reset(c)
+            return True
+        invalidate_motion(c)
+    return False
+
+
+def ensure_size(c):
+    size = desired_size(c)
+    old = c.fetch('Appliedsize', None)
+    if old is None or not _clock(c)['ready']:
+        c.store('Appliedsize', size)
+        return False
+    if tuple(old) == tuple(size):
+        return False
+    if c.par.Resizebehavior.eval() == 'reset':
+        reset(c)
+        return True
+    # Download before committing new dimensions. The stored dimensions gate all
+    # geometry-dependent operators, so no solver cook can see mismatched buffers.
+    snapshots = c.op('snapshot_lib').module
+    raw, shape = snapshots.download(c.op('state_read'))
+    upload = snapshots.upload(c, raw, shape)
+    for name in ('state_a', 'state_b'):
+        c.op(name).inputConnectors[0].connect(upload)
+    c.store('Appliedsize', size)
+    for name in ('state_a', 'state_b'):
+        capture(c.op(name), c.op('state_resize'))
+    _clock(c)['buffer'] = 0
+    c.op('state_read').par.top = 'state_a'
+    invalidate_motion(c)
+    rebase(c)
+    c.op('state').cook(force=True)
+    c.par.Statestatus.val = 'Resampled state; age retained. New grid changes future evolution.'
+    return False
+
+
+def _seed_buffers(c, clear_color):
+    if clear_color or not _clock(c)['ready']:
+        source = c.op('seed')
+    else:
+        c.op('state_reset').cook(force=True)
+        # Freeze result before either ping-pong buffer is replaced.
+        capture(c.op('state_work'), c.op('state_reset'))
+        source = c.op('state_work')
+    for name in ('state_a', 'state_b'):
+        capture(c.op(name), source)
+    c.op('state_read').par.top = 'state_a'
+    _clock(c)['buffer'] = 0
+
+
+def reset_chemistry(c):
+    # A pending resize is handled before resetting; seed controls are read here.
+    if not _clock(c)['ready']:
+        reset(c)
+        return
+    if ensure_size(c) or ensure_source(c):
+        return
+    _seed_buffers(c, clear_color=False)
+    _clock(c).update(ticks=0, debt=0.0, frame=None)
+    c.store('Resetcount', c.fetch('Resetcount', 0) + 1)
+    rebase(c)
+    c.op('state').cook(force=True)
+
+
+def clear_color(c):
+    ensure_size(c)
+    ensure_source(c)
+    state = _clock(c)
+    if not state['ready']:
+        reset(c)
+    dest = 1 - state['buffer']
+    capture(c.op(('state_a', 'state_b')[dest]), c.op('state_clear_color'))
+    c.op('state_read').par.top = ('state_a', 'state_b')[dest]
+    state['buffer'] = dest
+    c.op('state').cook(force=True)
+    rebase(c)
+
+
+def restart_media(c):
+    c.op('movie').par.cuepulse.pulse()
+    invalidate_motion(c)
+    rebase(c)
+
+
+def reset_all(c):
+    c.op('movie').par.cuepulse.pulse()
+    reset(c)
+
 def reset(c):
     state = _clock(c)
+    c.store('Appliedsize', desired_size(c))
     # Break old capture inputs before resizing/reinitializing the buffers.
     for name in ('state_a', 'state_b'):
         c.op(name).inputConnectors[0].connect(c.op('seed'))
@@ -1718,6 +2200,9 @@ def reset(c):
         capture(c.op(name), c.op('media_prepared'))
     c.op('media_cache').par.top = 'media_a'
     c.op('media_previous').par.top = 'media_b'
+    c.store('Motionready', False)
+    c.store('Motiontickready', False)
+    c.store('Sourcesignature', source_signature(c))
     c.store('Paletteready', False)
     for name in ('palette_a', 'palette_b'):
         c.op(name).inputConnectors[0].connect(c.op('palette_init'))
@@ -1740,12 +2225,15 @@ def reset(c):
 
 
 def tick(c, sample=None):
+    ensure_size(c)
+    ensure_source(c)
     state = _clock(c)
     if not state['ready']:
         reset(c)
     # A controlled source can provide one sample per tick for offline replay.
     if sample is not None:
         sample(c, state['ticks'], state['ticks'] * TICK_SECONDS)
+    c.store('Motiontickready', bool(c.fetch('Motionready', False)))
     media = 1 - state['media']
     capture(c.op(('media_a', 'media_b')[media]), c.op('media_prepared'))
     c.op('media_cache').par.top = ('media_a', 'media_b')[media]
@@ -1755,6 +2243,7 @@ def tick(c, sample=None):
     c.op('media_mask').cook(force=True)
     c.op('mask_preview').cook(force=True)
     state['media'] = media
+    c.store('Motionready', True)
 
     c.op('domain_mask').cook(force=True)
     c.op('influence_field').cook(force=True)
@@ -1776,6 +2265,8 @@ def stamp(c):
     """Apply the live mask once without advancing time, palette or motion history."""
     if c.par.Influencemode.eval() != 'stamp':
         return False
+    ensure_size(c)
+    ensure_source(c)
     state = _clock(c)
     if not state['ready']:
         reset(c)
@@ -1794,6 +2285,8 @@ def stamp(c):
 
 def advance(c, elapsed=None, sample=None):
     """One output frame; explicit elapsed seconds supports reproducible validation."""
+    ensure_size(c)
+    ensure_source(c)
     state = _clock(c)
     if not state['ready']:
         reset(c)
@@ -2088,8 +2581,25 @@ def build_turing_media_v2(container=None):
     _number(page, 'Seed', 'Seed', 1, 0, 1000000, True)
     _number(page, 'Seedradius', 'Seed Radius (cells)', 9.0, 3.0, 32.0)
     _toggle(page, 'Ambient', 'Ambient Seeds', True)
-    for name, label in (('Reset', 'Reset'), ('Reseed', 'Reseed + Reset')):
+    for name, label in (('Reset', 'Reset All'), ('Reseed', 'Reseed + Reset Chemistry')):
         page.appendPulse(name, label=label)
+
+    state_page = component.appendCustomPage('State')
+    state_page.appendPulse('Resetchemistry', label='Reset Chemistry')
+    state_page.appendPulse('Clearcolor', label='Clear Carried Color')
+    state_page.appendPulse('Resetall', label='Reset All')
+    _menu(state_page, 'Resizebehavior', 'Resize Behavior', [
+        ('reset', 'Reset'), ('resample', 'Resample State')], 'reset')
+    state_page.appendPulse('Savestate', label='Save State (memory)')
+    state_page.appendPulse('Restorestate', label='Restore State (memory)')
+    state_file = state_page.appendFile('Statefile', label='State File (.tstate)')[0]
+    state_file.default = 'turing_media_v2.tstate'
+    state_file.val = 'turing_media_v2.tstate'
+    state_page.appendPulse('Exportstate', label='Save State to Disk')
+    state_page.appendPulse('Importstate', label='Restore State from Disk')
+    state_status = state_page.appendStr('Statestatus', label='Status')[0]
+    state_status.val = 'No state saved'
+    state_status.readOnly = True
 
     preset_page = component.appendCustomPage('Presets')
     _menu(preset_page, 'Preset', 'Preset', [('coral', 'Coral')], 'coral')
@@ -2137,7 +2647,8 @@ def build_turing_media_v2(container=None):
     source_top.val = ''
     _toggle(media_page, 'Mediaplay', 'Play Media', True)
     _number(media_page, 'Mediaspeed', 'Media Speed', 0.5, -2.0, 2.0)
-    media_page.appendPulse('Restartclip', label='Restart Clip + Reset')
+    media_page.appendPulse('Restartclip', label='Restart Media')
+    _toggle(media_page, 'Resetonsource', 'Reset on Source Change', False)
     _toggle(media_page, 'Overridefps', 'Override FPS (image sequences)', False)
     _number(media_page, 'Sequencefps', 'Sequence FPS', 30.0, 1.0, 120.0)
     _number(media_page, 'Mediascale', 'Scale', 0.9, 0.05, 3.0)
@@ -2325,7 +2836,7 @@ def build_turing_media_v2(container=None):
                    'parent().par.Edgewidth * parent().par.Cellsize',
                    'parent().par.Smoothing * parent().par.Cellsize')),
         ('uMotion', ('parent().par.Motiongain',
-                     '1', '0', '0')),
+                     'parent().fetch("Motiontickready", False)', '0', '0')),
     ])
     mask_preview = component.create(nullTOP, 'mask_preview')
     mask_preview.nodeX, mask_preview.nodeY = 350, 650
@@ -2370,7 +2881,7 @@ def build_turing_media_v2(container=None):
         ('uMask', (_menu_index('Maskmode'), 'parent().par.Maskgain',
                    'parent().par.Edgewidth * parent().par.Cellsize',
                    'parent().par.Smoothing * parent().par.Cellsize')),
-        ('uMotion', ('parent().par.Motiongain', '1', '0', '0')),
+        ('uMotion', ('parent().par.Motiongain', 'parent().fetch("Motiontickready", False)', '0', '0')),
     ])
 
     seed = _shader(component, 'seed', 'seed_pixel', SEED_SHADER, (-600, 200))
@@ -2387,6 +2898,28 @@ def build_turing_media_v2(container=None):
     for index, name in enumerate(('state_a', 'state_b')):
         _buffer(component, name, seed, (-850, -250 - index * 150))
     state_read = _reader(component, 'state_read', 'state_a', (-350, 200))
+
+    upload_callbacks = component.create(textDAT, 'state_upload_callbacks')
+    upload_callbacks.text = UPLOAD_CALLBACKS.strip() + '\n'
+    upload_callbacks.nodeX, upload_callbacks.nodeY = -1400, -1400
+    upload_node = component.create(scriptTOP, 'state_upload')
+    upload_node.nodeX, upload_node.nodeY = -1400, -1100
+    _set(upload_node, 'callbacks', upload_callbacks.name)
+    _set(upload_node, 'format', 'rgba32float')
+    _set(upload_node, 'inputfiltertype', 'nearest')
+    resize = _shader(component, 'state_resize', 'resize_pixel', RESIZE_STATE_SHADER, (-1100, -1100))
+    resize.inputConnectors[0].connect(upload_node)
+    resize.inputConnectors[1].connect(domain)
+    _set(resize, 'outputresolution', 'custom')
+    _expression(resize, 'resolutionw', SIM_WIDTH)
+    _expression(resize, 'resolutionh', SIM_HEIGHT)
+    _uniforms(resize, [domain_uniform])
+    reset_node = _shader(component, 'state_reset', 'reset_pixel', STATE_RESET_SHADER, (-800, -1100))
+    reset_node.inputConnectors[0].connect(state_read)
+    reset_node.inputConnectors[1].connect(seed)
+    _buffer(component, 'state_work', seed, (-800, -1450))
+    clear_node = _shader(component, 'state_clear_color', 'clear_color_pixel', CLEAR_COLOR_SHADER, (-500, -1100))
+    clear_node.inputConnectors[0].connect(state_read)
 
     simulation = _shader(component, 'reaction_diffusion', 'simulation_pixel',
                          SIMULATION_SHADER, (-100, 200))
@@ -2526,6 +3059,9 @@ def build_turing_media_v2(container=None):
     _set(clock, 'frameend', False)
 
     _build_presets(component)
+    snapshot_lib = component.create(textDAT, 'snapshot_lib')
+    snapshot_lib.text = SNAPSHOT_MODULE.strip() + '\n'
+    snapshot_lib.nodeX, snapshot_lib.nodeY = -1100, -1450
     _build_explorer(component)
 
     callbacks = component.create(parameterexecuteDAT, 'controls')
@@ -2536,7 +3072,8 @@ def build_turing_media_v2(container=None):
     _set(callbacks, 'pars', 'Stamp Step Pause Clockmode Speed Reset Reseed Resolution Rectangle '
                             'Canvaswidth Canvasheight Cellsize Seed Seedradius Ambient Moviefile '
                             'Sourcetop Clipseed Restartclip Transformzero Applypreset Applyreset '
-                            'Savepreset Deletepreset Importpresets Exportpresets Generatethumbs')
+                            'Savepreset Deletepreset Importpresets Exportpresets Generatethumbs '
+                            'Resetchemistry Clearcolor Resetall Savestate Restorestate Exportstate Importstate')
     _set(callbacks, 'custom', True)
     _set(callbacks, 'builtin', False)
     _set(callbacks, 'onpulse', True)
@@ -2574,7 +3111,7 @@ def build_turing_media_v2(container=None):
 # 9. Embedded help
 # =============================================================================
 
-NETWORK_HELP = '''TURING MEDIA V2 / PHASE 4 — PRESETS AND FEED/KILL EXPLORER
+NETWORK_HELP = '''TURING MEDIA V2 / PHASE 5 — SNAPSHOTS AND DELIBERATE RESETS
 
 QUICK START
 Paste the entire builder into a Text DAT and Run Script. Play the timeline.
@@ -2603,8 +3140,10 @@ Step advances exactly one 1/60-second tick while paused, even at Speed zero.
 Step does nothing while running. It leaves Pause on and preserves time debt.
 Pause/resume rebases wall time, so paused time is never caught up. Changing
 Clock Mode clears fractional time and catch-up debt, preserving state/age.
-Reset restores seed, colorless state and initial palette/media samples, resets
-age/debt, and preserves Pause. Startup/load reinitializes GPU history.
+Reset All restores seed, colorless state and initial palette/media samples, resets
+age/debt, restarts the movie and preserves Pause. Reset Chemistry keeps color
+and palette/media history. Startup/load reinitializes GPU history; a saved
+in-memory or disk snapshot can then restore it.
 Simulation Time, Simulation Lag, Ticks Last Frame, and Substeps / Tick are
 read-only diagnostics. Viewer recooks do not advance the clock.
 
@@ -2616,19 +3155,24 @@ Several ticks in one output frame reuse the available live/movie source unless
 an offline caller supplies per-tick samples. Equal ticks/settings/source samples
 produce the same results at 30 and 60 output FPS (tolerance 1e-6 in validation).
 A live camera or ordinarily playing movie sampled at different output FPS can
-supply DIFFERENT samples. Frame Stepped does not resample or seek movies; movie
-position/snapshot controls are later work. For controlled offline input, the
+supply DIFFERENT samples. Frame Stepped does not resample or seek movies. State
+snapshots restore movie position and both sampled media/palette histories; equal
+subsequent movie frames/tick samples reproduce evolution. Sequential playback
+still depends on output timing and decoder scheduling. For controlled offline input, the
 clock DAT exposes advance(component, sample=callback); callback receives
 (component, tick_index, simulation_seconds) before each tick's source capture.
 Motion measures alpha and alpha-weighted luminance changes per tick, not optical
-flow. It settles to zero on the next unchanged tick; while paused history holds.
+flow. Changes <=1e-6 are treated as floating-point noise. It settles to zero on
+the next unchanged tick; while paused history holds. Source changes invalidate
+both samples immediately and suppress the first new tick difference.
 
 TURING PAGE
 Feed/Kill and Diffusion A/B control chemistry. Ambient Seeds adds ten initial
-patches. Editing Seed, Seed Radius, Ambient Seeds, dimensions or the source
-binding by hand still resets (deliberate reset controls are Phase 5). Reset keeps the current media position;
-Restart Clip cues the movie and resets. Reseed increments the seed and resets
-once. The former Coral/Dividing Spots pulses are now presets (Presets page).
+patches. Editing Seed, Seed Radius or Ambient Seeds takes effect on the next
+explicit reset. Source changes keep chemistry by default and invalidate motion
+history. Dimension edits follow State > Resize Behavior. Turing > Reset is a
+Reset All alias. Reseed increments the seed and resets chemistry once, keeping
+carried color. Restart Media cues the movie and retains chemistry/age/color. The former Coral/Dividing Spots pulses are now presets (Presets page).
 Resolution controls a square canvas; Rectangular Canvas enables Width/Height.
 Cell Size divides the canvas dimensions for a coarser simulation, upscaled by
 Display > Upscale Filter. Larger cells make thicker lines and lower GPU cost.
@@ -2637,7 +3181,9 @@ Seed Radius, Edge Width, Mask Smoothing, Tint Spread and Translate use cells.
 MEDIA PAGE
 Movie File supports clips and image sequences; Source TOP supports generators,
 cameras, renders, etc. Do not reference this component's own output (cook loop).
-Play Media/Media Speed/Restart Clip affect only the movie. Override FPS and
+Play Media/Media Speed/Restart Media affect only the movie. Reset on Source
+Change is off by default. Turn it on to reset chemistry/color/age and sampled
+histories when Movie File or Source TOP changes (without rewinding the movie). Override FPS and
 Sequence FPS are for image sequences. Scale, Offset X/Y and Rotation position
 the media while preserving its aspect. Offsets are fractions of canvas size.
 Prepared media is straight RGBA. Source Premultiplied unpremultiplies incoming
@@ -2699,18 +3245,19 @@ Presets live in the 'presets' Text DAT as a versioned JSON table (schema
 turing_media_v2.presets, version 1), saved with the TOE/TOX. Each preset holds
 a name, description and COMPLETE settings grouped as chemistry, seed,
 dimensions, timing, media fitting, influence, domain, transform, display and
-color. Pause, diagnostics and the Presets/Explorer controls are not preset data.
+color (including Resize Behavior and Reset on Source Change). Pause, diagnostics,
+snapshot file/status and the Presets/Explorer controls are not preset data.
 Built-in presets (read-only) are rebuilt from defaults on every build:
 Coral, Dividing Spots, Worms, Holes, Clip Seed, Stamp and Evolve, Chemistry Map,
 Color Swirl, Wide Coarse. User presets are marked (user) in the menu.
 Apply Preset (keep state) sets every parameter in ONE batch and does not reset:
 chemical state, carried color, age and palette/media history continue. Seed
-settings are stored but take effect at the next reset. Exception: if the
-effective canvas or simulation size changes, Apply performs exactly one reset,
-because state cannot survive a resize until resampling exists (Phase 5).
+settings are stored but take effect at the next reset. If effective canvas or
+simulation dimensions change, Resize Behavior selects one reset or resampling
+with age/color preserved. The policy IN THE PRESET applies; built-ins use Reset.
 Apply Preset + Reset sets everything, then resets exactly once.
-Applying source bindings without reset keeps state; motion history is not yet
-invalidated on source changes (Phase 5).
+Source bindings invalidate motion history and follow Reset on Source Change.
+Multiple size/source changes in one preset batch trigger at most one reset.
 Save Current Preset stores all current values under Save As Name (blank picks
 'User Preset N'); the same name replaces that user preset. Built-in names are
 refused. Delete User Preset removes the selected user preset.
@@ -2730,6 +3277,60 @@ reported. Menu values not offered by this build are reported as invalid.
 Parameters driven by an expression are set to constant; exported parameters
 are left alone and reported as blocked. Status shows the last result.
 Seed From Clip Only (Influence page) is a partial preset with one reset.
+
+STATE PAGE / RESETS AND SNAPSHOTS
+Reset Chemistry applies the current seed to A/B and resets simulation age/debt;
+keeps signed carried color, palette history, motion samples and movie position.
+Clear Carried Color zeros blue/alpha (signed Oklab a/b); chemical
+A/B (red/green), simulation age, palette and media position remain unchanged.
+Restart Media (Media page) cues the movie, invalidates motion history and retains
+chemistry, carried color, palette and age. Reset All combines seed, color clear,
+movie restart and initial palette/media histories, resetting age/debt once.
+Every operation retains Pause. Turing > Reset is the Reset All alias; Reseed
+increments Seed and invokes Reset Chemistry once. Apply Preset + Reset retains
+movie position while clearing chemistry/color/age/histories, as in Phase 4.
+
+Save State (memory) saves one snapshot in component storage; Restore State reuses
+it without consuming it. Saves are independent of Pause. Snapshots include all
+six float32 ping-pong textures, active readers, dimensions, tick count and clock
+debt, all 72 preset settings, four media/TOP bindings, Pause, motion readiness,
+palette readiness, movie position/mode/index and schema version. Settings restore
+as constants; exported settings are refused before anything changes. Presets and
+explorer thumbnails are not part of the evolving simulation snapshot.
+
+State File (.tstate) uses ZIP with versioned JSON metadata and six little-endian
+raw float32 RGBA payloads, rows bottom to top. No image/color conversion, alpha
+premultiplication, quantization, image codec or pickle is used. State alpha is
+signed chroma DATA, not opacity. Each payload includes dimensions and SHA-256.
+Save State to Disk captures the CURRENT state, checks the disk round trip and
+atomically replaces the destination. Restore State from Disk validates schema,
+settings, dimensions, sizes, hashes and finite values before applying, then also
+keeps that snapshot in memory. Relative paths resolve from the project folder.
+Save/restore may block while downloading/uploading GPU textures. Saving memory
+also requires CPU memory for all six arrays. Snapshots survive subsequent ticks,
+pauses, resets and resizes; a restored snapshot uses its original dimensions.
+
+Movie sources restore their position and sampled histories. For exact future
+playback, provide the same subsequent movie frames/source samples per tick:
+Specify Index movie playback can be driven by an offline sample callback.
+Sequential movies still depend on output timing/decoder scheduling. External
+live TOPs/cameras cannot rewind; their chemistry restores exactly, while live
+preview/overlay and subsequent source samples can differ. Bindings reference
+external media files/operators: snapshots do not embed their assets. Rebuilding
+or changing external shader/texture processing also changes future playback.
+After TOE/TOX load GPU buffers initialize afresh; Restore State recovers a saved
+memory snapshot, or Restore State from Disk recovers a .tstate snapshot.
+
+Resize Behavior: Reset (default) initializes chemistry/color/histories and age
+once when effective canvas or grid dimensions change. Resample State retains
+age/debt, color and palette, explicitly interpolates all raw state channels at
+normalized pixel centers with clamped edges, and respects the new domain mask.
+Motion samples invalidate when dimensions change. Every requested dimension
+change commits through the clock; both state buffers have the new grid before
+the next solver tick. Hidden Width/Height edits in square mode have no effect.
+Resampling preserves continuity but changes the discrete simulation and may
+alter future behavior. Large cell/canvas changes can smooth away small features.
+No resampling is needed when dimensions are unchanged.
 
 EXPLORER PAGE / FEED-KILL PANEL
 fk_explorer is a Container COMP panel (768x512). Open it as a viewer or panel.
@@ -2806,7 +3407,11 @@ NETWORK / OUTPUTS
 state_a/b, palette_a/b, media_a/b are RGBA32F GPU Cache TOPs. Automatic capture
 is disabled. The clock explicitly replaces the inactive buffer and switches
 the reader only after completing the tick. Repeated Feedback TOP cooks are not
-used. No CPU texture download/upload or external packages run in the product.
+used. Ordinary ticks stay on the GPU. Manual snapshots and resampling download/
+upload raw arrays through NumPy bundled with TouchDesigner; no pip install or
+external package/shader file is required. These operations can stall the GPU.
+snapshot_lib: raw snapshot/restore and verified disk persistence; state_upload:
+Script TOP staging texture; state_resize: explicit raw bilinear resampler.
 clock: Execute DAT scheduler and callable reset/step/advance API. Each reset
 increments the stored diagnostic counter Resetcount (component.fetch).
 preset_lib: preset module (apply/capture/import/export); presets: JSON table.
