@@ -1,5 +1,5 @@
 The new version should be **`create_turing_media_v2.py`**, with `create_turing_media.py` retained as the reference implementation. V2 should remain a single file that can be pasted into a TouchDesigner Text DAT and run without external Python packages or shader files.
- 
+
 1. **Establish the V2 structure and baseline**
 
    Copy the current implementation into the new file and organize it into clearly separated sections: configuration, shared GLSL, simulation shaders, media processing, display, callbacks, presets, network construction, and embedded help.
@@ -61,6 +61,8 @@ The new version should be **`create_turing_media_v2.py`**, with `create_turing_m
    **Completion criterion:** a stamped shape evolves after stamping stops; chemistry maps produce spatially different behavior; confined simulations do not leak through impermeable boundaries.
 
 4. **Add complete presets and a Feed/Kill explorer**
+
+   **Implemented and live-validated** in `create_turing_media_v2.py` on TouchDesigner 2025.33230 (macOS). Embedded versioned JSON preset table (schema v1, 70 settings in ten groups, optional media/TOP bindings), nine built-ins, Apply / Apply + Reset / Save / Delete / Import (merge or replace) / Export, one reset per action, and a Feed/Kill XY panel with eight reference-outcome thumbnails. All 44 live Phase 4 checks, eight native panel interaction checks, 31 offline preset tests, and the Phase 2/3 regression suites pass. Validation fixed delayed-callback duplicate resets and the explorer background TOP reference. See `validation/phase4/README.md` for the contract, evidence, and live run script.
 
    Replace hard-coded preset callbacks with an embedded, versioned preset table.
 
@@ -157,4 +159,4 @@ The new version should be **`create_turing_media_v2.py`**, with `create_turing_m
    Run shader checks outside TouchDesigner where useful, followed by live integration checks in each claimed supported build. Update the embedded help to describe units, reset behavior, snapshot limitations, and migration from V1.
 
    **Completion criterion:** the documented workflows pass live validation, and the script clearly reports unsupported parameters or shader failures.
- 
+

@@ -1,0 +1,17 @@
+{
+  "report.json": {
+    "passed": true,
+    "checks": 44,
+    "failed": []
+  },
+  "phase3_regression/report.json": {
+    "passed": true,
+    "checks": 75,
+    "failed": []
+  },
+  "clock_regression/report.json": {
+    "passed": true,
+    "checks": 20,
+    "failed": []
+  }
+}

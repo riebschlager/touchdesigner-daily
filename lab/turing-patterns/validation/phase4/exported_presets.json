@@ -1,0 +1,975 @@
+{
+  "schema": "turing_media_v2.presets",
+  "version": 1,
+  "presets": [
+    {
+      "name": "Coral",
+      "description": "Branching coral growth from ambient seeds. The default chemistry.",
+      "settings": {
+        "chemistry": {
+          "Feed": 0.0545,
+          "Kill": 0.062,
+          "Diffusiona": 1.0,
+          "Diffusionb": 0.5
+        },
+        "seed": {
+          "Seed": 1,
+          "Seedradius": 9.0,
+          "Ambient": true
+        },
+        "dimensions": {
+          "Resolution": 512,
+          "Rectangle": false,
+          "Canvaswidth": 768,
+          "Canvasheight": 432,
+          "Cellsize": 1.0
+        },
+        "timing": {
+          "Clockmode": "realtime",
+          "Speed": 1.0,
+          "Solverquality": 1,
+          "Renderfps": 60.0,
+          "Maxcatchup": 4
+        },
+        "media": {
+          "Mediaplay": true,
+          "Mediaspeed": 0.5,
+          "Overridefps": false,
+          "Sequencefps": 30.0,
+          "Mediascale": 0.9,
+          "Offsetx": 0.0,
+          "Offsety": 0.0,
+          "Rotation": 0.0,
+          "Sourcepremult": false,
+          "Ignorealpha": false
+        },
+        "influence": {
+          "Influencemode": "continuous",
+          "Stampamount": 1.0,
+          "Feedmin": 0.025,
+          "Feedmax": 0.065,
+          "Killmin": 0.045,
+          "Killmax": 0.07,
+          "Chemistryblend": 1.0,
+          "Maskmode": "edgealpha",
+          "Strength": 5.002896536343063,
+          "Maskgain": 1.0,
+          "Edgewidth": 3.0,
+          "Smoothing": 1.0,
+          "Motiongain": 4.0,
+          "Fade": 0.0
+        },
+        "domain": {
+          "Domainthreshold": 0.5,
+          "Domaininvert": false,
+          "Domainboundary": "noflux"
+        },
+        "transform": {
+          "Transform": false,
+          "Grow": 5.997001998501199,
+          "Scalex": 0.0,
+          "Scaley": 0.0,
+          "Translatex": 0.0,
+          "Translatey": 0.0,
+          "Rotate": 6.0,
+          "Pivotx": 0.5,
+          "Pivoty": 0.5,
+          "Transformedge": "wrap"
+        },
+        "display": {
+          "Coloramount": 1.0,
+          "Contrast": 2.5,
+          "Invert": false,
+          "Overlay": 0.2,
+          "Clipalpha": 0.0,
+          "Viewmode": "final",
+          "Upscale": "smooth"
+        },
+        "color": {
+          "Colormode": "fixed",
+          "Tintspread": 6.0,
+          "Palettesmooth": 0.15818702635049842,
+          "Paletteanchor": 0.5,
+          "Dyespread": 665.4212933375475,
+          "Dyesource": "alpha",
+          "Dyeinject": 3.077597663253032,
+          "Dyedecay": 0.0,
+          "Dyesaturation": 1.5
+        }
+      },
+      "builtin": true
+    },
+    {
+      "name": "Dividing Spots",
+      "description": "Self-replicating spots from small ambient seeds.",
+      "settings": {
+        "chemistry": {
+          "Feed": 0.0367,
+          "Kill": 0.0649,
+          "Diffusiona": 1.0,
+          "Diffusionb": 0.5
+        },
+        "seed": {
+          "Seed": 1,
+          "Seedradius": 5.0,
+          "Ambient": true
+        },
+        "dimensions": {
+          "Resolution": 512,
+          "Rectangle": false,
+          "Canvaswidth": 768,
+          "Canvasheight": 432,
+          "Cellsize": 1.0
+        },
+        "timing": {
+          "Clockmode": "realtime",
+          "Speed": 1.0,
+          "Solverquality": 1,
+          "Renderfps": 60.0,
+          "Maxcatchup": 4
+        },
+        "media": {
+          "Mediaplay": true,
+          "Mediaspeed": 0.5,
+          "Overridefps": false,
+          "Sequencefps": 30.0,
+          "Mediascale": 0.9,
+          "Offsetx": 0.0,
+          "Offsety": 0.0,
+          "Rotation": 0.0,
+          "Sourcepremult": false,
+          "Ignorealpha": false
+        },
+        "influence": {
+          "Influencemode": "continuous",
+          "Stampamount": 1.0,
+          "Feedmin": 0.025,
+          "Feedmax": 0.065,
+          "Killmin": 0.045,
+          "Killmax": 0.07,
+          "Chemistryblend": 1.0,
+          "Maskmode": "edgealpha",
+          "Strength": 5.002896536343063,
+          "Maskgain": 1.0,
+          "Edgewidth": 3.0,
+          "Smoothing": 1.0,
+          "Motiongain": 4.0,
+          "Fade": 0.0
+        },
+        "domain": {
+          "Domainthreshold": 0.5,
+          "Domaininvert": false,
+          "Domainboundary": "noflux"
+        },
+        "transform": {
+          "Transform": false,
+          "Grow": 5.997001998501199,
+          "Scalex": 0.0,
+          "Scaley": 0.0,
+          "Translatex": 0.0,
+          "Translatey": 0.0,
+          "Rotate": 6.0,
+          "Pivotx": 0.5,
+          "Pivoty": 0.5,
+          "Transformedge": "wrap"
+        },
+        "display": {
+          "Coloramount": 1.0,
+          "Contrast": 2.5,
+          "Invert": false,
+          "Overlay": 0.2,
+          "Clipalpha": 0.0,
+          "Viewmode": "final",
+          "Upscale": "smooth"
+        },
+        "color": {
+          "Colormode": "fixed",
+          "Tintspread": 6.0,
+          "Palettesmooth": 0.15818702635049842,
+          "Paletteanchor": 0.5,
+          "Dyespread": 665.4212933375475,
+          "Dyesource": "alpha",
+          "Dyeinject": 3.077597663253032,
+          "Dyedecay": 0.0,
+          "Dyesaturation": 1.5
+        }
+      },
+      "builtin": true
+    },
+    {
+      "name": "Worms",
+      "description": "Labyrinthine worms and mazes.",
+      "settings": {
+        "chemistry": {
+          "Feed": 0.029,
+          "Kill": 0.057,
+          "Diffusiona": 1.0,
+          "Diffusionb": 0.5
+        },
+        "seed": {
+          "Seed": 1,
+          "Seedradius": 6.0,
+          "Ambient": true
+        },
+        "dimensions": {
+          "Resolution": 512,
+          "Rectangle": false,
+          "Canvaswidth": 768,
+          "Canvasheight": 432,
+          "Cellsize": 1.0
+        },
+        "timing": {
+          "Clockmode": "realtime",
+          "Speed": 1.0,
+          "Solverquality": 1,
+          "Renderfps": 60.0,
+          "Maxcatchup": 4
+        },
+        "media": {
+          "Mediaplay": true,
+          "Mediaspeed": 0.5,
+          "Overridefps": false,
+          "Sequencefps": 30.0,
+          "Mediascale": 0.9,
+          "Offsetx": 0.0,
+          "Offsety": 0.0,
+          "Rotation": 0.0,
+          "Sourcepremult": false,
+          "Ignorealpha": false
+        },
+        "influence": {
+          "Influencemode": "continuous",
+          "Stampamount": 1.0,
+          "Feedmin": 0.025,
+          "Feedmax": 0.065,
+          "Killmin": 0.045,
+          "Killmax": 0.07,
+          "Chemistryblend": 1.0,
+          "Maskmode": "edgealpha",
+          "Strength": 5.002896536343063,
+          "Maskgain": 1.0,
+          "Edgewidth": 3.0,
+          "Smoothing": 1.0,
+          "Motiongain": 4.0,
+          "Fade": 0.0
+        },
+        "domain": {
+          "Domainthreshold": 0.5,
+          "Domaininvert": false,
+          "Domainboundary": "noflux"
+        },
+        "transform": {
+          "Transform": false,
+          "Grow": 5.997001998501199,
+          "Scalex": 0.0,
+          "Scaley": 0.0,
+          "Translatex": 0.0,
+          "Translatey": 0.0,
+          "Rotate": 6.0,
+          "Pivotx": 0.5,
+          "Pivoty": 0.5,
+          "Transformedge": "wrap"
+        },
+        "display": {
+          "Coloramount": 1.0,
+          "Contrast": 2.5,
+          "Invert": false,
+          "Overlay": 0.2,
+          "Clipalpha": 0.0,
+          "Viewmode": "final",
+          "Upscale": "smooth"
+        },
+        "color": {
+          "Colormode": "fixed",
+          "Tintspread": 6.0,
+          "Palettesmooth": 0.15818702635049842,
+          "Paletteanchor": 0.5,
+          "Dyespread": 665.4212933375475,
+          "Dyesource": "alpha",
+          "Dyeinject": 3.077597663253032,
+          "Dyedecay": 0.0,
+          "Dyesaturation": 1.5
+        }
+      },
+      "builtin": true
+    },
+    {
+      "name": "Holes",
+      "description": "A filled field punctured by stable holes.",
+      "settings": {
+        "chemistry": {
+          "Feed": 0.039,
+          "Kill": 0.058,
+          "Diffusiona": 1.0,
+          "Diffusionb": 0.5
+        },
+        "seed": {
+          "Seed": 1,
+          "Seedradius": 9.0,
+          "Ambient": true
+        },
+        "dimensions": {
+          "Resolution": 512,
+          "Rectangle": false,
+          "Canvaswidth": 768,
+          "Canvasheight": 432,
+          "Cellsize": 1.0
+        },
+        "timing": {
+          "Clockmode": "realtime",
+          "Speed": 1.0,
+          "Solverquality": 1,
+          "Renderfps": 60.0,
+          "Maxcatchup": 4
+        },
+        "media": {
+          "Mediaplay": true,
+          "Mediaspeed": 0.5,
+          "Overridefps": false,
+          "Sequencefps": 30.0,
+          "Mediascale": 0.9,
+          "Offsetx": 0.0,
+          "Offsety": 0.0,
+          "Rotation": 0.0,
+          "Sourcepremult": false,
+          "Ignorealpha": false
+        },
+        "influence": {
+          "Influencemode": "continuous",
+          "Stampamount": 1.0,
+          "Feedmin": 0.025,
+          "Feedmax": 0.065,
+          "Killmin": 0.045,
+          "Killmax": 0.07,
+          "Chemistryblend": 1.0,
+          "Maskmode": "edgealpha",
+          "Strength": 5.002896536343063,
+          "Maskgain": 1.0,
+          "Edgewidth": 3.0,
+          "Smoothing": 1.0,
+          "Motiongain": 4.0,
+          "Fade": 0.0
+        },
+        "domain": {
+          "Domainthreshold": 0.5,
+          "Domaininvert": false,
+          "Domainboundary": "noflux"
+        },
+        "transform": {
+          "Transform": false,
+          "Grow": 5.997001998501199,
+          "Scalex": 0.0,
+          "Scaley": 0.0,
+          "Translatex": 0.0,
+          "Translatey": 0.0,
+          "Rotate": 6.0,
+          "Pivotx": 0.5,
+          "Pivoty": 0.5,
+          "Transformedge": "wrap"
+        },
+        "display": {
+          "Coloramount": 1.0,
+          "Contrast": 2.5,
+          "Invert": false,
+          "Overlay": 0.2,
+          "Clipalpha": 0.0,
+          "Viewmode": "final",
+          "Upscale": "smooth"
+        },
+        "color": {
+          "Colormode": "fixed",
+          "Tintspread": 6.0,
+          "Palettesmooth": 0.15818702635049842,
+          "Paletteanchor": 0.5,
+          "Dyespread": 665.4212933375475,
+          "Dyesource": "alpha",
+          "Dyeinject": 3.077597663253032,
+          "Dyedecay": 0.0,
+          "Dyesaturation": 1.5
+        }
+      },
+      "builtin": true
+    },
+    {
+      "name": "Clip Seed",
+      "description": "Media silhouette continuously seeds coral; no ambient seeds.",
+      "settings": {
+        "chemistry": {
+          "Feed": 0.0545,
+          "Kill": 0.062,
+          "Diffusiona": 1.0,
+          "Diffusionb": 0.5
+        },
+        "seed": {
+          "Seed": 1,
+          "Seedradius": 9.0,
+          "Ambient": false
+        },
+        "dimensions": {
+          "Resolution": 512,
+          "Rectangle": false,
+          "Canvaswidth": 768,
+          "Canvasheight": 432,
+          "Cellsize": 1.0
+        },
+        "timing": {
+          "Clockmode": "realtime",
+          "Speed": 1.0,
+          "Solverquality": 1,
+          "Renderfps": 60.0,
+          "Maxcatchup": 4
+        },
+        "media": {
+          "Mediaplay": true,
+          "Mediaspeed": 0.5,
+          "Overridefps": false,
+          "Sequencefps": 30.0,
+          "Mediascale": 0.9,
+          "Offsetx": 0.0,
+          "Offsety": 0.0,
+          "Rotation": 0.0,
+          "Sourcepremult": false,
+          "Ignorealpha": false
+        },
+        "influence": {
+          "Influencemode": "continuous",
+          "Stampamount": 1.0,
+          "Feedmin": 0.025,
+          "Feedmax": 0.065,
+          "Killmin": 0.045,
+          "Killmax": 0.07,
+          "Chemistryblend": 1.0,
+          "Maskmode": "alpha",
+          "Strength": 600.0,
+          "Maskgain": 1.0,
+          "Edgewidth": 3.0,
+          "Smoothing": 1.0,
+          "Motiongain": 4.0,
+          "Fade": 0.0
+        },
+        "domain": {
+          "Domainthreshold": 0.5,
+          "Domaininvert": false,
+          "Domainboundary": "noflux"
+        },
+        "transform": {
+          "Transform": false,
+          "Grow": 5.997001998501199,
+          "Scalex": 0.0,
+          "Scaley": 0.0,
+          "Translatex": 0.0,
+          "Translatey": 0.0,
+          "Rotate": 6.0,
+          "Pivotx": 0.5,
+          "Pivoty": 0.5,
+          "Transformedge": "wrap"
+        },
+        "display": {
+          "Coloramount": 1.0,
+          "Contrast": 2.5,
+          "Invert": false,
+          "Overlay": 0.2,
+          "Clipalpha": 0.0,
+          "Viewmode": "final",
+          "Upscale": "smooth"
+        },
+        "color": {
+          "Colormode": "fixed",
+          "Tintspread": 6.0,
+          "Palettesmooth": 0.15818702635049842,
+          "Paletteanchor": 0.5,
+          "Dyespread": 665.4212933375475,
+          "Dyesource": "alpha",
+          "Dyeinject": 3.077597663253032,
+          "Dyedecay": 0.0,
+          "Dyesaturation": 1.5
+        }
+      },
+      "builtin": true
+    },
+    {
+      "name": "Stamp and Evolve",
+      "description": "Stamp Current Mask once, then let spots evolve with carried color.",
+      "settings": {
+        "chemistry": {
+          "Feed": 0.0367,
+          "Kill": 0.0649,
+          "Diffusiona": 1.0,
+          "Diffusionb": 0.5
+        },
+        "seed": {
+          "Seed": 1,
+          "Seedradius": 9.0,
+          "Ambient": false
+        },
+        "dimensions": {
+          "Resolution": 512,
+          "Rectangle": false,
+          "Canvaswidth": 768,
+          "Canvasheight": 432,
+          "Cellsize": 1.0
+        },
+        "timing": {
+          "Clockmode": "realtime",
+          "Speed": 1.0,
+          "Solverquality": 1,
+          "Renderfps": 60.0,
+          "Maxcatchup": 4
+        },
+        "media": {
+          "Mediaplay": true,
+          "Mediaspeed": 0.5,
+          "Overridefps": false,
+          "Sequencefps": 30.0,
+          "Mediascale": 0.9,
+          "Offsetx": 0.0,
+          "Offsety": 0.0,
+          "Rotation": 0.0,
+          "Sourcepremult": false,
+          "Ignorealpha": false
+        },
+        "influence": {
+          "Influencemode": "stamp",
+          "Stampamount": 1.0,
+          "Feedmin": 0.025,
+          "Feedmax": 0.065,
+          "Killmin": 0.045,
+          "Killmax": 0.07,
+          "Chemistryblend": 1.0,
+          "Maskmode": "alpha",
+          "Strength": 5.002896536343063,
+          "Maskgain": 1.0,
+          "Edgewidth": 3.0,
+          "Smoothing": 1.0,
+          "Motiongain": 4.0,
+          "Fade": 0.0
+        },
+        "domain": {
+          "Domainthreshold": 0.5,
+          "Domaininvert": false,
+          "Domainboundary": "noflux"
+        },
+        "transform": {
+          "Transform": false,
+          "Grow": 5.997001998501199,
+          "Scalex": 0.0,
+          "Scaley": 0.0,
+          "Translatex": 0.0,
+          "Translatey": 0.0,
+          "Rotate": 6.0,
+          "Pivotx": 0.5,
+          "Pivoty": 0.5,
+          "Transformedge": "wrap"
+        },
+        "display": {
+          "Coloramount": 1.0,
+          "Contrast": 2.5,
+          "Invert": false,
+          "Overlay": 0.2,
+          "Clipalpha": 0.0,
+          "Viewmode": "final",
+          "Upscale": "smooth"
+        },
+        "color": {
+          "Colormode": "dye",
+          "Tintspread": 6.0,
+          "Palettesmooth": 0.15818702635049842,
+          "Paletteanchor": 0.5,
+          "Dyespread": 665.4212933375475,
+          "Dyesource": "mask",
+          "Dyeinject": 3.077597663253032,
+          "Dyedecay": 0.0,
+          "Dyesaturation": 1.5
+        }
+      },
+      "builtin": true
+    },
+    {
+      "name": "Chemistry Map",
+      "description": "Media brightness maps local feed/kill; tinted by the source.",
+      "settings": {
+        "chemistry": {
+          "Feed": 0.0545,
+          "Kill": 0.062,
+          "Diffusiona": 1.0,
+          "Diffusionb": 0.5
+        },
+        "seed": {
+          "Seed": 1,
+          "Seedradius": 9.0,
+          "Ambient": true
+        },
+        "dimensions": {
+          "Resolution": 512,
+          "Rectangle": false,
+          "Canvaswidth": 768,
+          "Canvasheight": 432,
+          "Cellsize": 1.0
+        },
+        "timing": {
+          "Clockmode": "realtime",
+          "Speed": 1.0,
+          "Solverquality": 1,
+          "Renderfps": 60.0,
+          "Maxcatchup": 4
+        },
+        "media": {
+          "Mediaplay": true,
+          "Mediaspeed": 0.5,
+          "Overridefps": false,
+          "Sequencefps": 30.0,
+          "Mediascale": 0.9,
+          "Offsetx": 0.0,
+          "Offsety": 0.0,
+          "Rotation": 0.0,
+          "Sourcepremult": false,
+          "Ignorealpha": false
+        },
+        "influence": {
+          "Influencemode": "chemistry",
+          "Stampamount": 1.0,
+          "Feedmin": 0.025,
+          "Feedmax": 0.065,
+          "Killmin": 0.045,
+          "Killmax": 0.07,
+          "Chemistryblend": 1.0,
+          "Maskmode": "bright",
+          "Strength": 5.002896536343063,
+          "Maskgain": 1.0,
+          "Edgewidth": 3.0,
+          "Smoothing": 1.0,
+          "Motiongain": 4.0,
+          "Fade": 0.0
+        },
+        "domain": {
+          "Domainthreshold": 0.5,
+          "Domaininvert": false,
+          "Domainboundary": "noflux"
+        },
+        "transform": {
+          "Transform": false,
+          "Grow": 5.997001998501199,
+          "Scalex": 0.0,
+          "Scaley": 0.0,
+          "Translatex": 0.0,
+          "Translatey": 0.0,
+          "Rotate": 6.0,
+          "Pivotx": 0.5,
+          "Pivoty": 0.5,
+          "Transformedge": "wrap"
+        },
+        "display": {
+          "Coloramount": 1.0,
+          "Contrast": 2.5,
+          "Invert": false,
+          "Overlay": 0.2,
+          "Clipalpha": 0.0,
+          "Viewmode": "final",
+          "Upscale": "smooth"
+        },
+        "color": {
+          "Colormode": "tint",
+          "Tintspread": 6.0,
+          "Palettesmooth": 0.15818702635049842,
+          "Paletteanchor": 0.5,
+          "Dyespread": 665.4212933375475,
+          "Dyesource": "alpha",
+          "Dyeinject": 3.077597663253032,
+          "Dyedecay": 0.0,
+          "Dyesaturation": 1.5
+        }
+      },
+      "builtin": true
+    },
+    {
+      "name": "Color Swirl",
+      "description": "Carried media color with slow growth and rotation.",
+      "settings": {
+        "chemistry": {
+          "Feed": 0.0545,
+          "Kill": 0.062,
+          "Diffusiona": 1.0,
+          "Diffusionb": 0.5
+        },
+        "seed": {
+          "Seed": 1,
+          "Seedradius": 9.0,
+          "Ambient": true
+        },
+        "dimensions": {
+          "Resolution": 512,
+          "Rectangle": false,
+          "Canvaswidth": 768,
+          "Canvasheight": 432,
+          "Cellsize": 1.0
+        },
+        "timing": {
+          "Clockmode": "realtime",
+          "Speed": 1.0,
+          "Solverquality": 1,
+          "Renderfps": 60.0,
+          "Maxcatchup": 4
+        },
+        "media": {
+          "Mediaplay": true,
+          "Mediaspeed": 0.5,
+          "Overridefps": false,
+          "Sequencefps": 30.0,
+          "Mediascale": 0.9,
+          "Offsetx": 0.0,
+          "Offsety": 0.0,
+          "Rotation": 0.0,
+          "Sourcepremult": false,
+          "Ignorealpha": false
+        },
+        "influence": {
+          "Influencemode": "continuous",
+          "Stampamount": 1.0,
+          "Feedmin": 0.025,
+          "Feedmax": 0.065,
+          "Killmin": 0.045,
+          "Killmax": 0.07,
+          "Chemistryblend": 1.0,
+          "Maskmode": "edgealpha",
+          "Strength": 5.002896536343063,
+          "Maskgain": 1.0,
+          "Edgewidth": 3.0,
+          "Smoothing": 1.0,
+          "Motiongain": 4.0,
+          "Fade": 0.0
+        },
+        "domain": {
+          "Domainthreshold": 0.5,
+          "Domaininvert": false,
+          "Domainboundary": "noflux"
+        },
+        "transform": {
+          "Transform": true,
+          "Grow": 5.997001998501199,
+          "Scalex": 0.0,
+          "Scaley": 0.0,
+          "Translatex": 0.0,
+          "Translatey": 0.0,
+          "Rotate": 30.0,
+          "Pivotx": 0.5,
+          "Pivoty": 0.5,
+          "Transformedge": "wrap"
+        },
+        "display": {
+          "Coloramount": 1.0,
+          "Contrast": 2.5,
+          "Invert": false,
+          "Overlay": 0.2,
+          "Clipalpha": 0.0,
+          "Viewmode": "final",
+          "Upscale": "smooth"
+        },
+        "color": {
+          "Colormode": "dye",
+          "Tintspread": 6.0,
+          "Palettesmooth": 0.15818702635049842,
+          "Paletteanchor": 0.5,
+          "Dyespread": 665.4212933375475,
+          "Dyesource": "alpha",
+          "Dyeinject": 3.077597663253032,
+          "Dyedecay": 0.0,
+          "Dyesaturation": 1.5
+        }
+      },
+      "builtin": true
+    },
+    {
+      "name": "Wide Coarse",
+      "description": "A 768x432 canvas on a 3-pixel grid with thick lines. Resets when applied.",
+      "settings": {
+        "chemistry": {
+          "Feed": 0.0545,
+          "Kill": 0.062,
+          "Diffusiona": 1.0,
+          "Diffusionb": 0.5
+        },
+        "seed": {
+          "Seed": 1,
+          "Seedradius": 9.0,
+          "Ambient": true
+        },
+        "dimensions": {
+          "Resolution": 512,
+          "Rectangle": true,
+          "Canvaswidth": 768,
+          "Canvasheight": 432,
+          "Cellsize": 3.0
+        },
+        "timing": {
+          "Clockmode": "realtime",
+          "Speed": 1.0,
+          "Solverquality": 1,
+          "Renderfps": 60.0,
+          "Maxcatchup": 4
+        },
+        "media": {
+          "Mediaplay": true,
+          "Mediaspeed": 0.5,
+          "Overridefps": false,
+          "Sequencefps": 30.0,
+          "Mediascale": 0.9,
+          "Offsetx": 0.0,
+          "Offsety": 0.0,
+          "Rotation": 0.0,
+          "Sourcepremult": false,
+          "Ignorealpha": false
+        },
+        "influence": {
+          "Influencemode": "continuous",
+          "Stampamount": 1.0,
+          "Feedmin": 0.025,
+          "Feedmax": 0.065,
+          "Killmin": 0.045,
+          "Killmax": 0.07,
+          "Chemistryblend": 1.0,
+          "Maskmode": "edgealpha",
+          "Strength": 5.002896536343063,
+          "Maskgain": 1.0,
+          "Edgewidth": 3.0,
+          "Smoothing": 1.0,
+          "Motiongain": 4.0,
+          "Fade": 0.0
+        },
+        "domain": {
+          "Domainthreshold": 0.5,
+          "Domaininvert": false,
+          "Domainboundary": "noflux"
+        },
+        "transform": {
+          "Transform": false,
+          "Grow": 5.997001998501199,
+          "Scalex": 0.0,
+          "Scaley": 0.0,
+          "Translatex": 0.0,
+          "Translatey": 0.0,
+          "Rotate": 6.0,
+          "Pivotx": 0.5,
+          "Pivoty": 0.5,
+          "Transformedge": "wrap"
+        },
+        "display": {
+          "Coloramount": 1.0,
+          "Contrast": 2.5,
+          "Invert": false,
+          "Overlay": 0.2,
+          "Clipalpha": 0.0,
+          "Viewmode": "final",
+          "Upscale": "smooth"
+        },
+        "color": {
+          "Colormode": "fixed",
+          "Tintspread": 6.0,
+          "Palettesmooth": 0.15818702635049842,
+          "Paletteanchor": 0.5,
+          "Dyespread": 665.4212933375475,
+          "Dyesource": "alpha",
+          "Dyeinject": 3.077597663253032,
+          "Dyedecay": 0.0,
+          "Dyesaturation": 1.5
+        }
+      },
+      "builtin": true
+    },
+    {
+      "name": "Phase4 Round Trip",
+      "description": "Saved from /project1/phase4_validation2/turing_media_v2",
+      "settings": {
+        "chemistry": {
+          "Feed": 0.03333333333333333,
+          "Kill": 0.0611,
+          "Diffusiona": 1.0,
+          "Diffusionb": 0.4375
+        },
+        "seed": {
+          "Seed": 42,
+          "Seedradius": 7.25,
+          "Ambient": false
+        },
+        "dimensions": {
+          "Resolution": 512,
+          "Rectangle": false,
+          "Canvaswidth": 768,
+          "Canvasheight": 432,
+          "Cellsize": 1.0
+        },
+        "timing": {
+          "Clockmode": "framestepped",
+          "Speed": 0.75,
+          "Solverquality": 2,
+          "Renderfps": 60.0,
+          "Maxcatchup": 4
+        },
+        "media": {
+          "Mediaplay": true,
+          "Mediaspeed": 0.5,
+          "Overridefps": false,
+          "Sequencefps": 30.0,
+          "Mediascale": 1.25,
+          "Offsetx": 0.0,
+          "Offsety": 0.0,
+          "Rotation": 0.0,
+          "Sourcepremult": false,
+          "Ignorealpha": false
+        },
+        "influence": {
+          "Influencemode": "chemistry",
+          "Stampamount": 1.0,
+          "Feedmin": 0.031,
+          "Feedmax": 0.065,
+          "Killmin": 0.045,
+          "Killmax": 0.069,
+          "Chemistryblend": 1.0,
+          "Maskmode": "edgetexture",
+          "Strength": 5.002896536343063,
+          "Maskgain": 1.0,
+          "Edgewidth": 3.0,
+          "Smoothing": 1.0,
+          "Motiongain": 4.0,
+          "Fade": 0.0
+        },
+        "domain": {
+          "Domainthreshold": 0.5,
+          "Domaininvert": false,
+          "Domainboundary": "empty"
+        },
+        "transform": {
+          "Transform": true,
+          "Grow": -3.5,
+          "Scalex": 0.0,
+          "Scaley": 0.0,
+          "Translatex": 0.0,
+          "Translatey": 0.0,
+          "Rotate": 17.125,
+          "Pivotx": 0.5,
+          "Pivoty": 0.5,
+          "Transformedge": "clear"
+        },
+        "display": {
+          "Coloramount": 1.0,
+          "Contrast": 2.5,
+          "Invert": false,
+          "Overlay": 0.2,
+          "Clipalpha": 0.0,
+          "Viewmode": "patterns",
+          "Upscale": "linear"
+        },
+        "color": {
+          "Colormode": "ramp",
+          "Tintspread": 6.0,
+          "Palettesmooth": 0.3,
+          "Paletteanchor": 0.5,
+          "Dyespread": 665.4212933375475,
+          "Dyesource": "mask",
+          "Dyeinject": 3.077597663253032,
+          "Dyedecay": 0.0,
+          "Dyesaturation": 1.5
+        }
+      }
+    }
+  ]
+}

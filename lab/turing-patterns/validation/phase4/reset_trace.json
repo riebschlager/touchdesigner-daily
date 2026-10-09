@@ -1,0 +1,302 @@
+[
+  {
+    "frame": 264588,
+    "count": 1,
+    "stack": [
+      "  File \"<string>\", line 1, in <module>\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 85, in next_test\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 116, in round_trip_checks\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 50, in baseline\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/preset_lib\", line 444, in on_apply\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/preset_lib\", line 394, in apply\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/clock\", line 207, in reset\n"
+    ]
+  },
+  {
+    "frame": 264588,
+    "count": 2,
+    "stack": [
+      "  File \"<string>\", line 1, in <module>\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 85, in next_test\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 116, in round_trip_checks\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 52, in baseline\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/clock\", line 207, in reset\n"
+    ]
+  },
+  {
+    "frame": 264600,
+    "count": 3,
+    "stack": [
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/controls\", line 59, in onValueChange\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/controls\", line 6, in resetSimulation\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/clock\", line 207, in reset\n"
+    ]
+  },
+  {
+    "frame": 264600,
+    "count": 4,
+    "stack": [
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/controls\", line 59, in onValueChange\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/controls\", line 6, in resetSimulation\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/clock\", line 207, in reset\n"
+    ]
+  },
+  {
+    "frame": 264600,
+    "count": 5,
+    "stack": [
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/controls\", line 59, in onValueChange\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/controls\", line 6, in resetSimulation\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/clock\", line 207, in reset\n"
+    ]
+  },
+  {
+    "frame": 264602,
+    "count": 6,
+    "stack": [
+      "  File \"<string>\", line 1, in <module>\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 85, in next_test\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 169, in apply_checks\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 50, in baseline\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/preset_lib\", line 444, in on_apply\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/preset_lib\", line 394, in apply\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/clock\", line 207, in reset\n"
+    ]
+  },
+  {
+    "frame": 264602,
+    "count": 7,
+    "stack": [
+      "  File \"<string>\", line 1, in <module>\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 85, in next_test\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 169, in apply_checks\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 52, in baseline\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/clock\", line 207, in reset\n"
+    ]
+  },
+  {
+    "frame": 264602,
+    "count": 8,
+    "stack": [
+      "  File \"<string>\", line 1, in <module>\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 85, in next_test\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 182, in apply_checks\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/preset_lib\", line 444, in on_apply\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/preset_lib\", line 394, in apply\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/clock\", line 207, in reset\n"
+    ]
+  },
+  {
+    "frame": 264602,
+    "count": 9,
+    "stack": [
+      "  File \"<string>\", line 1, in <module>\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 85, in next_test\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 186, in apply_checks\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/preset_lib\", line 444, in on_apply\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/preset_lib\", line 394, in apply\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/clock\", line 207, in reset\n"
+    ]
+  },
+  {
+    "frame": 264604,
+    "count": 10,
+    "stack": [
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/controls\", line 59, in onValueChange\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/controls\", line 6, in resetSimulation\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/clock\", line 207, in reset\n"
+    ]
+  },
+  {
+    "frame": 264604,
+    "count": 11,
+    "stack": [
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/controls\", line 59, in onValueChange\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/controls\", line 6, in resetSimulation\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/clock\", line 207, in reset\n"
+    ]
+  },
+  {
+    "frame": 264604,
+    "count": 12,
+    "stack": [
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/controls\", line 59, in onValueChange\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/controls\", line 6, in resetSimulation\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/clock\", line 207, in reset\n"
+    ]
+  },
+  {
+    "frame": 264604,
+    "count": 13,
+    "stack": [
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/controls\", line 59, in onValueChange\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/controls\", line 6, in resetSimulation\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/clock\", line 207, in reset\n"
+    ]
+  },
+  {
+    "frame": 264604,
+    "count": 14,
+    "stack": [
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/controls\", line 59, in onValueChange\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/controls\", line 6, in resetSimulation\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/clock\", line 207, in reset\n"
+    ]
+  },
+  {
+    "frame": 264604,
+    "count": 15,
+    "stack": [
+      "  File \"<string>\", line 1, in <module>\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 85, in next_test\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 209, in thumbnail_checks\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 50, in baseline\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/preset_lib\", line 444, in on_apply\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/preset_lib\", line 394, in apply\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/clock\", line 207, in reset\n"
+    ]
+  },
+  {
+    "frame": 264604,
+    "count": 16,
+    "stack": [
+      "  File \"<string>\", line 1, in <module>\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 85, in next_test\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 209, in thumbnail_checks\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 52, in baseline\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/clock\", line 207, in reset\n"
+    ]
+  },
+  {
+    "frame": 264616,
+    "count": 17,
+    "stack": [
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/controls\", line 59, in onValueChange\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/controls\", line 6, in resetSimulation\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/clock\", line 207, in reset\n"
+    ]
+  },
+  {
+    "frame": 264616,
+    "count": 18,
+    "stack": [
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/controls\", line 59, in onValueChange\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/controls\", line 6, in resetSimulation\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/clock\", line 207, in reset\n"
+    ]
+  },
+  {
+    "frame": 264616,
+    "count": 19,
+    "stack": [
+      "  File \"<string>\", line 1, in <module>\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 85, in next_test\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 238, in explorer_checks\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 50, in baseline\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/preset_lib\", line 444, in on_apply\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/preset_lib\", line 394, in apply\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/clock\", line 207, in reset\n"
+    ]
+  },
+  {
+    "frame": 264616,
+    "count": 20,
+    "stack": [
+      "  File \"<string>\", line 1, in <module>\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 85, in next_test\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 238, in explorer_checks\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 52, in baseline\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/clock\", line 207, in reset\n"
+    ]
+  },
+  {
+    "frame": 264616,
+    "count": 21,
+    "stack": [
+      "  File \"<string>\", line 1, in <module>\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 85, in next_test\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 251, in explorer_checks\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/explorer\", line 53, in pick\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/clock\", line 207, in reset\n"
+    ]
+  },
+  {
+    "frame": 264688,
+    "count": 22,
+    "stack": [
+      "  File \"<string>\", line 1, in <module>\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 273, in wait_thumbs\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 50, in baseline\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/preset_lib\", line 444, in on_apply\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/preset_lib\", line 394, in apply\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/clock\", line 207, in reset\n"
+    ]
+  },
+  {
+    "frame": 264688,
+    "count": 23,
+    "stack": [
+      "  File \"<string>\", line 1, in <module>\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 273, in wait_thumbs\n",
+      "  File \"/project1/phase4_reset_trace/validate\", line 52, in baseline\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/clock\", line 207, in reset\n"
+    ]
+  },
+  {
+    "frame": 264704,
+    "count": 24,
+    "stack": [
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/controls\", line 59, in onValueChange\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/controls\", line 6, in resetSimulation\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/clock\", line 207, in reset\n"
+    ]
+  },
+  {
+    "frame": 264704,
+    "count": 25,
+    "stack": [
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/controls\", line 36, in onPulse\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/preset_lib\", line 444, in on_apply\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/preset_lib\", line 394, in apply\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/clock\", line 207, in reset\n"
+    ]
+  },
+  {
+    "frame": 264710,
+    "count": 26,
+    "stack": [
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/controls\", line 34, in onPulse\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/preset_lib\", line 444, in on_apply\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/preset_lib\", line 394, in apply\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/clock\", line 207, in reset\n"
+    ]
+  },
+  {
+    "frame": 264716,
+    "count": 27,
+    "stack": [
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/controls\", line 24, in onPulse\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/controls\", line 6, in resetSimulation\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/clock\", line 207, in reset\n"
+    ]
+  },
+  {
+    "frame": 264724,
+    "count": 28,
+    "stack": [
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/controls\", line 32, in onPulse\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/preset_lib\", line 517, in clip_seed\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/preset_lib\", line 394, in apply\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/clock\", line 207, in reset\n"
+    ]
+  },
+  {
+    "frame": 264731,
+    "count": 29,
+    "stack": [
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/controls\", line 59, in onValueChange\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/controls\", line 6, in resetSimulation\n",
+      "  File \"/project1/phase4_reset_trace/turing_media_v2/clock\", line 207, in reset\n"
+    ]
+  }
+]

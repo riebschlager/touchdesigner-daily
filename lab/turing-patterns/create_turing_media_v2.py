@@ -9,7 +9,12 @@ USE
   5. Explore Influence > Mask Mode, Strength, and Display > Source Overlay.
   6. On Color, switch Color Mode to tint, extract or carry the clip's colors.
      Assign Color > Ramp TOP to replace the built-in teal/gold ramp with your own.
+  7. On Presets, pick a preset and Apply (keeps the evolving state) or Apply + Reset.
+     Save Current Preset stores your settings in the component; Export/Import share them.
+  8. On Explorer, press Generate Thumbnails, then view fk_explorer as a panel and
+     click the Feed/Kill map or a reference thumbnail.
 
+Phase 4 adds a versioned preset table, preset import/export and the Feed/Kill explorer.
 Phase 3 adds independent media modes, domain confinement and carried-color sourcing.
 Phase 2 provides the fixed simulation clock and explicit GPU state storage. No external Python packages or shader files.
 Re-running creates turing_media_v2, turing_media_v2_2, and so on; existing operators are retained.
@@ -33,7 +38,8 @@ References:
 Phase 1 baseline results are in validation/phase1. Phase 2 clock validation and
 reproduction instructions are in validation/phase2. The builder is standalone;
 validation files and TDAPI are not required. Phase 3 validation is in
-validation/phase3. Phases 4–8 are not implemented.
+validation/phase3; Phase 4 preset/explorer validation is in validation/phase4.
+Phases 5–8 are not implemented.
 """
 
 
@@ -710,34 +716,735 @@ void main() {
 """
 
 
+# -----------------------------------------------------------------------------
+# Feed/Kill explorer
+# -----------------------------------------------------------------------------
+
+# Curated reference points (name, feed, kill). Thumbnails are simulated from one
+# fixed seed to a fixed age; initialization and media can change the outcome.
+FK_EXAMPLES = (
+    ('Coral', 0.0545, 0.062),
+    ('Dividing Spots', 0.0367, 0.0649),
+    ('Worms', 0.029, 0.057),
+    ('Holes', 0.039, 0.058),
+    ('Chaos', 0.026, 0.051),
+    ('Moving Spots', 0.014, 0.054),
+    ('Waves', 0.014, 0.045),
+    ('U-Skate', 0.062, 0.0609),
+)
+# Panel = square map + thumbnail atlas (FK_COLUMNS x FK_ROWS tiles, first at top-left).
+# Must match the constants in EXPLORER_CALLBACKS.
+FK_MAP_SIZE = 512
+FK_TILE = 128
+FK_COLUMNS = 2
+FK_ROWS = 4
+
+
+def _fk_glsl():
+    examples = ', '.join('vec2({!r}, {!r})'.format(feed, kill) for _, feed, kill in FK_EXAMPLES)
+    return r"""
+const int FK_COUNT = {count};
+const int FK_COLUMNS = {columns};
+const int FK_ROWS = {rows};
+const int FK_TILE = {tile};
+const float FK_MAP = {map_size}.0;
+const vec2 FK_EXAMPLES[{count}] = vec2[{count}]({examples}); // feed, kill
+const vec4 EMPTY_CELL = vec4(1.0, 0.0, 0.0, 0.0);
+
+// Tile (0, 0) is bottom-left in texture space; example 0 sits top-left.
+int fkIndex(ivec2 tile) {{ return (FK_ROWS - 1 - tile.y) * FK_COLUMNS + tile.x; }}
+
+vec3 fkHue(int i) {{
+    float h = float(i) / float(FK_COUNT);
+    vec3 rgb = clamp(abs(mod(h * 6.0 + vec3(0.0, 4.0, 2.0), 6.0) - 3.0) - 1.0, 0.0, 1.0);
+    return mix(vec3(0.35), rgb, 0.8);
+}}
+""".format(count=len(FK_EXAMPLES), columns=FK_COLUMNS, rows=FK_ROWS, tile=FK_TILE,
+           map_size=FK_MAP_SIZE, examples=examples)
+
+
+# Every tile uses the same seed layout, so tiles differ only by feed/kill.
+FK_SEED_SHADER = r"""
+layout(location = 0) out vec4 fragColor;
+uniform vec4 uFkSeed; // random seed, radius in cells, unused, unused
+
+float hash(float n) {
+    return fract(sin(n * 127.1 + uFkSeed.x * 31.7) * 43758.5453);
+}
+
+void main() {
+    ivec2 local = ivec2(gl_FragCoord.xy) % FK_TILE;
+    vec2 uv = (vec2(local) + 0.5) / float(FK_TILE);
+    float patchMask = 0.0;
+    for (int i = 0; i < 10; ++i) {
+        float n = float(i);
+        vec2 center = (i == 0) ? vec2(0.5) :
+            vec2(0.1 + 0.8 * hash(n * 3.0 + 1.0), 0.1 + 0.8 * hash(n * 3.0 + 2.0));
+        patchMask = max(patchMask, 1.0 - step(uFkSeed.y, length(uv - center) * float(FK_TILE)));
+    }
+    fragColor = TDOutputSwizzle(vec4(mix(1.0, 0.5, patchMask), 0.25 * patchMask, 0.0, 0.0));
+}
+"""
+
+
+# Reference solver: dt=1, diffusion 1/.5, sixteen passes per tick; tiles wrap independently.
+FK_SIM_SHADER = r"""
+layout(location = 0) out vec4 fragColor;
+const ivec2 OFFSETS[8] = ivec2[8](ivec2(-1, 0), ivec2(1, 0), ivec2(0, -1), ivec2(0, 1),
+                                  ivec2(-1, -1), ivec2(1, -1), ivec2(-1, 1), ivec2(1, 1));
+const float WEIGHTS[8] = float[8](0.2, 0.2, 0.2, 0.2, 0.05, 0.05, 0.05, 0.05);
+
+vec4 readCell(ivec2 origin, ivec2 local) {
+    local = (local % FK_TILE + FK_TILE) % FK_TILE;
+    return texelFetch(sTD2DInputs[0], origin + local, 0);
+}
+
+void main() {
+    ivec2 p = ivec2(gl_FragCoord.xy);
+    ivec2 tile = p / FK_TILE;
+    int index = fkIndex(tile);
+    if (index < 0 || index >= FK_COUNT) {
+        fragColor = TDOutputSwizzle(EMPTY_CELL);
+        return;
+    }
+    ivec2 origin = tile * FK_TILE;
+    vec2 ab = texelFetch(sTD2DInputs[0], p, 0).rg;
+    vec2 lap = vec2(0.0);
+    for (int i = 0; i < 8; ++i) {
+        lap += WEIGHTS[i] * (readCell(origin, p - origin + OFFSETS[i]).rg - ab);
+    }
+    vec2 rates = FK_EXAMPLES[index];
+    float reaction = ab.x * ab.y * ab.y;
+    vec2 change = vec2(1.0 * lap.x - reaction + rates.x * (1.0 - ab.x),
+                       0.5 * lap.y + reaction - (rates.x + rates.y) * ab.y);
+    fragColor = TDOutputSwizzle(vec4(clamp(ab + change, 0.0, 1.0), 0.0, 0.0));
+}
+"""
+
+
+FK_PANEL_SHADER = r"""
+layout(location = 0) out vec4 fragColor;
+uniform vec4 uFkMap; // feed min, feed max, kill min, kill max
+uniform vec4 uFkCurrent; // feed, kill, thumbnails ready, contrast
+""" + FIXED_PALETTE_GLSL + r"""
+vec2 mapPixel(vec2 feedKill) {
+    return vec2((feedKill.y - uFkMap.z) / (uFkMap.w - uFkMap.z),
+                (feedKill.x - uFkMap.x) / (uFkMap.y - uFkMap.x)) * FK_MAP;
+}
+
+int selectedExample() {
+    for (int i = 0; i < FK_COUNT; ++i) {
+        if (all(lessThan(abs(FK_EXAMPLES[i] - uFkCurrent.xy), vec2(1e-6)))) return i;
+    }
+    return -1;
+}
+
+void main() {
+    vec2 px = gl_FragCoord.xy;
+    int selected = selectedExample();
+    vec3 color;
+    if (px.x < FK_MAP) {
+        // Feed/Kill plane: kill along X, feed along Y, grid every 0.01.
+        vec2 t = px / FK_MAP;
+        float kill = mix(uFkMap.z, uFkMap.w, t.x);
+        float feed = mix(uFkMap.x, uFkMap.y, t.y);
+        vec2 perPixel = vec2(uFkMap.w - uFkMap.z, uFkMap.y - uFkMap.x) / FK_MAP;
+        vec2 grid = abs(fract(vec2(kill, feed) / 0.01 + 0.5) - 0.5) * 0.01 / perPixel;
+        color = vec3(0.035, 0.04, 0.06) + 0.06 * (1.0 - smoothstep(0.0, 1.0, min(grid.x, grid.y)));
+        // Saddle-node line k = sqrt(F)/2 - F: uniform red states exist to its left.
+        float curve = abs(kill - (0.5 * sqrt(max(feed, 0.0)) - feed)) / perPixel.x;
+        color = mix(color, vec3(0.5, 0.4, 0.7), 0.8 * (1.0 - smoothstep(0.5, 1.5, curve)));
+        for (int i = 0; i < FK_COUNT; ++i) {
+            float r = length(px - mapPixel(FK_EXAMPLES[i]));
+            float ring = 1.0 - smoothstep(1.0, 2.0, abs(r - 6.0));
+            float fill = (i == selected) ? 1.0 - smoothstep(3.0, 4.0, r) : 0.0;
+            color = mix(color, fkHue(i), max(ring, fill));
+        }
+        vec2 d = abs(px - mapPixel(uFkCurrent.xy));
+        bool crosshair = min(d.x, d.y) < 0.75 && max(d.x, d.y) > 4.0 && max(d.x, d.y) < 14.0;
+        if (crosshair) color = vec3(1.0);
+    } else {
+        ivec2 q = ivec2(px) - ivec2(int(FK_MAP), 0);
+        ivec2 tile = q / FK_TILE;
+        ivec2 local = q - tile * FK_TILE;
+        int index = fkIndex(tile);
+        if (uFkCurrent.z > 0.5) {
+            float t = clamp(texelFetch(sTD2DInputs[0], q, 0).g * uFkCurrent.w, 0.0, 1.0);
+            color = fixedPalette(t);
+        } else {
+            ivec2 checker = local / 16;
+            color = vec3(((checker.x + checker.y) % 2 == 0) ? 0.07 : 0.1); // not generated yet
+        }
+        int edge = min(min(local.x, local.y), min(FK_TILE - 1 - local.x, FK_TILE - 1 - local.y));
+        if (edge < 2) color = fkHue(index);
+        else if (index == selected && edge < 5) color = vec3(1.0);
+    }
+    fragColor = TDOutputSwizzle(vec4(color, 1.0));
+}
+"""
+
+
 # =============================================================================
 # 6. Presets
 # =============================================================================
 
-# Legacy preset pulses adapted to the new timing units.
-# A versioned preset table is deferred to phase 4.
-PRESET_PULSE_HANDLERS = '''    elif par.name == 'Coral':
-        component.par.Feed = 0.0545
-        component.par.Kill = 0.062
-        component.par.Diffusiona = 1.0
-        component.par.Diffusionb = 0.5
-        component.par.Speed = 1.0
-        component.par.Solverquality = 1
-        component.par.Seedradius = 9.0
-    elif par.name == 'Spots':
-        component.par.Feed = 0.0367
-        component.par.Kill = 0.0649
-        component.par.Diffusiona = 1.0
-        component.par.Diffusionb = 0.5
-        component.par.Speed = 1.0
-        component.par.Solverquality = 1
-        component.par.Seedradius = 5.0
-    elif par.name == 'Clipseed':
-        component.par.Ambient = False
-        component.par.Influencemode = 'continuous'
-        component.par.Maskmode = 'alpha'
-        component.par.Strength = 600.0
-        component.par.Fade = 0.0
+# Built-in presets are complete: build-time parameter defaults plus these
+# overrides. Media paths and TOP references are never part of a built-in.
+BUILTIN_PRESETS = (
+    ('Coral', 'Branching coral growth from ambient seeds. The default chemistry.', {}),
+    ('Dividing Spots', 'Self-replicating spots from small ambient seeds.',
+     {'Feed': 0.0367, 'Kill': 0.0649, 'Seedradius': 5.0}),
+    ('Worms', 'Labyrinthine worms and mazes.', {'Feed': 0.029, 'Kill': 0.057, 'Seedradius': 6.0}),
+    ('Holes', 'A filled field punctured by stable holes.', {'Feed': 0.039, 'Kill': 0.058}),
+    ('Clip Seed', 'Media silhouette continuously seeds coral; no ambient seeds.',
+     {'Ambient': False, 'Influencemode': 'continuous', 'Maskmode': 'alpha',
+      'Strength': 600.0, 'Fade': 0.0}),
+    ('Stamp and Evolve', 'Stamp Current Mask once, then let spots evolve with carried color.',
+     {'Feed': 0.0367, 'Kill': 0.0649, 'Ambient': False, 'Influencemode': 'stamp',
+      'Maskmode': 'alpha', 'Colormode': 'dye', 'Dyesource': 'mask'}),
+    ('Chemistry Map', 'Media brightness maps local feed/kill; tinted by the source.',
+     {'Influencemode': 'chemistry', 'Maskmode': 'bright', 'Colormode': 'tint'}),
+    ('Color Swirl', 'Carried media color with slow growth and rotation.',
+     {'Colormode': 'dye', 'Transform': True, 'Rotate': 30.0}),
+    ('Wide Coarse', 'A 768x432 canvas on a 3-pixel grid with thick lines. Resets when applied.',
+     {'Rectangle': True, 'Canvaswidth': 768, 'Canvasheight': 432, 'Cellsize': 3.0}),
+)
+
+# Custom parameters that are deliberately not preset data: runtime state,
+# diagnostics, and the preset/explorer controls themselves. The builder fails
+# if any other custom parameter is left out of the preset groups.
+PRESET_EXCLUDED = ('Pause', 'Simtime', 'Simlag', 'Tickcount', 'Substeps',
+                   'Preset', 'Presetname', 'Presetbindings', 'Presetfile', 'Importmode',
+                   'Presetstatus', 'Explorerclick', 'Explorerreset', 'Fkfeedmin', 'Fkfeedmax',
+                   'Fkkillmin', 'Fkkillmax', 'Thumbseed', 'Thumbage', 'Explorerstatus')
+
+
+PRESETS_MODULE = r'''
+"""Versioned preset table for turing_media_v2.
+
+Pure document helpers (no TouchDesigner access) come first, so they can be
+tested outside TouchDesigner. Adapters that read or write the component follow.
+"""
+import copy
+import json
+import math
+import re
+from pathlib import Path
+
+SCHEMA = 'turing_media_v2.presets'
+VERSION = 1
+
+GROUPS = (
+    ('chemistry', ('Feed', 'Kill', 'Diffusiona', 'Diffusionb')),
+    ('seed', ('Seed', 'Seedradius', 'Ambient')),
+    ('dimensions', ('Resolution', 'Rectangle', 'Canvaswidth', 'Canvasheight', 'Cellsize')),
+    ('timing', ('Clockmode', 'Speed', 'Solverquality', 'Renderfps', 'Maxcatchup')),
+    ('media', ('Mediaplay', 'Mediaspeed', 'Overridefps', 'Sequencefps', 'Mediascale',
+               'Offsetx', 'Offsety', 'Rotation', 'Sourcepremult', 'Ignorealpha')),
+    ('influence', ('Influencemode', 'Stampamount', 'Feedmin', 'Feedmax', 'Killmin', 'Killmax',
+                   'Chemistryblend', 'Maskmode', 'Strength', 'Maskgain', 'Edgewidth',
+                   'Smoothing', 'Motiongain', 'Fade')),
+    ('domain', ('Domainthreshold', 'Domaininvert', 'Domainboundary')),
+    ('transform', ('Transform', 'Grow', 'Scalex', 'Scaley', 'Translatex', 'Translatey',
+                   'Rotate', 'Pivotx', 'Pivoty', 'Transformedge')),
+    ('display', ('Coloramount', 'Contrast', 'Invert', 'Overlay', 'Clipalpha', 'Viewmode',
+                 'Upscale')),
+    ('color', ('Colormode', 'Tintspread', 'Palettesmooth', 'Paletteanchor', 'Dyespread',
+               'Dyesource', 'Dyeinject', 'Dyedecay', 'Dyesaturation')),
+)
+# Optional bindings: project-specific paths, stored separately so presets stay portable.
+BINDINGS = ('Moviefile', 'Sourcetop', 'Domaintop', 'Ramptop')
+# State buffers cannot survive a size change until resampling exists (Phase 5).
+DIMENSIONS = ('Resolution', 'Rectangle', 'Canvaswidth', 'Canvasheight', 'Cellsize')
+
+
+class PresetError(ValueError):
+    pass
+
+
+def parameter_names():
+    return [name for _, names in GROUPS for name in names]
+
+
+def slug(name, taken=()):
+    base = re.sub(r'[^a-z0-9]+', '_', name.strip().lower()).strip('_') or 'preset'
+    key, suffix = base, 2
+    while key in taken:
+        key = '{}_{}'.format(base, suffix)
+        suffix += 1
+    return key
+
+
+def group_settings(flat):
+    """Flat {parameter: value} -> settings grouped in schema order."""
+    settings, known = {}, set()
+    for group, names in GROUPS:
+        known.update(names)
+        values = {name: flat[name] for name in names if name in flat}
+        if values:
+            settings[group] = values
+    extra = {name: value for name, value in flat.items() if name not in known}
+    if extra:
+        settings['other'] = extra
+    return settings
+
+
+def flatten(settings):
+    flat = {}
+    for group, values in settings.items():
+        if not isinstance(values, dict):
+            raise PresetError('settings group {!r} must be an object'.format(group))
+        for name, value in values.items():
+            if name in flat:
+                raise PresetError('setting {!r} appears twice'.format(name))
+            flat[name] = value
+    return flat
+
+
+def make_preset(name, flat, bindings=None, description='', builtin=False):
+    preset = {'name': name, 'description': description, 'settings': group_settings(flat)}
+    if bindings:
+        preset['bindings'] = dict(bindings)
+    if builtin:
+        preset['builtin'] = True
+    return preset
+
+
+def empty_document():
+    return {'schema': SCHEMA, 'version': VERSION, 'presets': []}
+
+
+def _scalar(value):
+    if isinstance(value, float):
+        return math.isfinite(value)
+    return isinstance(value, (bool, int, str))
+
+
+def validate_preset(preset, where='preset'):
+    if not isinstance(preset, dict):
+        raise PresetError('{} must be an object'.format(where))
+    name = preset.get('name')
+    if not isinstance(name, str) or not name.strip():
+        raise PresetError('{} needs a non-empty name'.format(where))
+    where = 'preset {!r}'.format(name)
+    if not isinstance(preset.get('description', ''), str):
+        raise PresetError('{} description must be text'.format(where))
+    if not isinstance(preset.get('settings'), dict):
+        raise PresetError('{} needs a settings object'.format(where))
+    for key, value in flatten(preset['settings']).items():
+        if not _scalar(value):
+            raise PresetError('{} setting {!r} must be a finite number, toggle or text'.format(where, key))
+    bindings = preset.get('bindings', {})
+    if not isinstance(bindings, dict) or not all(isinstance(v, str) for v in bindings.values()):
+        raise PresetError('{} bindings must map names to text'.format(where))
+    if not isinstance(preset.get('builtin', False), bool):
+        raise PresetError('{} builtin flag must be true or false'.format(where))
+    return preset
+
+
+def migrate(document):
+    """Upgrade older schema versions in place. Version 1 is the first."""
+    return document
+
+
+def validate_document(document):
+    if not isinstance(document, dict) or document.get('schema') != SCHEMA:
+        raise PresetError('not a {} document'.format(SCHEMA))
+    version = document.get('version')
+    if not isinstance(version, int) or isinstance(version, bool) or version < 1:
+        raise PresetError('invalid preset schema version {!r}'.format(version))
+    if version > VERSION:
+        raise PresetError('preset schema version {} is newer than supported version {}'
+                          .format(version, VERSION))
+    document = migrate(document)
+    presets = document.get('presets')
+    if not isinstance(presets, list):
+        raise PresetError('presets must be a list')
+    names = set()
+    for index, preset in enumerate(presets):
+        validate_preset(preset, 'preset #{}'.format(index + 1))
+        key = preset['name'].strip().casefold()
+        if key in names:
+            raise PresetError('duplicate preset name {!r}'.format(preset['name']))
+        names.add(key)
+    return document
+
+
+def loads(text):
+    try:
+        document = json.loads(text)
+    except ValueError as error:
+        raise PresetError('invalid JSON: {}'.format(error))
+    return validate_document(document)
+
+
+def dumps(document):
+    return json.dumps(validate_document(document), indent=2, allow_nan=False) + '\n'
+
+
+def find(document, name):
+    key = name.strip().casefold()
+    for preset in document['presets']:
+        if preset['name'].strip().casefold() == key:
+            return preset
+    return None
+
+
+def menu_keys(document):
+    keys = []
+    for preset in document['presets']:
+        keys.append(slug(preset['name'], keys))
+    return keys
+
+
+def upsert(document, preset):
+    """Add or replace a user preset; returns True when it replaced one."""
+    validate_preset(preset)
+    existing = find(document, preset['name'])
+    if existing is not None and existing.get('builtin'):
+        raise PresetError('{!r} is a built-in preset; save under another name'.format(preset['name']))
+    if existing is None:
+        document['presets'].append(preset)
+        return False
+    document['presets'][document['presets'].index(existing)] = preset
+    return True
+
+
+def remove(document, name):
+    preset = find(document, name)
+    if preset is None:
+        raise PresetError('no preset named {!r}'.format(name))
+    if preset.get('builtin'):
+        raise PresetError('{!r} is a built-in preset and cannot be deleted'.format(name))
+    document['presets'].remove(preset)
+    return preset
+
+
+def merge(document, incoming, replace=False):
+    """Import user presets. Embedded built-ins always win over imported copies."""
+    result = copy.deepcopy(document)
+    report = dict(added=[], replaced=[], renamed=[], skipped=[])
+    if replace:
+        result['presets'] = [p for p in result['presets'] if p.get('builtin')]
+    builtins = {p['name'].strip().casefold() for p in result['presets'] if p.get('builtin')}
+    for preset in copy.deepcopy(incoming['presets']):
+        key = preset['name'].strip().casefold()
+        if preset.pop('builtin', False) and key in builtins:
+            report['skipped'].append(preset['name'])
+            continue
+        if key in builtins:
+            original, suffix = preset['name'], 1
+            while find(result, preset['name']) is not None:
+                preset['name'] = '{} (imported{})'.format(
+                    original, '' if suffix == 1 else ' {}'.format(suffix))
+                suffix += 1
+            report['renamed'].append([original, preset['name']])
+        (report['replaced'] if upsert(result, preset) else report['added']).append(preset['name'])
+    return result, report
+
+
+def coerce(kind, value):
+    """Return value converted to a parameter kind, or raise PresetError."""
+    if kind == 'float':
+        if isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value):
+            return float(value)
+    elif kind == 'int':
+        if isinstance(value, bool):
+            pass
+        elif isinstance(value, int):
+            return value
+        elif isinstance(value, float) and value.is_integer():
+            return int(value)
+    elif kind == 'bool':
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, int) and value in (0, 1):
+            return bool(value)
+    elif kind == 'str':
+        if isinstance(value, str):
+            return value
+    elif isinstance(kind, tuple) and kind[0] == 'menu':
+        if isinstance(value, str) and value in kind[1]:
+            return value
+    raise PresetError('{!r} is not a valid {} value'.format(value, kind if isinstance(kind, str) else 'menu'))
+
+
+def effective_size(values):
+    """(canvas w, canvas h, sim w, sim h), matching the network expressions."""
+    rectangle = values['Rectangle']
+    width = values['Canvaswidth'] if rectangle else values['Resolution']
+    height = values['Canvasheight'] if rectangle else values['Resolution']
+    cell = values['Cellsize']
+    return (width, height, max(8, int(round(width / cell))), max(8, int(round(height / cell))))
+
+
+def plan_apply(current, preset, spec, include_bindings=False):
+    """Changes needed to apply preset over current values, without touching anything."""
+    validate_preset(preset)
+    report = dict(unknown=[], invalid=[], missing=[], changed=[], blocked=[], reset='')
+    flat = flatten(preset['settings'])
+    changes = {}
+    for name, value in flat.items():
+        if name not in spec or name in BINDINGS:
+            report['unknown'].append(name)
+            continue
+        try:
+            value = coerce(spec[name], value)
+        except PresetError:
+            report['invalid'].append(name)
+            continue
+        if value != current.get(name) or type(value) is not type(current.get(name)):
+            changes[name] = value
+    report['missing'] = [name for name in parameter_names() if name in spec and name not in flat]
+    if include_bindings:
+        for name, value in preset.get('bindings', {}).items():
+            if name not in BINDINGS or name not in spec:
+                report['unknown'].append(name)
+            elif value != current.get(name):
+                changes[name] = value
+    after = dict(current)
+    after.update(changes)
+    report['resized'] = effective_size(current) != effective_size(after)
+    return changes, report
+
+
+def summary(name, report):
+    parts = ['Applied {!r}: {} changed'.format(name, len(report['changed']))]
+    parts.append('reset ({})'.format(report['reset']) if report['reset'] else 'state kept')
+    for key in ('unknown', 'invalid', 'blocked', 'missing'):
+        names = report[key]
+        if names:
+            more = '' if len(names) <= 4 else ' +{}'.format(len(names) - 4)
+            parts.append('{} {}: {}{}'.format(len(names), key, ', '.join(names[:4]), more))
+    return '; '.join(parts)
+
+
+# -----------------------------------------------------------------------------
+# TouchDesigner adapters
+# -----------------------------------------------------------------------------
+
+STYLES = {'Float': 'float', 'Int': 'int', 'Toggle': 'bool', 'File': 'str',
+          'TOP': 'str', 'Str': 'str'}
+
+
+def spec(c):
+    kinds = {}
+    for name in parameter_names() + list(BINDINGS):
+        par = getattr(c.par, name, None)
+        if par is None:
+            continue
+        if par.style in ('Menu', 'StrMenu'):
+            kinds[name] = ('menu', tuple(par.menuNames))
+        elif par.style in STYLES:
+            kinds[name] = STYLES[par.style]
+    return kinds
+
+
+def current_values(c, kinds):
+    values = {}
+    for name, kind in kinds.items():
+        par = c.par[name]
+        if kind == 'str':
+            # Keep a typed (possibly relative) path; evaluate driven bindings.
+            if par.mode == ParMode.CONSTANT:
+                value = par.val
+            else:
+                value = par.eval()
+                value = getattr(value, 'path', value)
+            values[name] = '' if value is None else str(value)
+        else:
+            values[name] = coerce(kind, par.eval())
+    return values
+
+
+def capture(c, include_bindings=False):
+    """Current settings as flat preset values plus optional bindings."""
+    values = current_values(c, spec(c))
+    flat = {name: values[name] for name in parameter_names() if name in values}
+    bindings = {name: values[name] for name in BINDINGS if name in values} if include_bindings else {}
+    return flat, bindings
+
+
+def mark_pending(c, values):
+    # TD may skip absolute frames while GPU work blocks the UI. Keep expected
+    # values until their callbacks arrive, and merge overlapping preset batches.
+    pending = dict(c.fetch('Presetpending', {}))
+    pending.update(values)
+    c.store('Presetpending', pending)
+
+
+def consume_pending(c, par):
+    """True when a value-change callback belongs to a preset batch."""
+    pending = dict(c.fetch('Presetpending', {}))
+    if par.name not in pending:
+        return False
+    expected = pending.pop(par.name)
+    c.store('Presetpending', pending)
+    # A subsequent hand edit must retain the ordinary reset behavior. Typed
+    # TOP bindings use their path text, not the OP returned by eval().
+    actual = par.val if par.style in ('TOP', 'File', 'Str') else par.eval()
+    return actual == expected
+
+
+def set_quietly(c, values):
+    """Set parameters without triggering their reset callbacks; returns blocked names."""
+    blocked = []
+    mark_pending(c, values)
+    for name, value in values.items():
+        par = c.par[name]
+        if par.mode == ParMode.EXPORT:
+            blocked.append(name)
+            continue
+        if par.mode != ParMode.CONSTANT:
+            par.mode = ParMode.CONSTANT
+        par.val = value
+    return blocked
+
+
+def apply(c, preset, reset=False, include_bindings=False):
+    """Apply one preset as a batch with at most one reset; returns a report."""
+    kinds = spec(c)
+    current = current_values(c, kinds)
+    changes, report = plan_apply(current, preset, kinds, include_bindings)
+    report['blocked'] = set_quietly(c, changes)
+    report['changed'] = sorted(name for name in changes if name not in report['blocked'])
+    clock = c.op('clock').module
+    if 'Clockmode' in changes or 'Speed' in changes:
+        clock.rebase(c, clear_debt='Clockmode' in changes)
+    if reset:
+        report['reset'] = 'requested'
+    elif report['resized']:
+        report['reset'] = 'dimensions changed'
+    if report['reset']:
+        clock.reset(c)
+    return report
+
+
+def document(c):
+    return loads(c.op('presets').text)
+
+
+def store_document(c, document, select=None):
+    c.op('presets').text = dumps(document)
+    refresh_menu(c, select)
+
+
+def refresh_menu(c, select=None):
+    doc = document(c)
+    keys = menu_keys(doc)
+    par = c.par.Preset
+    current = par.eval()
+    par.menuNames = keys
+    par.menuLabels = [p['name'] if p.get('builtin') else p['name'] + '  (user)' for p in doc['presets']]
+    if select is not None and find(doc, select) is not None:
+        current = keys[doc['presets'].index(find(doc, select))]
+    if keys:
+        par.val = current if current in keys else keys[0]
+
+
+def selected(c, doc):
+    keys = menu_keys(doc)
+    key = c.par.Preset.eval()
+    if key not in keys:
+        raise PresetError('no preset selected')
+    return doc['presets'][keys.index(key)]
+
+
+def status(c, text):
+    c.par.Presetstatus.val = text
+    print('{} presets: {}'.format(c.path, text))
+
+
+def _path(c):
+    path = c.par.Presetfile.eval().strip()
+    if not path:
+        raise PresetError('set Preset File first')
+    path = Path(path)
+    return path if path.is_absolute() else Path(project.folder) / path
+
+
+def on_apply(c, reset=False):
+    try:
+        preset = selected(c, document(c))
+        report = apply(c, preset, reset, bool(c.par.Presetbindings))
+    except PresetError as error:
+        status(c, 'Error: {}'.format(error))
+        return None
+    status(c, summary(preset['name'], report))
+    return report
+
+
+def on_save(c):
+    try:
+        doc = document(c)
+        name = c.par.Presetname.eval().strip()
+        if not name:
+            number = 1
+            while find(doc, 'User Preset {}'.format(number)) is not None:
+                number += 1
+            name = 'User Preset {}'.format(number)
+        flat, bindings = capture(c, bool(c.par.Presetbindings))
+        preset = make_preset(name, flat, bindings, 'Saved from {}'.format(c.path))
+        replaced = upsert(doc, preset)
+        store_document(c, doc, select=name)
+    except PresetError as error:
+        status(c, 'Error: {}'.format(error))
+        return None
+    status(c, '{} {!r}: {} settings{}'.format('Replaced' if replaced else 'Saved', name, len(flat),
+                                             ', {} bindings'.format(len(bindings)) if bindings else ''))
+    return preset
+
+
+def on_delete(c):
+    try:
+        doc = document(c)
+        preset = remove(doc, selected(c, doc)['name'])
+        store_document(c, doc)
+    except PresetError as error:
+        status(c, 'Error: {}'.format(error))
+        return None
+    status(c, 'Deleted {!r}'.format(preset['name']))
+    return preset
+
+
+def on_export(c):
+    try:
+        path = _path(c)
+        text = dumps(document(c))
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text)
+    except (PresetError, OSError) as error:
+        status(c, 'Error: {}'.format(error))
+        return None
+    status(c, 'Exported {} presets to {}'.format(len(document(c)['presets']), path))
+    return path
+
+
+def on_import(c):
+    try:
+        incoming = loads(_path(c).read_text())
+        merged, report = merge(document(c), incoming, c.par.Importmode.eval() == 'replace')
+        store_document(c, merged)
+    except (PresetError, OSError) as error:
+        status(c, 'Error: {}'.format(error))
+        return None
+    parts = ['Imported: {} added, {} replaced'.format(len(report['added']), len(report['replaced']))]
+    if report['renamed']:
+        parts.append('renamed ' + ', '.join('{} -> {}'.format(*pair) for pair in report['renamed']))
+    if report['skipped']:
+        parts.append('{} built-in copies skipped'.format(len(report['skipped'])))
+    status(c, '; '.join(parts))
+    return report
+
+
+def clip_seed(c):
+    """Seed From Clip Only: a partial preset over current settings, then one reset."""
+    report = apply(c, {'name': 'Seed From Clip Only', 'settings': {
+        'seed': {'Ambient': False},
+        'influence': {'Influencemode': 'continuous', 'Maskmode': 'alpha',
+                      'Strength': 600.0, 'Fade': 0.0}}}, reset=True)
+    status(c, 'Seed From Clip Only: {} changed; reset'.format(len(report['changed'])))
+    return report
 '''
 
 
@@ -745,37 +1452,201 @@ PRESET_PULSE_HANDLERS = '''    elif par.name == 'Coral':
 # 7. Callbacks
 # =============================================================================
 
-CONTROL_CALLBACKS = '''
+CONTROL_CALLBACKS = r'''
+RESET_PARAMETERS = ('Resolution', 'Rectangle', 'Canvaswidth', 'Canvasheight', 'Cellsize',
+                    'Seed', 'Seedradius', 'Ambient', 'Moviefile', 'Sourcetop')
+
+
 def resetSimulation(component):
     component.op('clock').module.reset(component)
     return
 
+
 def onPulse(par):
-    component = par.owner
-    if par.name == 'Stamp':
-        component.op('clock').module.stamp(component)
-        return
-    if par.name == 'Step':
-        component.op('clock').module.step(component)
-        return
-    if par.name == 'Reseed':
-        component.par.Seed = component.par.Seed.eval() + 1
-''' + PRESET_PULSE_HANDLERS + '''    elif par.name == 'Restartclip':
-        component.op('movie').par.cuepulse.pulse()
-    elif par.name == 'Transformzero':
-        for name in ('Grow', 'Scalex', 'Scaley', 'Translatex', 'Translatey', 'Rotate'):
-            component.par[name].val = 0.0
-        return
-    resetSimulation(component)
+    c = par.owner
+    clock = c.op('clock').module
+    presets = c.op('preset_lib').module
+    name = par.name
+    if name == 'Stamp':
+        clock.stamp(c)
+    elif name == 'Step':
+        clock.step(c)
+    elif name == 'Reset':
+        resetSimulation(c)
+    elif name == 'Reseed':
+        # One reset: the Seed change itself is batched, not a second trigger.
+        presets.set_quietly(c, {'Seed': c.par.Seed.eval() + 1})
+        resetSimulation(c)
+    elif name == 'Restartclip':
+        c.op('movie').par.cuepulse.pulse()
+        resetSimulation(c)
+    elif name == 'Transformzero':
+        for key in ('Grow', 'Scalex', 'Scaley', 'Translatex', 'Translatey', 'Rotate'):
+            c.par[key].val = 0.0
+    elif name == 'Clipseed':
+        presets.clip_seed(c)
+    elif name == 'Applypreset':
+        presets.on_apply(c, reset=False)
+    elif name == 'Applyreset':
+        presets.on_apply(c, reset=True)
+    elif name == 'Savepreset':
+        presets.on_save(c)
+    elif name == 'Deletepreset':
+        presets.on_delete(c)
+    elif name == 'Exportpresets':
+        presets.on_export(c)
+    elif name == 'Importpresets':
+        presets.on_import(c)
+    elif name == 'Generatethumbs':
+        c.op('explorer').module.generate(c)
     return
 
+
 def onValueChange(par, prev):
-    if par.name in ('Pause', 'Clockmode', 'Speed'):
-        par.owner.op('clock').module.rebase(par.owner, clear_debt=par.name == 'Clockmode')
+    c = par.owner
+    # Preset batches apply their own single (or no) reset.
+    if c.op('preset_lib').module.consume_pending(c, par):
         return
-    if par.name in ('Resolution', 'Rectangle', 'Canvaswidth', 'Canvasheight', 'Cellsize',
-                    'Seed', 'Seedradius', 'Ambient', 'Moviefile', 'Sourcetop'):
-        resetSimulation(par.owner)
+    if par.name in ('Pause', 'Clockmode', 'Speed'):
+        c.op('clock').module.rebase(c, clear_debt=par.name == 'Clockmode')
+        return
+    if par.name in RESET_PARAMETERS:
+        resetSimulation(c)
+    return
+'''
+
+
+EXPLORER_CALLBACKS = r'''
+"""Feed/Kill explorer: reference thumbnails and XY panel input.
+
+Layout constants must match FK_* in the builder (checked by validation).
+"""
+MAP_SIZE = 512
+TILE = 128
+COLUMNS = 2
+ROWS = 4
+PANEL_WIDTH = MAP_SIZE + COLUMNS * TILE
+PANEL_HEIGHT = ROWS * TILE
+TICKS_PER_FRAME = 40
+
+
+def examples(c):
+    table = c.op('fk_examples')
+    return [dict(name=table[row, 'name'].val, feed=float(table[row, 'feed'].val),
+                 kill=float(table[row, 'kill'].val)) for row in range(1, table.numRows)]
+
+
+def example_at(u, v):
+    """Example index under normalized panel coordinates; None on the map."""
+    x, y = u * PANEL_WIDTH, v * PANEL_HEIGHT
+    if x < MAP_SIZE or x >= PANEL_WIDTH or y < 0 or y >= PANEL_HEIGHT:
+        return None
+    column, row = int((x - MAP_SIZE) // TILE), int(y // TILE)
+    return (ROWS - 1 - row) * COLUMNS + column
+
+
+def map_point(c, u, v):
+    """(feed, kill) at normalized panel coordinates on the map; kill runs along X."""
+    x = min(max(u * PANEL_WIDTH / MAP_SIZE, 0.0), 1.0)
+    y = min(max(v, 0.0), 1.0)
+    low, high = float(c.par.Fkfeedmin.eval()), float(c.par.Fkfeedmax.eval())
+    feed = low + (high - low) * y
+    low, high = float(c.par.Fkkillmin.eval()), float(c.par.Fkkillmax.eval())
+    kill = low + (high - low) * x
+    return round(feed, 5), round(kill, 5)
+
+
+def pick(c, u, v, pressed=True):
+    """One panel sample: map drags set Feed/Kill; a tile press selects its example."""
+    index = example_at(u, v)
+    if index is None:
+        if u * PANEL_WIDTH >= MAP_SIZE:
+            return None
+        c.par.Feed, c.par.Kill = map_point(c, u, v)
+        return 'map'
+    rows = examples(c)
+    if not pressed or index >= len(rows):
+        return None
+    c.par.Feed, c.par.Kill = rows[index]['feed'], rows[index]['kill']
+    if c.par.Explorerreset:
+        c.op('clock').module.reset(c)
+    return rows[index]['name']
+
+
+def _value(value):
+    return float(getattr(value, 'val', value))
+
+
+def poll(c):
+    panel = c.op('fk_explorer')
+    if panel is None:
+        return
+    try:
+        down = _value(panel.panel.lselect) > 0.5
+        u, v = _value(panel.panel.u), _value(panel.panel.v)
+    except Exception:
+        return
+    was = c.fetch('Fkdown', False)
+    if down != was:  # avoid touching storage every frame
+        c.store('Fkdown', down)
+    if down and c.par.Explorerclick:
+        pick(c, u, v, pressed=not was)
+
+
+def _status(c, text):
+    c.par.Explorerstatus.val = text
+
+
+def generate(c, synchronous=False):
+    """Simulate every curated example from one fixed seed to a fixed age."""
+    clock = c.op('clock').module
+    token = c.fetch('Fkjob', 0) + 1
+    c.store('Fkjob', token)
+    c.store('Fkready', 0)
+    for name in ('fk_a', 'fk_b'):
+        c.op(name).inputConnectors[0].connect(c.op('fk_seed'))
+        c.op(name).par.resetpulse.pulse()
+        clock.capture(c.op(name), c.op('fk_seed'))
+    c.op('fk_read').par.top = 'fk_a'
+    total = max(1, int(round(float(c.par.Thumbage) * 60.0)))
+    c.store('Fkprogress', dict(token=token, done=0, total=total, buffer=0,
+                               seed=int(c.par.Thumbseed), synchronous=synchronous))
+    return advance(c, token)
+
+
+def advance(c, token):
+    job = c.fetch('Fkprogress', None)
+    if job is None or job['token'] != token or c.fetch('Fkjob', 0) != token:
+        return False  # superseded by a newer Generate
+    clock = c.op('clock').module
+    count = job['total'] - job['done']
+    if not job['synchronous']:
+        count = min(count, TICKS_PER_FRAME)
+    for _ in range(count):
+        c.op('fk_read').cook(force=True)
+        dest = 1 - job['buffer']
+        clock.capture(c.op(('fk_a', 'fk_b')[dest]), c.op('fk_sim'))
+        c.op('fk_read').par.top = ('fk_a', 'fk_b')[dest]
+        job['buffer'] = dest
+        job['done'] += 1
+    c.store('Fkprogress', job)
+    if job['done'] < job['total']:
+        _status(c, 'Generating thumbnails: {}/{} ticks'.format(job['done'], job['total']))
+        run('args[0].module.advance(args[1], args[2])', me, c, token, delayFrames=1)
+        return False
+    c.op('fk_read').cook(force=True)
+    c.store('Fkready', 1)
+    c.store('Fkreference', dict(seed=job['seed'], ticks=job['total'],
+                                seconds=job['total'] / 60.0))
+    c.op('fk_panel').cook(force=True)
+    _status(c, 'Reference outcomes: seed {}, age {:.2f} s ({} ticks), {}-cell tiles, '
+               'no media. Initialization and media change results.'
+            .format(job['seed'], job['total'] / 60.0, job['total'], TILE))
+    return True
+
+
+def onFrameStart(frame):
+    poll(me.parent())
     return
 '''
 
@@ -860,6 +1731,8 @@ def reset(c):
     c.store('Paletteready', True)
     state.update(ticks=0, debt=0.0, buffer=0, media=0, ready=True,
                  last=time.perf_counter(), mode=c.par.Clockmode.eval(), frame=None)
+    # Diagnostic: presets and pulses promise at most one reset per action.
+    c.store('Resetcount', c.fetch('Resetcount', 0) + 1)
     for name in ('state_read', 'palette_read', 'media_cache', 'media_previous',
                  'media_mask', 'mask_preview', 'state', 'palette'):
         c.op(name).cook(force=True)
@@ -1090,6 +1963,103 @@ def _menu_index(name):
     return 'parent().par.{0}.menuNames.index(parent().par.{0}.eval())'.format(name)
 
 
+def _build_presets(component):
+    """Embedded preset library and versioned table, with a coverage check."""
+    library = component.create(textDAT, 'preset_lib')
+    library.text = PRESETS_MODULE.strip() + '\n'
+    library.nodeX, library.nodeY = -850, -380
+    table = component.create(textDAT, 'presets')
+    table.nodeX, table.nodeY = -1100, -380
+    lib = library.module
+
+    # Every non-pulse custom parameter is preset data, a binding, or deliberately excluded.
+    classified = set(lib.parameter_names()) | set(lib.BINDINGS) | set(PRESET_EXCLUDED)
+    for name in classified:
+        if getattr(component.par, name, None) is None:
+            raise RuntimeError('Preset table names missing parameter {}'.format(name))
+    unclassified = [par.name for par in component.customPars
+                    if par.style != 'Pulse' and par.name not in classified]
+    if unclassified:
+        raise RuntimeError('Preset coverage: unclassified parameters {}'.format(unclassified))
+
+    # Built-ins are complete: current (default) values plus overrides, no bindings.
+    defaults, _ = lib.capture(component)
+    document = lib.empty_document()
+    for name, description, overrides in BUILTIN_PRESETS:
+        unknown = sorted(set(overrides) - set(defaults))
+        if unknown:
+            raise RuntimeError('Built-in preset {} sets unknown parameters {}'.format(name, unknown))
+        values = dict(defaults)
+        values.update(overrides)
+        document['presets'].append(lib.make_preset(name, values, None, description, builtin=True))
+    lib.store_document(component, document, select=BUILTIN_PRESETS[0][0])
+    component.par.Presetstatus.val = '{} built-in presets, schema version {}'.format(
+        len(BUILTIN_PRESETS), lib.VERSION)
+
+
+def _build_explorer(component):
+    """Feed/Kill reference thumbnails, map panel, and the optional XY panel COMP."""
+    atlas_width, atlas_height = FK_COLUMNS * FK_TILE, FK_ROWS * FK_TILE
+    if len(FK_EXAMPLES) != FK_COLUMNS * FK_ROWS:
+        raise RuntimeError('FK_EXAMPLES must fill the thumbnail atlas')
+    fk_glsl = _fk_glsl()
+
+    examples = component.create(tableDAT, 'fk_examples')
+    examples.nodeX, examples.nodeY = 1400, -900
+    examples.clear()
+    examples.appendRow(['index', 'name', 'feed', 'kill', 'preset', 'note'])
+    builtin_names = {name for name, _, _ in BUILTIN_PRESETS}
+    for index, (name, feed, kill) in enumerate(FK_EXAMPLES):
+        examples.appendRow([index, name, repr(feed), repr(kill),
+                            name if name in builtin_names else '',
+                            'reference outcome: fixed seed and age, no media'])
+
+    seed = _shader(component, 'fk_seed', 'fk_seed_pixel', fk_glsl + FK_SEED_SHADER, (1400, -300))
+    _set(seed, 'outputresolution', 'custom')
+    _set(seed, 'resolutionw', atlas_width)
+    _set(seed, 'resolutionh', atlas_height)
+    _uniforms(seed, [('uFkSeed', ('parent().par.Thumbseed', '5', '0', '0'))])
+    for index, name in enumerate(('fk_a', 'fk_b')):
+        _buffer(component, name, seed, (1400 + index * 220, -600))
+    reader = _reader(component, 'fk_read', 'fk_a', (1650, -300))
+    simulation = _shader(component, 'fk_sim', 'fk_sim_pixel', fk_glsl + FK_SIM_SHADER, (1900, -300))
+    simulation.inputConnectors[0].connect(reader)
+    _set(simulation, 'npasses', 16)
+
+    panel_top = _shader(component, 'fk_panel', 'fk_panel_pixel', fk_glsl + FK_PANEL_SHADER, (2150, -300))
+    panel_top.inputConnectors[0].connect(reader)
+    _set(panel_top, 'outputresolution', 'custom')
+    _set(panel_top, 'resolutionw', FK_MAP_SIZE + atlas_width)
+    _set(panel_top, 'resolutionh', atlas_height)
+    _uniforms(panel_top, [
+        ('uFkMap', ('parent().par.Fkfeedmin', 'parent().par.Fkfeedmax',
+                    'parent().par.Fkkillmin', 'parent().par.Fkkillmax')),
+        ('uFkCurrent', ('parent().par.Feed', 'parent().par.Kill',
+                        'parent().fetch("Fkready", 0)', 'parent().par.Contrast')),
+    ])
+
+    explorer = component.create(executeDAT, 'explorer')
+    explorer.nodeX, explorer.nodeY = 1650, -900
+    _set(explorer, 'active', False)
+    explorer.text = EXPLORER_CALLBACKS.strip() + '\n'
+    for name in ('framestart', 'playstatechange', 'start', 'create', 'frameend'):
+        _set(explorer, name, name == 'framestart')
+
+    # The XY panel is optional: report unsupported parameters instead of failing the build.
+    try:
+        panel = component.create(containerCOMP, 'fk_explorer')
+        panel.nodeX, panel.nodeY = 2400, -300
+        _set(panel, 'w', FK_MAP_SIZE + atlas_width)
+        _set(panel, 'h', atlas_height)
+        _set(panel, 'top', 'fk_panel')
+        _set(explorer, 'active', True)
+    except RuntimeError as error:
+        if component.op('fk_explorer') is not None:
+            component.op('fk_explorer').destroy()
+        component.par.Explorerstatus.val = 'XY panel unavailable: {}'.format(error)
+        print('WARNING: Feed/Kill XY panel not built: {}'.format(error))
+
+
 def build_turing_media_v2(container=None):
     if container is None:
         container = me.parent()
@@ -1118,9 +2088,28 @@ def build_turing_media_v2(container=None):
     _number(page, 'Seed', 'Seed', 1, 0, 1000000, True)
     _number(page, 'Seedradius', 'Seed Radius (cells)', 9.0, 3.0, 32.0)
     _toggle(page, 'Ambient', 'Ambient Seeds', True)
-    for name, label in (('Reset', 'Reset'), ('Reseed', 'Reseed'),
-                        ('Coral', 'Coral Preset'), ('Spots', 'Dividing Spots Preset')):
+    for name, label in (('Reset', 'Reset'), ('Reseed', 'Reseed + Reset')):
         page.appendPulse(name, label=label)
+
+    preset_page = component.appendCustomPage('Presets')
+    _menu(preset_page, 'Preset', 'Preset', [('coral', 'Coral')], 'coral')
+    preset_page.appendPulse('Applypreset', label='Apply Preset (keep state)')
+    preset_page.appendPulse('Applyreset', label='Apply Preset + Reset')
+    preset_name = preset_page.appendStr('Presetname', label='Save As Name')[0]
+    preset_name.default = ''
+    preset_name.val = ''
+    preset_page.appendPulse('Savepreset', label='Save Current Preset')
+    preset_page.appendPulse('Deletepreset', label='Delete User Preset')
+    _toggle(preset_page, 'Presetbindings', 'Include Media/TOP Bindings', False)
+    preset_file = preset_page.appendFile('Presetfile', label='Preset File (.json)')[0]
+    preset_file.default = 'turing_media_v2_presets.json'
+    preset_file.val = 'turing_media_v2_presets.json'
+    _menu(preset_page, 'Importmode', 'Import Mode', [
+        ('merge', 'Merge (replace same names)'), ('replace', 'Replace User Presets')], 'merge')
+    preset_page.appendPulse('Importpresets', label='Import Presets')
+    preset_page.appendPulse('Exportpresets', label='Export Presets')
+    preset_status = preset_page.appendStr('Presetstatus', label='Status')[0]
+    preset_status.readOnly = True
     clock_page = component.appendCustomPage('Clock')
     _menu(clock_page, 'Clockmode', 'Clock Mode', [
         ('realtime', 'Real Time'), ('framestepped', 'Frame Stepped')], 'realtime')
@@ -1245,6 +2234,21 @@ def build_turing_media_v2(container=None):
     _number(color_page, 'Dyeinject', 'Color Injection Rate (1 / second)', _rate(0.05), 0.0, 600.0)
     _number(color_page, 'Dyedecay', 'Color Decay Rate (1 / second)', 0.0, 0.0, 60.0)
     _number(color_page, 'Dyesaturation', 'Color Saturation', 1.5, 0.0, 4.0)
+
+    explorer_page = component.appendCustomPage('Explorer')
+    _toggle(explorer_page, 'Explorerclick', 'Panel Click Sets Feed/Kill', True)
+    _toggle(explorer_page, 'Explorerreset', 'Reset When Choosing Example', False)
+    _number(explorer_page, 'Fkfeedmin', 'Map Feed Minimum', 0.0, 0.0, 0.1)
+    _number(explorer_page, 'Fkfeedmax', 'Map Feed Maximum', 0.08, 0.0, 0.1)
+    _number(explorer_page, 'Fkkillmin', 'Map Kill Minimum', 0.04, 0.0, 0.1)
+    _number(explorer_page, 'Fkkillmax', 'Map Kill Maximum', 0.07, 0.0, 0.1)
+    _number(explorer_page, 'Thumbseed', 'Thumbnail Seed', 1, 0, 1000000, True)
+    _number(explorer_page, 'Thumbage', 'Thumbnail Age (seconds)', 10.0, 0.5, 60.0)
+    explorer_page.appendPulse('Generatethumbs', label='Generate Thumbnails')
+    explorer_status = explorer_page.appendStr('Explorerstatus', label='Status')[0]
+    explorer_status.default = 'Thumbnails not generated'
+    explorer_status.val = 'Thumbnails not generated'
+    explorer_status.readOnly = True
 
     # A transparent canvas-sized source: no media means no influence at all.
     blank = component.create(constantTOP, 'blank')
@@ -1521,12 +2525,18 @@ def build_turing_media_v2(container=None):
         _set(clock, name, True)
     _set(clock, 'frameend', False)
 
+    _build_presets(component)
+    _build_explorer(component)
+
     callbacks = component.create(parameterexecuteDAT, 'controls')
     callbacks.nodeX, callbacks.nodeY = -350, -160
     _set(callbacks, 'active', False)
     callbacks.text = CONTROL_CALLBACKS.strip() + '\n'
     _set(callbacks, 'op', '..')
-    _set(callbacks, 'pars', 'Stamp Step Pause Clockmode Speed Reset Reseed Coral Spots Resolution Rectangle Canvaswidth Canvasheight Cellsize Seed Seedradius Ambient Moviefile Sourcetop Clipseed Restartclip Transformzero')
+    _set(callbacks, 'pars', 'Stamp Step Pause Clockmode Speed Reset Reseed Resolution Rectangle '
+                            'Canvaswidth Canvasheight Cellsize Seed Seedradius Ambient Moviefile '
+                            'Sourcetop Clipseed Restartclip Transformzero Applypreset Applyreset '
+                            'Savepreset Deletepreset Importpresets Exportpresets Generatethumbs')
     _set(callbacks, 'custom', True)
     _set(callbacks, 'builtin', False)
     _set(callbacks, 'onpulse', True)
@@ -1564,7 +2574,7 @@ def build_turing_media_v2(container=None):
 # 9. Embedded help
 # =============================================================================
 
-NETWORK_HELP = '''TURING MEDIA V2 / PHASE 3 — INDEPENDENT MEDIA INFLUENCE
+NETWORK_HELP = '''TURING MEDIA V2 / PHASE 4 — PRESETS AND FEED/KILL EXPLORER
 
 QUICK START
 Paste the entire builder into a Text DAT and Run Script. Play the timeline.
@@ -1614,11 +2624,11 @@ Motion measures alpha and alpha-weighted luminance changes per tick, not optical
 flow. It settles to zero on the next unchanged tick; while paused history holds.
 
 TURING PAGE
-Feed/Kill and Diffusion A/B control chemistry. Coral and Dividing Spots set
-chemistry, Speed=1, Quality=1 and seed radius, then reset. Ambient Seeds adds
-ten initial patches. Seed, Seed Radius, Ambient Seeds, dimensions, and source
-binding changes still reset in Phase 3 (deliberate reset controls are Phase 5). Reset keeps the current media position;
-Restart Clip cues the movie and resets. Reseed increments the random seed.
+Feed/Kill and Diffusion A/B control chemistry. Ambient Seeds adds ten initial
+patches. Editing Seed, Seed Radius, Ambient Seeds, dimensions or the source
+binding by hand still resets (deliberate reset controls are Phase 5). Reset keeps the current media position;
+Restart Clip cues the movie and resets. Reseed increments the seed and resets
+once. The former Coral/Dividing Spots pulses are now presets (Presets page).
 Resolution controls a square canvas; Rectangular Canvas enables Width/Height.
 Cell Size divides the canvas dimensions for a coarser simulation, upscaled by
 Display > Upscale Filter. Larger cells make thicker lines and lower GPU cost.
@@ -1684,6 +2694,65 @@ Without a domain, canvas edges retain the Phase 2 contract. With a domain, Wrap
 repeats its mask across seams; Clear treats out-of-canvas cells as blocked, so
 Domain Boundary also governs that interface. Full boundary unification is Phase 6.
 
+PRESETS PAGE
+Presets live in the 'presets' Text DAT as a versioned JSON table (schema
+turing_media_v2.presets, version 1), saved with the TOE/TOX. Each preset holds
+a name, description and COMPLETE settings grouped as chemistry, seed,
+dimensions, timing, media fitting, influence, domain, transform, display and
+color. Pause, diagnostics and the Presets/Explorer controls are not preset data.
+Built-in presets (read-only) are rebuilt from defaults on every build:
+Coral, Dividing Spots, Worms, Holes, Clip Seed, Stamp and Evolve, Chemistry Map,
+Color Swirl, Wide Coarse. User presets are marked (user) in the menu.
+Apply Preset (keep state) sets every parameter in ONE batch and does not reset:
+chemical state, carried color, age and palette/media history continue. Seed
+settings are stored but take effect at the next reset. Exception: if the
+effective canvas or simulation size changes, Apply performs exactly one reset,
+because state cannot survive a resize until resampling exists (Phase 5).
+Apply Preset + Reset sets everything, then resets exactly once.
+Applying source bindings without reset keeps state; motion history is not yet
+invalidated on source changes (Phase 5).
+Save Current Preset stores all current values under Save As Name (blank picks
+'User Preset N'); the same name replaces that user preset. Built-in names are
+refused. Delete User Preset removes the selected user preset.
+Include Media/TOP Bindings: when on, Save stores Movie File, Source TOP, Domain
+Mask TOP and Ramp TOP paths (typed relative paths are kept) and Apply restores
+them. When off (default), bindings are neither saved nor applied, so presets
+stay portable between projects.
+Export Presets writes the whole table to Preset File (relative paths resolve
+from the project folder). Import Presets reads a file: Merge adds and replaces
+same-named user presets; Replace User Presets first removes all user presets.
+Imported copies of built-ins are skipped; a user preset named like a built-in
+is renamed '<name> (imported)'. Files with a newer schema version, invalid JSON,
+duplicate names or non-finite values are refused without changing anything.
+Unknown settings (e.g. from a newer build) are kept in the table and reported
+as unknown when applied; missing settings keep their current values and are
+reported. Menu values not offered by this build are reported as invalid.
+Parameters driven by an expression are set to constant; exported parameters
+are left alone and reported as blocked. Status shows the last result.
+Seed From Clip Only (Influence page) is a partial preset with one reset.
+
+EXPLORER PAGE / FEED-KILL PANEL
+fk_explorer is a Container COMP panel (768x512). Open it as a viewer or panel.
+Left: the Feed/Kill plane (kill along X, feed along Y, faint grid every 0.01)
+with colored rings at curated examples, a crosshair at the current Feed/Kill,
+and the saddle-node line k = sqrt(F)/2 - F (uniform reacted states exist left
+of it). Right: eight reference thumbnails, first at top-left, borders matching
+the ring colors; the selected example gets a white border.
+Click or drag on the map to set Feed/Kill (rounded to 5 decimals); click a
+thumbnail to choose that example exactly. This never resets, unless Reset
+When Choosing Example is on. Panel Click Sets Feed/Kill disables input.
+Map Feed/Kill Minimum/Maximum set the plotted range.
+Generate Thumbnails simulates all examples together in a 256x512 atlas of
+independently wrapping 128-cell tiles: one fixed seed layout (Thumbnail Seed),
+radius 5 cells, the reference solver (dt=1, diffusion 1/.5, 16 updates/tick),
+for Thumbnail Age seconds (default 10 = 600 ticks), spread across frames.
+They are REFERENCE OUTCOMES only: other seeds, ages, sizes, diffusion, media
+and domains can produce different patterns. fk_examples lists their names
+and values; Status records seed and age. Thumbnails do not touch the main state.
+Network: fk_seed -> fk_a/fk_b (explicit ping-pong) -> fk_read -> fk_sim;
+fk_read -> fk_panel -> fk_explorer background. explorer: Execute DAT that polls
+panel input each frame and generates thumbnails.
+
 COLOR / DISPLAY
 All four color modes remain: Fixed Palette, Source Tint, Clip Palette, Carried
 Color. Ramp TOP optionally replaces the teal/gold ramp (horizontal middle row).
@@ -1729,13 +2798,18 @@ Translation/rotation: multiply old per-frame rates by 60. Grow/scale percentage
 p: continuous_percent_per_second=6000*ln(1+p/100).
 Default no-media chemistry remains the 16-update dt=1 reference. Phase 1 reports
 are historical baseline evidence; Phase 2 intentionally changes controls/network.
+Phase 4: Turing > Coral / Dividing Spots pulses became the Coral and Dividing
+Spots presets; select them on Presets and use Apply Preset + Reset for the old
+behavior (they now also restore every other setting to its default).
 
 NETWORK / OUTPUTS
 state_a/b, palette_a/b, media_a/b are RGBA32F GPU Cache TOPs. Automatic capture
 is disabled. The clock explicitly replaces the inactive buffer and switches
 the reader only after completing the tick. Repeated Feedback TOP cooks are not
 used. No CPU texture download/upload or external packages run in the product.
-clock: Execute DAT scheduler and callable reset/step/advance API.
+clock: Execute DAT scheduler and callable reset/step/advance API. Each reset
+increments the stored diagnostic counter Resetcount (component.fetch).
+preset_lib: preset module (apply/capture/import/export); presets: JSON table.
 state_read -> reaction_diffusion -> state_transform -> inactive state buffer.
 media_prepared -> inactive media buffer -> media_cache/media_previous -> mask.
 media_cache -> palette_cells -> palette_sort -> inactive palette buffer.
@@ -1745,7 +2819,7 @@ palette=64x2 (clip ramp row 0, base ramp row 1); state=raw A/B + signed Oklab a/
 State alpha is DATA, not opacity. Do not premultiply or color-convert it.
 Each shader has a compiler Info DAT. The unselected blank movie may report an
 empty-file diagnostic; the transparent fallback is used until media is assigned.
-Validation scripts/results: validation/phase2 and validation/phase3.
+Validation scripts/results: validation/phase2, validation/phase3, validation/phase4.
 Live-supported build: TouchDesigner 2025.33230 on macOS.
 '''
 
@@ -1761,4 +2835,3 @@ except NameError:
     print('Paste this file into a TouchDesigner Text DAT and choose Run Script.')
 else:
     turing_component = build_turing_media_v2()
-

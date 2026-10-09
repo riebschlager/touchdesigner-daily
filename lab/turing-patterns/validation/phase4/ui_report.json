@@ -1,0 +1,18 @@
+{
+  "build": "2025.33230",
+  "checks": {
+    "thumbnail_click": true,
+    "click_keeps_state": true,
+    "click_keeps_age": true,
+    "click_no_reset": true,
+    "map_drag": true,
+    "drag_keeps_state": true,
+    "drag_keeps_age": true,
+    "drag_no_reset": true
+  },
+  "map_values": [
+    0.02928,
+    0.05044
+  ],
+  "passed": true
+}
