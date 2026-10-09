@@ -1,0 +1,206 @@
+{
+  "square_full": {
+    "before_gpu_ms_estimate": 5.025755600084085,
+    "after_gpu_ms_estimate": 4.477961398824118,
+    "gpu_reduction_percent": 10.899738165755647,
+    "before_memory_mib": 76.0126953125,
+    "after_memory_mib": 66.259765625,
+    "memory_reduction_percent": 12.830658941120543,
+    "stages": {
+      "simulation": {
+        "before_gpu_ms_estimate": 3.020941886631772,
+        "after_gpu_ms_estimate": 2.1741375993471594,
+        "before_bytes": 37748736,
+        "after_bytes": 33816576
+      },
+      "media": {
+        "before_gpu_ms_estimate": 1.1593354960205033,
+        "after_gpu_ms_estimate": 2.1828207998303695,
+        "before_bytes": 33554432,
+        "after_bytes": 29360128
+      },
+      "palette": {
+        "before_gpu_ms_estimate": 0.7102990672225132,
+        "after_gpu_ms_estimate": 0.0,
+        "before_bytes": 13312,
+        "after_bytes": 10240
+      },
+      "display": {
+        "before_gpu_ms_estimate": 0.1351791502092965,
+        "after_gpu_ms_estimate": 0.12100299964658916,
+        "before_bytes": 8388608,
+        "after_bytes": 6291456
+      }
+    }
+  },
+  "rectangle_full": {
+    "before_gpu_ms_estimate": 4.740170651802328,
+    "after_gpu_ms_estimate": 5.573595739970915,
+    "gpu_reduction_percent": -17.58217476519961,
+    "before_memory_mib": 85.5126953125,
+    "after_memory_mib": 74.541015625,
+    "memory_reduction_percent": 12.830468794609718,
+    "stages": {
+      "simulation": {
+        "before_gpu_ms_estimate": 1.1257782744942233,
+        "after_gpu_ms_estimate": 3.389848112582695,
+        "before_bytes": 42467328,
+        "after_bytes": 38043648
+      },
+      "media": {
+        "before_gpu_ms_estimate": 2.68827006125357,
+        "after_gpu_ms_estimate": 2.047402777778916,
+        "before_bytes": 37748736,
+        "after_bytes": 33030144
+      },
+      "palette": {
+        "before_gpu_ms_estimate": 0.7990232896525413,
+        "after_gpu_ms_estimate": 0.0,
+        "before_bytes": 13312,
+        "after_bytes": 10240
+      },
+      "display": {
+        "before_gpu_ms_estimate": 0.1270990264019929,
+        "after_gpu_ms_estimate": 0.1363448496093042,
+        "before_bytes": 9437184,
+        "after_bytes": 7077888
+      }
+    }
+  },
+  "square_coarse": {
+    "before_gpu_ms_estimate": 1.8236189168062993,
+    "after_gpu_ms_estimate": 2.0801384486723693,
+    "gpu_reduction_percent": -14.066509702329277,
+    "before_memory_mib": 38.5126953125,
+    "after_memory_mib": 33.462890625,
+    "memory_reduction_percent": 13.112052133782992,
+    "stages": {
+      "simulation": {
+        "before_gpu_ms_estimate": 0.28872387391747906,
+        "after_gpu_ms_estimate": 0.18341032647294925,
+        "before_bytes": 2359296,
+        "after_bytes": 2113536
+      },
+      "media": {
+        "before_gpu_ms_estimate": 0.8942479279474356,
+        "after_gpu_ms_estimate": 1.7729374727932736,
+        "before_bytes": 29622272,
+        "after_bytes": 26673152
+      },
+      "palette": {
+        "before_gpu_ms_estimate": 0.5380410157726147,
+        "after_gpu_ms_estimate": 0.0,
+        "before_bytes": 13312,
+        "after_bytes": 10240
+      },
+      "display": {
+        "before_gpu_ms_estimate": 0.10260609916877002,
+        "after_gpu_ms_estimate": 0.12379064940614626,
+        "before_bytes": 8388608,
+        "after_bytes": 6291456
+      }
+    }
+  },
+  "rectangle_coarse_clip": {
+    "before_gpu_ms_estimate": 2.2198650179896506,
+    "after_gpu_ms_estimate": 2.2498049009940586,
+    "gpu_reduction_percent": -1.3487253847318081,
+    "before_memory_mib": 43.3251953125,
+    "after_memory_mib": 37.6845703125,
+    "memory_reduction_percent": 13.019271948608136,
+    "stages": {
+      "simulation": {
+        "before_gpu_ms_estimate": 0.4252312244847417,
+        "after_gpu_ms_estimate": 0.17591460046824067,
+        "before_bytes": 2654208,
+        "after_bytes": 2392064
+      },
+      "media": {
+        "before_gpu_ms_estimate": 0.7297176013235003,
+        "after_gpu_ms_estimate": 1.7837825238471852,
+        "before_bytes": 33325056,
+        "after_bytes": 30031872
+      },
+      "palette": {
+        "before_gpu_ms_estimate": 0.8608982916455716,
+        "after_gpu_ms_estimate": 0.22149320158641786,
+        "before_bytes": 13312,
+        "after_bytes": 13312
+      },
+      "display": {
+        "before_gpu_ms_estimate": 0.20401790053583682,
+        "after_gpu_ms_estimate": 0.0686145750922151,
+        "before_bytes": 9437184,
+        "after_bytes": 7077888
+      }
+    }
+  },
+  "square_full_no_carry": {
+    "before_gpu_ms_estimate": 5.347289080906194,
+    "after_gpu_ms_estimate": 4.564697401144077,
+    "gpu_reduction_percent": 14.635297772782707,
+    "before_memory_mib": 76.0126953125,
+    "after_memory_mib": 66.5439453125,
+    "memory_reduction_percent": 12.456800750285858,
+    "stages": {
+      "simulation": {
+        "before_gpu_ms_estimate": 3.4542887114570475,
+        "after_gpu_ms_estimate": 2.3119824543129655,
+        "before_bytes": 37748736,
+        "after_bytes": 33816576
+      },
+      "media": {
+        "before_gpu_ms_estimate": 1.02624890395673,
+        "after_gpu_ms_estimate": 2.0565838938811796,
+        "before_bytes": 33554432,
+        "after_bytes": 29655040
+      },
+      "palette": {
+        "before_gpu_ms_estimate": 0.6999598160386086,
+        "after_gpu_ms_estimate": 0.0,
+        "before_bytes": 13312,
+        "after_bytes": 13312
+      },
+      "display": {
+        "before_gpu_ms_estimate": 0.16679164945380762,
+        "after_gpu_ms_estimate": 0.19613105294993147,
+        "before_bytes": 8388608,
+        "after_bytes": 6291456
+      }
+    }
+  },
+  "rectangle_clip_interval4": {
+    "before_gpu_ms_estimate": 2.2594456347520464,
+    "after_gpu_ms_estimate": 1.9973111312137917,
+    "gpu_reduction_percent": 11.601717673858602,
+    "before_memory_mib": 43.3251953125,
+    "after_memory_mib": 37.6845703125,
+    "memory_reduction_percent": 13.019271948608136,
+    "stages": {
+      "simulation": {
+        "before_gpu_ms_estimate": 0.30367897188989446,
+        "after_gpu_ms_estimate": 0.2359323262120597,
+        "before_bytes": 2654208,
+        "after_bytes": 2392064
+      },
+      "media": {
+        "before_gpu_ms_estimate": 1.0977331230416894,
+        "after_gpu_ms_estimate": 1.489891654229723,
+        "before_bytes": 33325056,
+        "after_bytes": 30031872
+      },
+      "palette": {
+        "before_gpu_ms_estimate": 0.6479857900296337,
+        "after_gpu_ms_estimate": 0.08453687515575439,
+        "before_bytes": 13312,
+        "after_bytes": 13312
+      },
+      "display": {
+        "before_gpu_ms_estimate": 0.2100477497908287,
+        "after_gpu_ms_estimate": 0.18695027561625466,
+        "before_bytes": 9437184,
+        "after_bytes": 7077888
+      }
+    }
+  }
+}

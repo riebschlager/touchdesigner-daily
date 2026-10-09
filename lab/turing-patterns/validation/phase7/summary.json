@@ -1,0 +1,48 @@
+{
+  "report.json": {
+    "passed": true,
+    "checks": 60,
+    "failed": [],
+    "current_source": true
+  },
+  "frame_report.json": {
+    "passed": true,
+    "checks": 7,
+    "failed": [],
+    "current_source": true
+  },
+  "clock_regression/report.json": {
+    "passed": true,
+    "checks": 20,
+    "failed": [],
+    "current_source": true
+  },
+  "phase3_regression/report.json": {
+    "passed": true,
+    "checks": 75,
+    "failed": [],
+    "current_source": true
+  },
+  "presets_regression/report.json": {
+    "passed": true,
+    "checks": 44,
+    "failed": [],
+    "current_source": true
+  },
+  "snapshots_regression/report.json": {
+    "passed": true,
+    "checks": 104,
+    "failed": [],
+    "current_source": true
+  },
+  "boundaries_regression/report.json": {
+    "passed": true,
+    "checks": 159,
+    "failed": [],
+    "current_source": true
+  },
+  "profiles": {
+    "passed": true,
+    "current_source": true
+  }
+}

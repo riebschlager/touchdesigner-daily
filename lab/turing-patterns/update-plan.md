@@ -127,6 +127,8 @@ The new version should be **`create_turing_media_v2.py`**, with `create_turing_m
 
 7. **Optimize measured costs**
 
+   **Implemented and live-validated** in `create_turing_media_v2.py` on TouchDesigner 2025.33230 (macOS). Includes direct matching-grid sampling, alpha-aware simulation-resolution influence, channel-only mask/field formats and RGBA16F color intermediate, optional carried-color maintenance, demand-driven palette extraction, and a simulation-tick update interval with snapshot replay. Six before/after workloads show 12.5–13.1% lower reported TOP memory; GPU estimates improve in three workloads and regress in three, so no universal FPS gain is claimed. RGBA32F state is retained after 3,600-tick coral/spot half-float experiments failed fidelity. All 60 Phase 7 checks, seven real-frame checks, Phase 2/3/4/5/6 regressions, and 62 offline tests pass. See `validation/phase7/README.md` for stage costs, filtering/history contracts, precision comparisons, measurement limits, and reproduction.
+
    Profile representative square and rectangular projects before changing formats or shader structure.
 
    Implement these focused improvements:

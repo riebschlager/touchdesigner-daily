@@ -1,0 +1,27 @@
+{
+  "checks": {
+    "performance edits paused preserve state": {
+      "passed": true
+    },
+    "performance edits preserve reset count": {
+      "passed": true
+    },
+    "performance edits preserve age": {
+      "passed": true
+    },
+    "Step pulse one tick": {
+      "passed": true
+    },
+    "Step disabled carry holds signed chroma": {
+      "passed": true
+    },
+    "snapshot sees real performance edits": {
+      "passed": true
+    },
+    "no errors after frames": {
+      "passed": true
+    }
+  },
+  "sha256": "775f2fd30538c9575c53d0806a244992cc3929d4ffbbf50de5dc64cff1f57590",
+  "passed": true
+}

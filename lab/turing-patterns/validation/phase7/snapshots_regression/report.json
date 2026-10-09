@@ -1,0 +1,392 @@
+{
+  "build": "099.2025.33230",
+  "checks": {
+    "signed upload preserves raw rgba including negative alpha": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "state changed after subsequent evolution": {
+      "passed": true
+    },
+    "memory restore action succeeds": {
+      "passed": true
+    },
+    "memory restore exact state_a": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "memory restore exact state_b": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "memory restore exact media_a": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "memory restore exact media_b": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "memory restore exact palette_a": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "memory restore exact palette_b": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "memory restore exact state": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "memory restore exact palette": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "memory restore exact mask_preview": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "memory restore exact patterns": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "external live source overlay continues independently": {
+      "passed": true
+    },
+    "controlled source restores final output": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "pause dimensions settings clock restored": {
+      "passed": true
+    },
+    "independent palette parity restore state_a": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "independent palette parity restore state_b": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "independent palette parity restore media_a": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "independent palette parity restore media_b": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "independent palette parity restore palette_a": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "independent palette parity restore palette_b": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "independent palette parity restore state": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "independent palette parity restore palette": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "independent palette parity restore mask_preview": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "independent palette parity restore patterns": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "independent palette parity restore out1": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "deterministic replay state_a": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "deterministic replay state_b": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "deterministic replay media_a": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "deterministic replay media_b": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "deterministic replay palette_a": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "deterministic replay palette_b": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "deterministic replay state": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "deterministic replay palette": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "deterministic replay mask_preview": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "deterministic replay patterns": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "deterministic replay out1": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "disk save action succeeds": {
+      "passed": true
+    },
+    "disk payload bit exact": {
+      "passed": true
+    },
+    "disk restore action succeeds": {
+      "passed": true
+    },
+    "disk restores signed raw state": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "newer snapshot refused without mutation": {
+      "passed": true
+    },
+    "invalid settings refused without mutation": {
+      "passed": true
+    },
+    "reset chemistry uses seed ab": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "reset chemistry preserves signed color": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "reset chemistry keeps palette history": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "reset chemistry age zero one reset pause preserved": {
+      "passed": true
+    },
+    "clear color preserves chemistry": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "clear color zeros only ba keeps age": {
+      "passed": true
+    },
+    "clear color keeps palette": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "seed edits defer until explicit reset": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "explicit reset reads latest seed settings": {
+      "passed": true
+    },
+    "restart media preserves chemistry and color": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "restart media preserves palette": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "restart media preserves age": {
+      "passed": true
+    },
+    "reset all clears color and age": {
+      "passed": true
+    },
+    "source removal preserves raw patterns by default": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "source removal preserves palette": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "source removal keeps age reset count": {
+      "passed": true
+    },
+    "motion invalidated on removal": {
+      "passed": true
+    },
+    "motion invalidated on reassignment": {
+      "passed": true
+    },
+    "first new source tick has no stale motion": {
+      "passed": true
+    },
+    "subsequent source motion detected": {
+      "passed": true
+    },
+    "motion settles to zero on stopped source": {
+      "passed": true
+    },
+    "opt in reset on source change once": {
+      "passed": true
+    },
+    "preset source binding preserves patterns": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "preset binding invalidates motion": {
+      "passed": true
+    },
+    "requested resize does not expose mismatched grid": {
+      "passed": true
+    },
+    "resample commits matching state buffers": {
+      "passed": true
+    },
+    "resample retains age and reset count": {
+      "passed": true
+    },
+    "resample raw channels matches bilinear reference": {
+      "passed": true,
+      "max_error": 1.1920928955078125e-07
+    },
+    "resample signed chroma preserved": {
+      "passed": true
+    },
+    "resize then tick 128x80 cell 2.0": {
+      "passed": true
+    },
+    "resize then tick 64x96 cell 3.0": {
+      "passed": true
+    },
+    "resize then tick 96x64 cell 1.0": {
+      "passed": true
+    },
+    "preset resize resamples without reset": {
+      "passed": true
+    },
+    "reset resize zeros age and resets once": {
+      "passed": true
+    },
+    "movie position restores fitted source": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "movie index and mode restored": {
+      "passed": true
+    },
+    "movie histories restored state_a": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "movie histories restored state_b": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "movie histories restored media_a": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "movie histories restored media_b": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "movie histories restored palette_a": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "movie histories restored palette_b": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "movie histories restored state": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "movie histories restored palette": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "movie histories restored mask_preview": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "movie histories restored patterns": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "movie histories restored out1": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "movie deterministic replay state_a": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "movie deterministic replay state_b": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "movie deterministic replay media_a": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "movie deterministic replay media_b": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "movie deterministic replay palette_a": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "movie deterministic replay palette_b": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "movie deterministic replay state": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "movie deterministic replay palette": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "movie deterministic replay mask_preview": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "movie deterministic replay patterns": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "movie deterministic replay out1": {
+      "passed": true,
+      "max_error": 0.0
+    },
+    "sequential movie frame restored": {
+      "passed": true,
+      "expected": 37.0,
+      "actual": 37.0
+    },
+    "no operator or shader errors": {
+      "passed": true,
+      "errors": ""
+    }
+  },
+  "source_sha256": "775f2fd30538c9575c53d0806a244992cc3929d4ffbbf50de5dc64cff1f57590",
+  "passed": true
+}

@@ -1,0 +1,257 @@
+{
+  "build": "099.2025.33230",
+  "tolerance": 1e-06,
+  "checks": {
+    "preset_table_versioned": {
+      "passed": true
+    },
+    "builtins_present": {
+      "passed": true,
+      "names": [
+        "Coral",
+        "Dividing Spots",
+        "Worms",
+        "Holes",
+        "Clip Seed",
+        "Stamp and Evolve",
+        "Chemistry Map",
+        "Color Swirl",
+        "Wide Coarse"
+      ]
+    },
+    "menu_matches_table": {
+      "passed": true
+    },
+    "capture_complete": {
+      "passed": true,
+      "count": 78
+    },
+    "builtins_complete": {
+      "passed": true
+    },
+    "legacy_preset_pulses_removed": {
+      "passed": true
+    },
+    "outputs_present": {
+      "passed": true
+    },
+    "explorer_panel_built": {
+      "passed": true,
+      "status": "Thumbnails not generated"
+    },
+    "explorer_background_resolves": {
+      "passed": true
+    },
+    "fk_panel_size": {
+      "passed": true
+    },
+    "save_reports": {
+      "passed": true,
+      "status": "Saved 'Phase4 Round Trip': 78 settings"
+    },
+    "other_preset_differs": {
+      "passed": true
+    },
+    "preset_round_trip_exact": {
+      "passed": true,
+      "mismatched": {}
+    },
+    "round_trip_matches_configured": {
+      "passed": true,
+      "mismatched": {}
+    },
+    "table_text_stable": {
+      "passed": true
+    },
+    "export_matches_table": {
+      "passed": true
+    },
+    "import_replace_round_trip": {
+      "passed": true,
+      "report": {
+        "added": [
+          "Phase4 Round Trip"
+        ],
+        "replaced": [],
+        "renamed": [],
+        "skipped": [
+          "Coral",
+          "Dividing Spots",
+          "Worms",
+          "Holes",
+          "Clip Seed",
+          "Stamp and Evolve",
+          "Chemistry Map",
+          "Color Swirl",
+          "Wide Coarse"
+        ]
+      }
+    },
+    "newer_version_refused": {
+      "passed": true
+    },
+    "apply_keeps_state_direct": {
+      "passed": true,
+      "changed": [
+        "Clockmode",
+        "Colormode",
+        "Influencemode",
+        "Maskmode"
+      ]
+    },
+    "evolves_after_apply": {
+      "passed": true,
+      "ticks_before": 30,
+      "ticks_after": 40,
+      "max_abs": 0.29305407404899597
+    },
+    "apply_reset_once_direct": {
+      "passed": true
+    },
+    "resize_forces_one_reset": {
+      "passed": true,
+      "shape": [
+        144,
+        256,
+        4
+      ]
+    },
+    "resize_no_errors": {
+      "passed": true
+    },
+    "bindings_optional": {
+      "passed": true,
+      "unbound": true,
+      "resolved": "/project1/phase7_presets_regression2/fixture_source",
+      "resets_before": 7,
+      "resets_after": 7
+    },
+    "thumbnails_generated": {
+      "passed": true,
+      "seconds": 0.08515654200164136,
+      "reference": {
+        "seed": 1,
+        "ticks": 600,
+        "seconds": 10.0
+      }
+    },
+    "thumbnails_finite_bounded": {
+      "passed": true
+    },
+    "thumbnails_deterministic": {
+      "passed": true
+    },
+    "thumbnails_distinct": {
+      "passed": true,
+      "mean_b": [
+        0.0,
+        0.26429283618927,
+        0.2317746877670288,
+        0.05686626955866814,
+        0.1647062599658966,
+        0.22426149249076843,
+        0.20516450703144073,
+        0.09698930382728577
+      ]
+    },
+    "thumbnails_evolved": {
+      "passed": true,
+      "mean_b": [
+        0.0,
+        0.26429283618927,
+        0.2317746877670288,
+        0.05686626955866814,
+        0.1647062599658966,
+        0.22426149249076843,
+        0.20516450703144073,
+        0.09698930382728577
+      ]
+    },
+    "thumbnails_leave_main_state": {
+      "passed": true
+    },
+    "thumbnail_status_labels_reference": {
+      "passed": true
+    },
+    "map_pick_sets_feed_kill": {
+      "passed": true,
+      "values": [
+        0.04,
+        0.055
+      ]
+    },
+    "tile_pick_selects_example": {
+      "passed": true
+    },
+    "explorer_never_resets": {
+      "passed": true
+    },
+    "explorer_optional_reset": {
+      "passed": true
+    },
+    "async_thumbnails_match": {
+      "passed": true
+    },
+    "apply_pulse_keeps_state": {
+      "passed": true,
+      "status": "Applied 'Dividing Spots': 4 changed; state kept"
+    },
+    "apply_reset_pulse_once": {
+      "passed": true,
+      "resets_before": 14,
+      "resets_after": 15,
+      "ticks": 0,
+      "status": "Applied 'Dividing Spots': 0 changed; reset (requested)"
+    },
+    "resize_pulse_once": {
+      "passed": true
+    },
+    "reseed_pulse_once": {
+      "passed": true
+    },
+    "clipseed_pulse_once": {
+      "passed": true
+    },
+    "manual_seed_edit_deferred_phase5": {
+      "passed": true
+    },
+    "no_unexpected_operator_errors": {
+      "passed": true
+    },
+    "all_shaders_compile": {
+      "passed": true,
+      "count": 26
+    }
+  },
+  "source_sha256": "775f2fd30538c9575c53d0806a244992cc3929d4ffbbf50de5dc64cff1f57590",
+  "errors": {},
+  "shaders": {
+    "seed_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "fk_sim_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "display_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "fk_seed_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "colorize_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "fk_panel_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "composite_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "media_mask_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "simulation_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "stamp_mask_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "state_reset_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "state_stamp_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "palette_init_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "palette_sort_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "state_resize_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "palette_cells_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "domain_prepare_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "media_prepared_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "state_transform_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "sim_live_prepare_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "velocity_prepare_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "influence_prepare_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "state_clear_color_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "reaction_diffusion_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "sim_source_prepare_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n",
+    "sim_previous_prepare_info": "Vertex Shader Compile Results:\n\nCompiled Successfully\n\n=============\nPixel Shader Compile Results:\n\nCompiled Successfully\n"
+  },
+  "passed": true
+}

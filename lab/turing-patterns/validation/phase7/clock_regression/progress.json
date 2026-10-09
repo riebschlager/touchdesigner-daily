@@ -1,0 +1,190 @@
+{
+  "build": "099.2025.33230",
+  "tolerance": 1e-06,
+  "duration_seconds": 2,
+  "cases": [
+    {
+      "name": "coral",
+      "fps30": {
+        "ticks": 120,
+        "seconds": 2.0,
+        "evolved": true,
+        "finite": true,
+        "bounded": true
+      },
+      "fps60": {
+        "ticks": 120,
+        "seconds": 2.0,
+        "evolved": true,
+        "finite": true,
+        "bounded": true
+      },
+      "max_abs": {
+        "state": 0.0,
+        "palette": 0.0,
+        "out1": 0.0,
+        "patterns": 0.0,
+        "mask_preview": 0.0,
+        "source_preview": 0.0
+      },
+      "passed": true
+    },
+    {
+      "name": "spots",
+      "fps30": {
+        "ticks": 120,
+        "seconds": 2.0,
+        "evolved": true,
+        "finite": true,
+        "bounded": true
+      },
+      "fps60": {
+        "ticks": 120,
+        "seconds": 2.0,
+        "evolved": true,
+        "finite": true,
+        "bounded": true
+      },
+      "max_abs": {
+        "state": 0.0,
+        "palette": 0.0,
+        "out1": 0.0,
+        "patterns": 0.0,
+        "mask_preview": 0.0,
+        "source_preview": 0.0
+      },
+      "passed": true
+    },
+    {
+      "name": "fixed",
+      "fps30": {
+        "ticks": 120,
+        "seconds": 2.0,
+        "evolved": true,
+        "finite": true,
+        "bounded": true
+      },
+      "fps60": {
+        "ticks": 120,
+        "seconds": 2.0,
+        "evolved": true,
+        "finite": true,
+        "bounded": true
+      },
+      "max_abs": {
+        "state": 0.0,
+        "palette": 0.0,
+        "out1": 0.0,
+        "patterns": 0.0,
+        "mask_preview": 0.0,
+        "source_preview": 0.0
+      },
+      "passed": true
+    },
+    {
+      "name": "tint",
+      "fps30": {
+        "ticks": 120,
+        "seconds": 2.0,
+        "evolved": true,
+        "finite": true,
+        "bounded": true
+      },
+      "fps60": {
+        "ticks": 120,
+        "seconds": 2.0,
+        "evolved": true,
+        "finite": true,
+        "bounded": true
+      },
+      "max_abs": {
+        "state": 0.0,
+        "palette": 0.0,
+        "out1": 0.0,
+        "patterns": 0.0,
+        "mask_preview": 0.0,
+        "source_preview": 0.0
+      },
+      "passed": true
+    },
+    {
+      "name": "ramp",
+      "fps30": {
+        "ticks": 120,
+        "seconds": 2.0,
+        "evolved": true,
+        "finite": true,
+        "bounded": true
+      },
+      "fps60": {
+        "ticks": 120,
+        "seconds": 2.0,
+        "evolved": true,
+        "finite": true,
+        "bounded": true
+      },
+      "max_abs": {
+        "state": 0.0,
+        "palette": 0.0,
+        "out1": 0.0,
+        "patterns": 0.0,
+        "mask_preview": 0.0,
+        "source_preview": 0.0
+      },
+      "passed": true
+    },
+    {
+      "name": "dye",
+      "fps30": {
+        "ticks": 120,
+        "seconds": 2.0,
+        "evolved": true,
+        "finite": true,
+        "bounded": true
+      },
+      "fps60": {
+        "ticks": 120,
+        "seconds": 2.0,
+        "evolved": true,
+        "finite": true,
+        "bounded": true
+      },
+      "max_abs": {
+        "state": 0.0,
+        "palette": 0.0,
+        "out1": 0.0,
+        "patterns": 0.0,
+        "mask_preview": 0.0,
+        "source_preview": 0.0
+      },
+      "passed": true
+    },
+    {
+      "name": "motion",
+      "fps30": {
+        "ticks": 120,
+        "seconds": 2.0,
+        "evolved": true,
+        "finite": true,
+        "bounded": true
+      },
+      "fps60": {
+        "ticks": 120,
+        "seconds": 2.0,
+        "evolved": true,
+        "finite": true,
+        "bounded": true
+      },
+      "max_abs": {
+        "state": 0.0,
+        "palette": 0.0,
+        "out1": 0.0,
+        "patterns": 0.0,
+        "mask_preview": 0.0,
+        "source_preview": 0.0
+      },
+      "passed": true
+    }
+  ],
+  "checks": {}
+}

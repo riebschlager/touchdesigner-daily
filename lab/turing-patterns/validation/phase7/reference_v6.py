@@ -14,7 +14,6 @@ USE
   8. On Explorer, press Generate Thumbnails, then view fk_explorer as a panel and
      click the Feed/Kill map or a reference thumbnail.
 
-Phase 7 adds measured GPU optimizations and configurable color/palette histories.
 Phase 6 unifies boundaries and adds bounded, optional Velocity TOP transport.
 Phase 5 adds raw state snapshots, independent resets and safe state resampling.
 Phase 4 adds a versioned preset table, preset import/export and the Feed/Kill explorer.
@@ -43,8 +42,7 @@ reproduction instructions are in validation/phase2. The builder is standalone;
 validation files and TDAPI are not required. Phase 3 validation is in
 validation/phase3; Phase 4 preset/explorer validation is in validation/phase4.
 Phase 5 validation is in validation/phase5; Phase 6 boundary/flow validation is in
-validation/phase6; Phase 7 profiling/quality checks are in validation/phase7.
-Phase 8 is not implemented.
+validation/phase6. Phases 7–8 are not implemented.
 """
 
 
@@ -215,7 +213,7 @@ void main() {
 SIMULATION_SHADER = r"""
 layout(location = 0) out vec4 fragColor;
 uniform vec4 uRates; // feed, kill, diffusion A, diffusion B
-uniform vec4 uStep;  // chemistry dt, substep seconds, maintain carried color, tick seconds
+uniform vec4 uStep;  // chemistry dt, substep seconds, unused, tick seconds
 uniform vec4 uInfluence; // injection and recovery rates / simulation second
 uniform vec4 uDye; // spread, injection, decay rates / simulation second, source (alpha/mask)
 uniform vec4 uInfluenceMode; // continuous/stamp/chemistry, chemistry blend, unused, unused
@@ -249,8 +247,7 @@ void main() {
 
     // Neighbor differences preserve a uniform field exactly (no weight-sum drift).
     vec2 lap = vec2(0.0);
-    bool carry = uStep.z > 0.5;
-    vec3 dye = carry ? dyeSample(cell, 1.0) : vec3(0.0);
+    vec3 dye = dyeSample(cell, 1.0);
     for (int i = 0; i < 8; ++i) {
         ivec2 offset = OFFSETS[i];
         bool exterior = uBoundary.x > 1.5 && cellOutside(p + offset, size);
@@ -262,9 +259,9 @@ void main() {
         }
         vec4 neighbor = exterior ? EMPTY_CELL : (open ? readCell(p + offset) : domainBoundary(cell));
         lap += WEIGHTS[i] * (neighbor.rg - ab);
-        if (carry) dye += dyeSample(neighbor, WEIGHTS[i]);
+        dye += dyeSample(neighbor, WEIGHTS[i]);
     }
-    vec2 chroma = carry ? mix(cell.ba, dye.xy / dye.z, 1.0 - exp(-uDye.x * uStep.y)) : cell.ba;
+    vec2 chroma = mix(cell.ba, dye.xy / dye.z, 1.0 - exp(-uDye.x * uStep.y));
 
     float maskValue = clamp(texture(sTD2DInputs[1], vUV.st).r, 0.0, 1.0);
     vec4 source = texture(sTD2DInputs[2], vUV.st); // prepared straight RGBA
@@ -287,12 +284,10 @@ void main() {
             nextState = mix(nextState, vec2(0.5, 0.25), 1.0 - exp(-uInfluence.x * maskValue * uStep.w));
         }
         // Color injection stays independent of chemical influence mode.
-        if (carry) {
         float colorMask = uDye.w < 0.5 ? clamp(source.a, 0.0, 1.0) : maskValue;
         vec2 sourceChroma = linearToOklab(toLinear(source.rgb)).yz;
         chroma = mix(chroma, sourceChroma, 1.0 - exp(-uDye.y * colorMask * uStep.w));
         chroma *= exp(-uDye.z * uStep.w);
-        }
     }
     fragColor = TDOutputSwizzle(vec4(nextState, chroma));
 }
@@ -541,55 +536,6 @@ void main() {
 """
 
 
-# Alpha-weighted box quadrature before simulation-resolution masks/color injection.
-# Full-grid path is exact. Coarse grids use 4x4 stratified bilinear taps over each
-# destination footprint (bounded cost); this is a low-pass approximation, not a
-# promise to preserve sub-cell detail. Transparent RGB never bleeds into color.
-SIM_SOURCE_SHADER = r"""
-layout(location = 0) out vec4 fragColor;
-vec4 premultCell(ivec2 p, ivec2 size) {
-    vec4 s = texelFetch(sTD2DInputs[0], clamp(p, ivec2(0), size-1), 0);
-    return vec4(s.rgb*s.a, s.a);
-}
-vec4 premultSample(vec2 uv, ivec2 size) {
-    vec2 pos = uv*vec2(size)-0.5;
-    ivec2 p = ivec2(floor(pos));
-    vec2 f = fract(pos);
-    return mix(mix(premultCell(p,size), premultCell(p+ivec2(1,0),size),f.x),
-               mix(premultCell(p+ivec2(0,1),size), premultCell(p+ivec2(1,1),size),f.x),f.y);
-}
-void main() {
-    ivec2 size = textureSize(sTD2DInputs[0], 0);
-    if (all(equal(size, ivec2(uTDOutputInfo.res.zw)))) {
-        fragColor = TDOutputSwizzle(texelFetch(sTD2DInputs[0], ivec2(gl_FragCoord.xy), 0));
-        return;
-    }
-    vec2 ratio = vec2(size) * uTDOutputInfo.res.xy;
-    ivec2 cells = ivec2(round(ratio));
-    if (all(lessThan(abs(ratio-vec2(cells)), vec2(0.00001)))
-            && all(greaterThanEqual(cells, ivec2(1))) && all(lessThanEqual(cells, ivec2(4)))) {
-        // Exact small integer box: each source cell contributes once. Avoids
-        // redundant bilinear taps at positions already centered on source texels.
-        ivec2 origin = ivec2(gl_FragCoord.xy) * cells;
-        vec4 total = vec4(0.0);
-        for (int y=0; y<cells.y; ++y) for (int x=0; x<cells.x; ++x)
-            total += premultCell(origin+ivec2(x,y), size);
-        total /= float(cells.x*cells.y);
-        fragColor = TDOutputSwizzle(vec4(total.a > 0.000001 ? total.rgb/total.a : vec3(0.0), total.a));
-        return;
-    }
-    vec2 footprint = uTDOutputInfo.res.xy;
-    vec4 total = vec4(0.0);
-    for (int y = 0; y < 4; ++y) for (int x = 0; x < 4; ++x) {
-        vec2 uv = vUV.st + ((vec2(x,y)+0.5)/4.0-0.5)*footprint;
-        total += premultSample(uv, size);
-    }
-    total /= 16.0;
-    fragColor = TDOutputSwizzle(vec4(total.a > 0.000001 ? total.rgb/total.a : vec3(0.0), total.a));
-}
-"""
-
-
 MASK_SHADER = r"""
 layout(location = 0) out vec4 fragColor;
 uniform vec4 uMask; // mode index, gain, edge width in pixels, smoothing radius
@@ -681,8 +627,6 @@ vec4 catmullRomRow(ivec2 p, ivec2 size, vec4 w) {
 // Catmull-Rom passes through every cell value, so at Cell Size 1 it matches the state exactly.
 vec4 sampleState(vec2 uv) {
     ivec2 size = textureSize(sTD2DInputs[0], 0);
-    if (all(equal(size, ivec2(uTDOutputInfo.res.zw))))
-        return texelFetch(sTD2DInputs[0], ivec2(gl_FragCoord.xy), 0);
     int upscaleMode = int(uUpscale.x + 0.5);
     if (upscaleMode == 2) return stateCell(ivec2(floor(uv * vec2(size))), size);
     vec2 pos = uv * vec2(size) - 0.5;
@@ -795,10 +739,6 @@ void main() {
     float t = (gl_FragCoord.x - 0.5) / max(uPalette.w - 1.0, 1.0);
     if (gl_FragCoord.y > 1.0) {
         fragColor = TDOutputSwizzle(vec4(basePalette(t), 1.0));
-        return;
-    }
-    if (uRamp.y < 0.5) {
-        fragColor = TDOutputSwizzle(texelFetch(sTD2DInputs[1], ivec2(gl_FragCoord.xy), 0));
         return;
     }
     int side = int(uPalette.x + 0.5);
@@ -1107,7 +1047,6 @@ GROUPS = (
     ('flow', ('Flow', 'Flowstrength', 'Flowmax')),
     ('display', ('Coloramount', 'Contrast', 'Invert', 'Overlay', 'Clipalpha', 'Viewmode',
                  'Upscale')),
-    ('performance', ('Carryhistory', 'Palettehistory', 'Paletteinterval')),
     ('color', ('Colormode', 'Tintspread', 'Palettesmooth', 'Paletteanchor', 'Dyespread',
                'Dyesource', 'Dyeinject', 'Dyedecay', 'Dyesaturation')),
 )
@@ -1656,9 +1595,6 @@ def validate(snapshot):
             type(m.get('pause')) is not bool or type(m.get('palette_ready')) is not bool or
             type(m.get('motion_ready')) is not bool or type(m.get('motion_tick_ready')) is not bool or m.get('palette_reader') not in ('palette_a', 'palette_b')):
         raise SnapshotError('invalid settings/history metadata')
-    last_tick = m.get('palette_last_tick', clock['ticks'])
-    if type(last_tick) is not int or not 0 <= last_tick <= clock['ticks']:
-        raise SnapshotError('invalid palette schedule')
     movie = m.get('movie')
     if (not isinstance(movie, dict) or movie.get('playmode') not in
             ('locked', 'specify', 'sequential', 'timecodeop') or
@@ -1783,7 +1719,6 @@ def capture(c):
              motion_ready=bool(c.fetch('Motionready', False)),
              motion_tick_ready=bool(c.fetch('Motiontickready', False)), movie=_movie(c), textures={},
              palette_reader=c.op('palette_read').par.top.eval().name,
-             palette_last_tick=int(c.fetch('Palettelasttick', 0)),
              build=str(app.version) + '.' + str(app.build),
              replay='Equal settings, ticks and source samples reproduce state. External live '
                     'sources cannot rewind; sequential movie scheduling depends on output timing.')
@@ -1823,9 +1758,6 @@ def restore(c, snapshot):
     if legacy:
         saved_settings.update(flow_defaults)
         saved_bindings['Velocitytop'] = ''
-    performance_defaults = {'Carryhistory': True, 'Palettehistory': True, 'Paletteinterval': 1}
-    if not (set(performance_defaults) & set(saved_settings)):
-        saved_settings.update(performance_defaults)
     values = dict(saved_settings, **saved_bindings, Pause=m['pause'])
     # Validate everything before touching parameters, buffers or media position.
     for name, value in values.items():
@@ -1874,8 +1806,6 @@ def restore(c, snapshot):
         c.op('media_cache').par.top = ('media_a', 'media_b')[state['media']]
         c.op('media_previous').par.top = ('media_a', 'media_b')[1 - state['media']]
         c.store('Paletteready', m['palette_ready'])
-        c.store('Palettelasttick', m.get('palette_last_tick', m['clock']['ticks']))
-        c.store('Paletteelapsed', 1.0/60.0)
         c.store('Motionready', m['motion_ready'])
         c.store('Motiontickready', m['motion_tick_ready'])
         c.store('Sourcesignature', clock.source_signature(c))
@@ -2286,7 +2216,6 @@ def reset_chemistry(c):
         return
     _seed_buffers(c, clear_color=False)
     _clock(c).update(ticks=0, debt=0.0, frame=None)
-    c.store('Palettelasttick', 0)
     c.store('Resetcount', c.fetch('Resetcount', 0) + 1)
     rebase(c)
     c.op('state').cook(force=True)
@@ -2339,10 +2268,11 @@ def reset(c):
         c.op(name).par.resetpulse.pulse()
         capture(c.op(name), c.op('palette_init'))
     c.op('palette_read').par.top = 'palette_a'
-    c.store('Palettelasttick', 0)
-    c.store('Paletteelapsed', TICK_SECONDS)
-    # Custom ramp row and clip history initialize only when consumed.
-    update_palette(c, reset=True)
+    c.op('palette_sort').cook(force=True)
+    for name in ('palette_a', 'palette_b'):
+        capture(c.op(name), c.op('palette_sort'))
+    c.op('palette_read').par.top = 'palette_a'
+    c.store('Paletteready', True)
     state.update(ticks=0, debt=0.0, buffer=0, media=0, ready=True,
                  last=time.perf_counter(), mode=c.par.Clockmode.eval(), frame=None)
     # Diagnostic: presets and pulses promise at most one reset per action.
@@ -2351,36 +2281,6 @@ def reset(c):
                  'media_mask', 'mask_preview', 'state', 'palette'):
         c.op(name).cook(force=True)
     _status(c, 0)
-
-
-def palette_extract_required(c):
-    return bool(c.par.Palettehistory or c.par.Colormode.eval() == 'ramp')
-
-
-def palette_required(c):
-    return bool(c.par.Palettehistory or c.par.Colormode.eval() == 'ramp'
-                or c.par.Ramptop.eval() is not None)
-
-
-def update_palette(c, reset=False):
-    tick_index = 0 if reset else _clock(c)['ticks'] + 1
-    last = int(c.fetch('Palettelasttick', 0))
-    ready = bool(c.fetch('Paletteready', False))
-    if not palette_required(c):
-        return False
-    if not reset and ready and tick_index - last < int(c.par.Paletteinterval):
-        return False
-    c.store('Paletteelapsed', max(1, tick_index - last) * TICK_SECONDS)
-    reader = c.op('palette_read')
-    dest = 'palette_b' if reader.par.top.eval().name == 'palette_a' else 'palette_a'
-    reader.cook(force=True)
-    if palette_extract_required(c):
-        c.op('palette_cells').cook(force=True)
-    capture(c.op(dest), c.op('palette_sort'))
-    reader.par.top = dest
-    c.store('Paletteready', True)
-    c.store('Palettelasttick', tick_index)
-    return True
 
 
 def tick(c, sample=None):
@@ -2413,8 +2313,11 @@ def tick(c, sample=None):
     dest = 1 - state['buffer']
     capture(c.op(('state_a', 'state_b')[dest]), c.op('state_transform'))
 
-    update_palette(c)
+    c.op('palette_read').cook(force=True)
+    c.op('palette_cells').cook(force=True)
+    capture(c.op(('palette_a', 'palette_b')[dest]), c.op('palette_sort'))
     c.op('state_read').par.top = ('state_a', 'state_b')[dest]
+    c.op('palette_read').par.top = ('palette_a', 'palette_b')[dest]
     state['buffer'] = dest
     state['ticks'] += 1
 
@@ -2913,11 +2816,6 @@ def build_turing_media_v2(container=None):
     _number(color_page, 'Dyedecay', 'Color Decay Rate (1 / second)', 0.0, 0.0, 60.0)
     _number(color_page, 'Dyesaturation', 'Color Saturation', 1.5, 0.0, 4.0)
 
-    performance_page = component.appendCustomPage('Performance')
-    _toggle(performance_page, 'Carryhistory', 'Maintain Carried Color', True)
-    _toggle(performance_page, 'Palettehistory', 'Continuous Palette History', False)
-    _number(performance_page, 'Paletteinterval', 'Palette Update Interval (ticks)', 1, 1, 600, True)
-
     explorer_page = component.appendCustomPage('Explorer')
     _toggle(explorer_page, 'Explorerclick', 'Panel Click Sets Feed/Kill', True)
     _toggle(explorer_page, 'Explorerreset', 'Reset When Choosing Example', False)
@@ -2997,44 +2895,22 @@ def build_turing_media_v2(container=None):
     cache = _reader(component, 'media_cache', 'media_a', (-400, 650))
     previous = _reader(component, 'media_previous', 'media_b', (-150, 900))
 
-    # Separate normalized simulation samples from full-resolution display/media history.
-    sim_samples = {}
-    for name, source_node in (('sim_source', cache), ('sim_previous', previous), ('sim_live', prepared)):
-        node = _shader(component, name + '_prepare', name + '_pixel', SIM_SOURCE_SHADER, (-400, -2100 - len(sim_samples)*350))
-        node.inputConnectors[0].connect(source_node)
-        _set(node, 'outputresolution', 'custom')
-        _expression(node, 'resolutionw', SIM_WIDTH)
-        _expression(node, 'resolutionh', SIM_HEIGHT)
-        _set(node, 'inputfiltertype', 'linear')
-        _set(node, 'inputextenduv', 'hold')
-        reader = _reader(component, name, source_node.name, (0, -2100 - len(sim_samples)*350))
-        _expression(reader, 'top', 'op("{}") if parent().fetch("Appliedsize")[0:2] == parent().fetch("Appliedsize")[2:4] else op("{}")'.format(source_node.name, node.name))
-        if name == 'sim_previous':
-            _expression(reader, 'top', 'op("sim_source") if parent().par.Maskmode.eval() != "motion" else ('
-                        'op("media_previous") if parent().fetch("Appliedsize")[0:2] == parent().fetch("Appliedsize")[2:4] '
-                        'else op("sim_previous_prepare"))')
-        sim_samples[name] = reader
-
     mask = _shader(component, 'media_mask', 'mask_pixel', MASK_SHADER, (100, 650))
-    mask.inputConnectors[0].connect(sim_samples['sim_source'])
-    mask.inputConnectors[1].connect(sim_samples['sim_previous'])
+    mask.inputConnectors[0].connect(cache)
+    mask.inputConnectors[1].connect(previous)
     _set(mask, 'inputfiltertype', 'linear')
     _set(mask, 'inputextenduv', 'zero')
     _uniforms(mask, [
-        # Mask input/output are at simulation size; widths stay in simulation cells.
+        # The mask is built at canvas size; widths are in cells, so convert to pixels.
         ('uMask', (_menu_index('Maskmode'), 'parent().par.Maskgain',
-                   'parent().par.Edgewidth',
-                   'parent().par.Smoothing')),
+                   'parent().par.Edgewidth * parent().par.Cellsize',
+                   'parent().par.Smoothing * parent().par.Cellsize')),
         ('uMotion', ('parent().par.Motiongain',
                      'parent().fetch("Motiontickready", False)', '0', '0')),
     ])
-    mask_preview = component.create(resolutionTOP, 'mask_preview')
+    mask_preview = component.create(nullTOP, 'mask_preview')
     mask_preview.nodeX, mask_preview.nodeY = 350, 650
     mask_preview.inputConnectors[0].connect(mask)
-    _set(mask_preview, 'outputresolution', 'custom')
-    _expression(mask_preview, 'resolutionw', CANVAS_WIDTH)
-    _expression(mask_preview, 'resolutionh', CANVAS_HEIGHT)
-    _set(mask_preview, 'inputfiltertype', 'linear')
     source_preview = component.create(nullTOP, 'source_preview')
     source_preview.nodeX, source_preview.nodeY = -400, 1050
     source_preview.inputConnectors[0].connect(prepared)
@@ -3070,7 +2946,7 @@ def build_turing_media_v2(container=None):
 
     # GLSL TOP has three inputs: pack influence R and domain G into one field.
     field = _shader(component, 'influence_prepare', 'influence_pixel', INFLUENCE_FIELD_SHADER, (-450, -750))
-    field.inputConnectors[0].connect(mask)
+    field.inputConnectors[0].connect(mask_preview)
     field.inputConnectors[1].connect(domain)
     _set(field, 'outputresolution', 'custom')
     _expression(field, 'resolutionw', SIM_WIDTH)
@@ -3080,14 +2956,14 @@ def build_turing_media_v2(container=None):
     influence_field.inputConnectors[0].connect(field)
 
     stamp_mask = _shader(component, 'stamp_mask', 'stamp_mask_pixel', MASK_SHADER, (600, 650))
-    stamp_mask.inputConnectors[0].connect(sim_samples['sim_live'])
-    stamp_mask.inputConnectors[1].connect(sim_samples['sim_source'])
+    stamp_mask.inputConnectors[0].connect(prepared)
+    stamp_mask.inputConnectors[1].connect(cache)
     _set(stamp_mask, 'inputfiltertype', 'linear')
     _set(stamp_mask, 'inputextenduv', 'zero')
     _uniforms(stamp_mask, [
         ('uMask', (_menu_index('Maskmode'), 'parent().par.Maskgain',
-                   'parent().par.Edgewidth',
-                   'parent().par.Smoothing')),
+                   'parent().par.Edgewidth * parent().par.Cellsize',
+                   'parent().par.Smoothing * parent().par.Cellsize')),
         ('uMotion', ('parent().par.Motiongain', 'parent().fetch("Motiontickready", False)', '0', '0')),
     ])
 
@@ -3132,13 +3008,13 @@ def build_turing_media_v2(container=None):
                          SIMULATION_SHADER, (-100, 200))
     simulation.inputConnectors[0].connect(state_read)
     simulation.inputConnectors[1].connect(influence_field)
-    simulation.inputConnectors[2].connect(sim_samples['sim_source'])
+    simulation.inputConnectors[2].connect(cache)
     _expression(simulation, 'npasses', '16 * parent().par.Solverquality')
     _uniforms(simulation, [
         ('uRates', ('parent().par.Feed', 'parent().par.Kill',
                     'parent().par.Diffusiona', 'parent().par.Diffusionb')),
         ('uStep', ('1.0 / parent().par.Solverquality', '1.0 / (960.0 * parent().par.Solverquality)',
-                   'parent().par.Carryhistory', repr(TICK_SECONDS))),
+                   '0', repr(TICK_SECONDS))),
         ('uInfluence', ('parent().par.Strength', 'parent().par.Fade', '0', '0')),
         ('uDye', ('parent().par.Dyespread', 'parent().par.Dyeinject',
                   'parent().par.Dyedecay', _menu_index('Dyesource'))),
@@ -3182,7 +3058,7 @@ def build_turing_media_v2(container=None):
 
     # Clip palette history uses the same explicit tick commits as chemical state.
     palette_uniforms = [('uPalette', (str(PALETTE_CELLS),
-                                      'math.exp(-parent().fetch("Paletteelapsed", 1.0/60.0) / parent().par.Palettesmooth) if parent().par.Palettesmooth > 0 else 0',
+                                      'math.exp(-1.0 / (60.0 * parent().par.Palettesmooth)) if parent().par.Palettesmooth > 0 else 0',
                                       'parent().fetch("Paletteready", False)',
                                       str(PALETTE_WIDTH)))]
     palette_cells = _shader(component, 'palette_cells', 'palette_cells_pixel',
@@ -3195,10 +3071,7 @@ def build_turing_media_v2(container=None):
     _set(palette_cells, 'inputextenduv', 'zero')
     _uniforms(palette_cells, palette_uniforms)
 
-    palette_init = _shader(component, 'palette_init', 'palette_init_pixel',
-                           'layout(location=0) out vec4 fragColor;\n' + FIXED_PALETTE_GLSL +
-                           '\nvoid main(){ float t=(gl_FragCoord.x-0.5)/63.0; fragColor=TDOutputSwizzle(vec4(fixedPalette(t),1.0)); }',
-                           (100, 1550))
+    palette_init = component.create(constantTOP, 'palette_init')
     palette_init.nodeX, palette_init.nodeY = 100, 1550
     _set(palette_init, 'outputresolution', 'custom')
     _set(palette_init, 'resolutionw', PALETTE_WIDTH)
@@ -3213,15 +3086,11 @@ def build_turing_media_v2(container=None):
     ramp.nodeX, ramp.nodeY = 100, 1750
     _expression(ramp, 'top', 'parent().par.Ramptop.eval() if parent().par.Ramptop.eval() is not None '
                              'else op("palette_init")')
-    ramp_uniform = ('uRamp', ('1 if parent().par.Ramptop.eval() is not None else 0',
-                                'parent().par.Palettehistory or parent().par.Colormode.eval() == "ramp"', '0', '0'))
-
-    palette_samples = _reader(component, 'palette_samples', 'palette_init', (-150, 1750))
-    _expression(palette_samples, 'top', 'op("palette_cells") if parent().par.Palettehistory or parent().par.Colormode.eval() == "ramp" else op("palette_init")')
+    ramp_uniform = ('uRamp', ('1 if parent().par.Ramptop.eval() is not None else 0', '0', '0', '0'))
 
     palette_sort = _shader(component, 'palette_sort', 'palette_sort_pixel',
                            PALETTE_SORT_SHADER, (350, 1350))
-    palette_sort.inputConnectors[0].connect(palette_samples)
+    palette_sort.inputConnectors[0].connect(palette_cells)
     palette_sort.inputConnectors[1].connect(palette_read)
     palette_sort.inputConnectors[2].connect(ramp)
     _set(palette_sort, 'outputresolution', 'custom')
@@ -3262,12 +3131,6 @@ def build_turing_media_v2(container=None):
     _set(composite, 'inputfiltertype', 'linear')
     _uniforms(composite, [('uComposite', ('parent().par.Overlay', 'parent().par.Clipalpha',
                                         _menu_index('Viewmode'), '0'))])
-
-    # Channel-only formats preserve float32 mask values and exact binary walls.
-    for node, format_name in ((mask, 'mono32float'), (stamp_mask, 'mono32float'),
-                              (domain_mask, 'mono8fixed'), (field, 'rg32float'),
-                              (display, 'rgba16float')):
-        _set(node, 'format', format_name)
 
     out = component.create(outTOP, 'out1')
     out.nodeX, out.nodeY = 1150, 200
@@ -3335,7 +3198,7 @@ def build_turing_media_v2(container=None):
 # 9. Embedded help
 # =============================================================================
 
-NETWORK_HELP = '''TURING MEDIA V2 / PHASE 7 — MEASURED GPU OPTIMIZATIONS
+NETWORK_HELP = '''TURING MEDIA V2 / PHASE 6 — EXPLICIT BOUNDARIES AND FLOW
 
 QUICK START
 Paste the entire builder into a Text DAT and Run Script. Play the timeline.
@@ -3518,7 +3381,7 @@ movie position while clearing chemistry/color/age/histories, as in Phase 4.
 Save State (memory) saves one snapshot in component storage; Restore State reuses
 it without consuming it. Saves are independent of Pause. Snapshots include all
 six float32 ping-pong textures, active readers, dimensions, tick count and clock
-debt, all 78 preset settings, five media/TOP bindings, Pause, motion readiness,
+debt, all 75 preset settings, five media/TOP bindings, Pause, motion readiness,
 palette readiness, movie position/mode/index and schema version. Settings restore
 as constants; exported settings are refused before anything changes. Presets and
 explorer thumbnails are not part of the evolving simulation snapshot.
@@ -3585,7 +3448,7 @@ Color. Ramp TOP optionally replaces the teal/gold ramp (horizontal middle row).
 Tint Spread blurs source color. Clip Palette sorts averaged 8x8 cells into a
 64-step ramp; cells below 25% alpha coverage are ignored. Palette Smoothing is
 a time constant in simulation seconds: 0=instant, default ~.158 seconds.
-History retention per update is exp(-elapsed_ticks/60 / smoothing_seconds).
+History retention per tick is exp(-tick_seconds / smoothing_seconds).
 Palette Anchoring borrows base-ramp lightness. Color Amount, Contrast and
 Invert affect display; changing color mode never resets simulation.
 Carried Color stores signed Oklab a/b in state blue/alpha. Color Spread Rate
@@ -3594,49 +3457,11 @@ Carried Color Source selects Source Alpha (default) or the Influence Mask.
 Color Injection Rate independently blends toward source chroma using that value
 in the exponent, in every influence mode; Color Decay Rate fades toward gray by exp(-rate*tick_seconds).
 Default spread ~665.42/second, injection ~3.08/second, decay 0. Saturation only
-affects display. Maintain Carried Color defaults on in every color mode.
+affects display. Color history is maintained in every color mode.
 Source Overlay adds live media over patterns. Clip Patterns to Alpha clips
 display only; it does not confine simulation. Output is premultiplied RGBA.
 Output View selects final/patterns/mask/source-on-checkerboard. Upscale Filter
 selects cubic, linear or nearest reconstruction for coarse simulations.
-
-PERFORMANCE PAGE
-Maintain Carried Color (default on) enables injection, neighbor spreading and
-color decay. Turn off when carried color is unnecessary: A/B evolution is
-unchanged, and existing signed chroma is retained. Global/velocity transport
-still moves all state channels. Clear Carried Color is the explicit erase action.
-Re-enabling resumes from retained chroma; there is no retroactive media history.
-Continuous Palette History defaults off. Clip Palette requests extraction;
-other modes hold the last clip ramp. A custom Ramp TOP refreshes the base row
-without sampling/sorting media unless clip extraction is also required.
-Enable continuous history to keep a warmed clip ramp across color-mode changes.
-Palette Update Interval is an integer number of simulation ticks (1..600, default
-1); it is independent of output FPS and Solver Quality. The first needed update
-initializes immediately. Smoothing uses elapsed simulation time since the last
-update. Larger intervals intentionally sample fewer media frames and hold colors
-between updates; switching modes takes effect on the next tick. Pause freezes
-palette updates. Reset initializes the fixed fallback ramp and any required
-clip/base ramp; Reset Chemistry rebases cadence while keeping palette values.
-Snapshots save the cadence offset and all three performance settings. Complete
-older snapshots restore carried and continuous palette history on, interval 1.
-Partially missing new performance settings are refused. Older presets leave
-missing performance controls at their current values, following the preset contract.
-
-When grid and canvas match, display and simulation source reads bypass resampling.
-Coarse masks/injection use simulation-size alpha-weighted box filtering from
-full-resolution prepared media: exact integer boxes up to 4 cells per axis,
-otherwise bounded 4x4 quadrature with premultiplication BEFORE bilinear filtering.
-Edge Width and Smoothing remain simulation-cell units. This bounded low-pass
-filter can change coarse media influence and removes sub-cell detail; increase
-grid resolution for fine silhouettes. Domain walls retain nearest hard-threshold
-sampling independently. Motion history and Source Preview stay full-resolution.
-Mask Preview reconstructs the simulation mask to canvas size with linear filtering.
-Single-channel masks and two-channel influence retain float32; binary domains
-use mono8; the colorized visual intermediate uses RGBA16F. Final compositing,
-sources, palette histories and all signed chemical state remain RGBA32F.
-Half-float chemical simulation was tested separately for 3600 ticks in coral and
-spots and failed pointwise fidelity; it is not a supported simulation mode.
-Profiling results, methods and limits: validation/phase7/README.md.
 
 TRANSFORM PAGE
 Enable Transform to move chemical and color state after every tick's solver.
@@ -3717,9 +3542,8 @@ clock: Execute DAT scheduler and callable reset/step/advance API. Each reset
 increments the stored diagnostic counter Resetcount (component.fetch).
 preset_lib: preset module (apply/capture/import/export); presets: JSON table.
 state_read -> reaction_diffusion -> state_transform -> inactive state buffer.
-media_prepared -> inactive full-size media buffer -> simulation source/previous -> mask.
-media_cache -> optional palette_cells -> palette_sort -> inactive palette buffer.
-Palette reader parity is independent of the state reader and updates on cadence.
+media_prepared -> inactive media buffer -> media_cache/media_previous -> mask.
+media_cache -> palette_cells -> palette_sort -> inactive palette buffer.
 out1=final display; patterns=colored simulation before overlay/clipping;
 mask_preview=last tick mask; source_preview=live fitted straight RGBA;
 palette=64x2 (clip ramp row 0, base ramp row 1); state=raw A/B + signed Oklab a/b.
