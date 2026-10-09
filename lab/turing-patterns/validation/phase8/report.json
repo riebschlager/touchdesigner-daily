@@ -1,0 +1,216 @@
+{
+  "build": "099.2025.33230",
+  "source_sha256": "e294ab9c7c732c3191100ebacb6366bb58f5c4a063c2e7c3376002ae2aa8d3d6",
+  "checks": {
+    "status effective rectangular grid": {
+      "passed": true
+    },
+    "status mode and pause": {
+      "passed": true
+    },
+    "status tick and substeps": {
+      "passed": true
+    },
+    "status lag units": {
+      "passed": true
+    },
+    "unassigned source valid ambient": {
+      "passed": true
+    },
+    "status table and panel": {
+      "passed": true
+    },
+    "all shaders initially checked": {
+      "passed": true
+    },
+    "full per-shader logs retained": {
+      "passed": true
+    },
+    "diagnostics preserves all six outputs": {
+      "passed": true
+    },
+    "diagnostics preserves motion and palette histories": {
+      "passed": true
+    },
+    "diagnostics preserves age debt and reader": {
+      "passed": true
+    },
+    "media_a explicit cache settings": {
+      "passed": true
+    },
+    "media_b explicit cache settings": {
+      "passed": true
+    },
+    "unresolved TOP reference reported": {
+      "passed": true,
+      "status": "Invalid Source TOP: unresolved reference /project1/no_such_phase8_source"
+    },
+    "invalid movie reported": {
+      "passed": true,
+      "status": "Movie error: file not found /no_such_phase8_movie.mp4"
+    },
+    "required parameter reports named failure": {
+      "passed": true
+    },
+    "expression parameter reports named failure": {
+      "passed": true
+    },
+    "unsupported menu reports named failure": {
+      "passed": true
+    },
+    "unsupported configuration visible in status": {
+      "passed": true
+    },
+    "runtime failure visible": {
+      "passed": true
+    },
+    "successful reset clears runtime failure": {
+      "passed": true
+    },
+    "uniform empty field stable wrap": {
+      "passed": true
+    },
+    "uniform empty field stable noflux": {
+      "passed": true
+    },
+    "uniform empty field stable clear": {
+      "passed": true
+    },
+    "finite bounded evolved chemistry coral": {
+      "passed": true,
+      "ticks": 240,
+      "minimum": 0.019074957817792892,
+      "maximum": 0.8343244194984436
+    },
+    "finite bounded evolved chemistry spots": {
+      "passed": true,
+      "ticks": 240,
+      "minimum": 1.039433875130205e-37,
+      "maximum": 0.9999992251396179
+    },
+    "finite bounded evolved chemistry coral q4": {
+      "passed": true,
+      "ticks": 240,
+      "minimum": 0.019084112718701363,
+      "maximum": 0.8343701362609863
+    },
+    "finite bounded evolved chemistry spots q4": {
+      "passed": true,
+      "ticks": 240,
+      "minimum": 1.1276040229210311e-37,
+      "maximum": 0.9999967813491821
+    },
+    "shader failure named in panel": {
+      "passed": true
+    },
+    "shader compiler failure retained": {
+      "passed": true
+    },
+    "shader repair clears diagnostic": {
+      "passed": true
+    },
+    "final operator errors clear": {
+      "passed": true,
+      "errors": ""
+    }
+  },
+  "shaders": [
+    [
+      "media_prepared",
+      "ok"
+    ],
+    [
+      "sim_source_prepare",
+      "ok"
+    ],
+    [
+      "sim_previous_prepare",
+      "ok"
+    ],
+    [
+      "sim_live_prepare",
+      "ok"
+    ],
+    [
+      "media_mask",
+      "ok"
+    ],
+    [
+      "domain_prepare",
+      "ok"
+    ],
+    [
+      "velocity_prepare",
+      "ok"
+    ],
+    [
+      "influence_prepare",
+      "ok"
+    ],
+    [
+      "stamp_mask",
+      "ok"
+    ],
+    [
+      "seed",
+      "ok"
+    ],
+    [
+      "state_resize",
+      "ok"
+    ],
+    [
+      "state_reset",
+      "ok"
+    ],
+    [
+      "state_clear_color",
+      "ok"
+    ],
+    [
+      "reaction_diffusion",
+      "ok"
+    ],
+    [
+      "state_transform",
+      "ok"
+    ],
+    [
+      "state_stamp",
+      "ok"
+    ],
+    [
+      "palette_cells",
+      "ok"
+    ],
+    [
+      "palette_init",
+      "ok"
+    ],
+    [
+      "palette_sort",
+      "ok"
+    ],
+    [
+      "colorize",
+      "ok"
+    ],
+    [
+      "composite",
+      "ok"
+    ],
+    [
+      "fk_seed",
+      "ok"
+    ],
+    [
+      "fk_sim",
+      "ok"
+    ],
+    [
+      "fk_panel",
+      "ok"
+    ]
+  ],
+  "passed": true
+}

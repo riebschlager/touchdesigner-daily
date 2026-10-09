@@ -1,0 +1,84 @@
+{
+  "build": "099.2025.33230",
+  "source_sha256": "e294ab9c7c732c3191100ebacb6366bb58f5c4a063c2e7c3376002ae2aa8d3d6",
+  "checks": {
+    "real frames pause chemistry": {
+      "passed": true
+    },
+    "diagnostics runs while paused": {
+      "passed": true,
+      "text": "TURING MEDIA V2\nBuild: 099.2025.33230 (validated: 2025.33230 macOS)\nCanvas / grid: 96 x 64 / 32 x 21\nClock: framestepped / paused\nTicks: 0 total / 0 last frame\nSubsteps: 16 per tick / 0 last frame\nTime / lag: 0.0000 s / 0.0000 s\nSource: Valid TOP: /project1/phase8_validation10/frame_source (96 x 64)\nShaders: 0 errors / 0 unchecked / 24 shaders\nBuild issues: None\nRuntime: OK",
+      "active": true,
+      "resets": 3,
+      "initial_resets": 2
+    },
+    "live source valid": {
+      "passed": true
+    },
+    "first Step warms history without stale motion": {
+      "passed": true
+    },
+    "real Step one tick and stays paused": {
+      "passed": true
+    },
+    "changed source produces motion": {
+      "passed": true,
+      "max_motion": 0.23811200261116028
+    },
+    "paused motion mask retained": {
+      "passed": true
+    },
+    "reader and diagnostics recooks preserve histories": {
+      "passed": true
+    },
+    "live source changes cannot auto-capture while paused": {
+      "passed": true
+    },
+    "diagnostics pulse preserves ticks": {
+      "passed": true
+    },
+    "stopped source motion exactly zero next tick": {
+      "passed": true
+    },
+    "stopped source histories identical": {
+      "passed": true
+    },
+    "source dimension edit invalidates during pause": {
+      "passed": true
+    },
+    "source dimension edit keeps chemistry and age": {
+      "passed": true
+    },
+    "source dimension edit captures matching samples": {
+      "passed": true
+    },
+    "source dimension change avoids chemistry reset": {
+      "passed": true,
+      "resets": 3,
+      "initial_resets": 3
+    },
+    "first tick after dimension invalidation suppressed": {
+      "passed": true
+    },
+    "timeline running advances ticks": {
+      "passed": true
+    },
+    "stationary running source settles": {
+      "passed": true
+    },
+    "clock exception disables scheduler": {
+      "passed": true
+    },
+    "clock failure visible in panel": {
+      "passed": true
+    },
+    "Reset All clears clock failure": {
+      "passed": true
+    },
+    "final frame operator errors clear": {
+      "passed": true,
+      "errors": ""
+    }
+  },
+  "passed": true
+}

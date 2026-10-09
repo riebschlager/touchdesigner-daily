@@ -147,6 +147,8 @@ The new version should be **`create_turing_media_v2.py`**, with `create_turing_m
 
 8. **Add diagnostics, validation, and embedded documentation**
 
+   **Implemented and live-validated** in `create_turing_media_v2.py` on TouchDesigner 2025.33230 (macOS). Compact `status_panel` plus full status/compiler DATs report effective dimensions, clock/tick/substep work, lag, source validity, unsupported settings and runtime/shader failures. Explicit motion-cache configuration and source-dimension invalidation are verified over real timeline frames; validation fixed false stationary-source motion at smoothed canvas edges. All 516 live checks, seven controlled 30/60-FPS replay cases (42 output comparisons), and 77 offline tests pass. Embedded help includes units, resets, snapshot/replay limits, V1 migration and failure recovery. See `validation/phase8/README.md` for contracts, build scope, evidence and reproduction.
+
    Include a compact status panel showing effective simulation dimensions, clock mode, tick/substep counts, simulation lag, source validity, and shader errors.
 
    Explicitly configure motion-cache cooking and history invalidation. Verify that motion influence settles to zero when the source stops.

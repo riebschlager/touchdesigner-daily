@@ -1,0 +1,66 @@
+{
+  "report.json": {
+    "passed": true,
+    "checks": 32,
+    "cases": 0,
+    "failed": [],
+    "current_source": true,
+    "build": "099.2025.33230"
+  },
+  "frame_report.json": {
+    "passed": true,
+    "checks": 23,
+    "cases": 0,
+    "failed": [],
+    "current_source": true,
+    "build": "099.2025.33230"
+  },
+  "clock_regression/report.json": {
+    "passed": true,
+    "checks": 20,
+    "cases": 7,
+    "failed": [],
+    "current_source": true,
+    "build": "099.2025.33230"
+  },
+  "phase3_regression/report.json": {
+    "passed": true,
+    "checks": 75,
+    "cases": 0,
+    "failed": [],
+    "current_source": true,
+    "build": "099.2025.33230"
+  },
+  "presets_regression/report.json": {
+    "passed": true,
+    "checks": 44,
+    "cases": 0,
+    "failed": [],
+    "current_source": true,
+    "build": "099.2025.33230"
+  },
+  "snapshots_regression/report.json": {
+    "passed": true,
+    "checks": 104,
+    "cases": 0,
+    "failed": [],
+    "current_source": true,
+    "build": "099.2025.33230"
+  },
+  "boundaries_regression/report.json": {
+    "passed": true,
+    "checks": 159,
+    "cases": 0,
+    "failed": [],
+    "current_source": true,
+    "build": "099.2025.33230"
+  },
+  "performance_regression/report.json": {
+    "passed": true,
+    "checks": 59,
+    "cases": 0,
+    "failed": [],
+    "current_source": true,
+    "build": "099.2025.33230"
+  }
+}

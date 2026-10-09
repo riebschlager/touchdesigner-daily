@@ -1,0 +1,2698 @@
+{
+  "build": "099.2025.33230",
+  "tdapi": false,
+  "textCOMP": {
+    "pageindex": {
+      "value": "0",
+      "menus": []
+    },
+    "mode": {
+      "value": "text",
+      "menus": [
+        "text",
+        "specdat"
+      ]
+    },
+    "text": {
+      "value": "Derivative",
+      "menus": []
+    },
+    "specdat": {
+      "value": "None",
+      "menus": []
+    },
+    "specchop": {
+      "value": "None",
+      "menus": []
+    },
+    "type": {
+      "value": "string",
+      "menus": [
+        "string",
+        "float",
+        "integer",
+        "multiline",
+        "password"
+      ]
+    },
+    "formatting": {
+      "value": "default",
+      "menus": [
+        "default",
+        "customfstring",
+        "customfmt"
+      ]
+    },
+    "customformatting": {
+      "value": "",
+      "menus": []
+    },
+    "precision": {
+      "value": "2",
+      "menus": []
+    },
+    "thousandsseparator": {
+      "value": "none",
+      "menus": [
+        "none",
+        "space",
+        "comma"
+      ]
+    },
+    "framerate": {
+      "value": "30",
+      "menus": []
+    },
+    "formatcodes": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "escapeseq": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "smartpunct": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "wordwrap": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "editmode": {
+      "value": "locked",
+      "menus": [
+        "locked",
+        "editable",
+        "editablecontinuous",
+        "selectonly"
+      ]
+    },
+    "shiftenter": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "placeholdertext": {
+      "value": "",
+      "menus": []
+    },
+    "placeholdercolorr": {
+      "value": "0.25",
+      "menus": []
+    },
+    "placeholdercolorg": {
+      "value": "0.25",
+      "menus": []
+    },
+    "placeholdercolorb": {
+      "value": "0.25",
+      "menus": []
+    },
+    "readingdirection": {
+      "value": "lefttoright",
+      "menus": [
+        "lefttoright",
+        "righttoleft"
+      ]
+    },
+    "fieldfocus": {
+      "value": "None",
+      "menus": []
+    },
+    "dragdropmode": {
+      "value": "textinsert",
+      "menus": [
+        "panel",
+        "textinsert",
+        "textreplace",
+        "textappend"
+      ]
+    },
+    "postdropfocus": {
+      "value": "True",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "callbacks": {
+      "value": "/project1/phase8_probe/probe_textCOMP_callbacks",
+      "menus": []
+    },
+    "legacyfontselection": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "font": {
+      "value": "Verdana",
+      "menus": [
+        "Academy Engraved LET",
+        "Al Bayan",
+        "Al Nile",
+        "Al Tarikh",
+        "American Typewriter",
+        "Andale Mono",
+        "Apple Braille",
+        "Apple Chancery",
+        "Apple Color Emoji",
+        "Apple SD Gothic Neo",
+        "Apple Symbols",
+        "AppleGothic",
+        "AppleMyungjo",
+        "Arial",
+        "Arial Black",
+        "Arial Hebrew",
+        "Arial Hebrew Scholar",
+        "Arial Narrow",
+        "Arial Rounded MT Bold",
+        "Arial Unicode MS",
+        "Avenir",
+        "Avenir Next",
+        "Avenir Next Condensed",
+        "Ayuthaya",
+        "Baghdad",
+        "Bangla MN",
+        "Bangla Sangam MN",
+        "Baskerville",
+        "Baudot",
+        "Baudot Pop Fill",
+        "Baudot Pop Open",
+        "Beirut",
+        "Big Caslon",
+        "Bodoni 72",
+        "Bodoni 72 Oldstyle",
+        "Bodoni 72 Smallcaps",
+        "Bodoni Ornaments",
+        "Bradley Hand",
+        "Brush Script MT",
+        "Chalkboard",
+        "Chalkboard SE",
+        "Chalkduster",
+        "Charter",
+        "Chuck Noon",
+        "Clippers",
+        "Cochin",
+        "Comic Sans MS",
+        "Copperplate",
+        "Corsiva Hebrew",
+        "Courier New",
+        "DIN Alternate",
+        "DIN Condensed",
+        "Damascus",
+        "DecoType Naskh",
+        "Devanagari MT",
+        "Devanagari Sangam MN",
+        "Didot",
+        "Diwan Kufi",
+        "Diwan Thuluth",
+        "Euphemia UCAS",
+        "Faceless",
+        "Farah",
+        "Farisi",
+        "Figtree",
+        "Forza",
+        "Futura",
+        "GB18030 Bitmap",
+        "Galvji",
+        "Geeza Pro",
+        "Geneva",
+        "Georgia",
+        "Gill Sans",
+        "Gotham Rounded",
+        "Grantha Sangam MN",
+        "Gujarati MT",
+        "Gujarati Sangam MN",
+        "Gurmukhi MN",
+        "Gurmukhi MT",
+        "Gurmukhi Sangam MN",
+        "Heiti SC",
+        "Heiti TC",
+        "Helvetica",
+        "Helvetica Neue",
+        "Herculanum",
+        "Hiragino Maru Gothic ProN",
+        "Hiragino Mincho ProN",
+        "Hiragino Sans",
+        "Hiragino Sans GB",
+        "Hoefler Text",
+        "ITF Devanagari",
+        "ITF Devanagari Marathi",
+        "Impact",
+        "InaiMathi",
+        "Interstate",
+        "Interstate Cond Mono",
+        "Interstate Cond Mono - Blk",
+        "Interstate Cond Mono - Lgt",
+        "Interstate Mono",
+        "Interstate Mono - Blk",
+        "Interstate Mono - Lgt",
+        "InterstateBlack",
+        "InterstateCond",
+        "InterstateCondBlack",
+        "InterstateCondensed",
+        "InterstateLight",
+        "InterstateLightCondensed",
+        "InterstatePlus",
+        "Kailasa",
+        "Kannada MN",
+        "Kannada Sangam MN",
+        "Kefa III",
+        "Khmer MN",
+        "Khmer Sangam MN",
+        "Kohinoor Bangla",
+        "Kohinoor Devanagari",
+        "Kohinoor Gujarati",
+        "Kohinoor Telugu",
+        "Kokonor",
+        "Krungthep",
+        "KufiStandardGK",
+        "Lao MN",
+        "Lao Sangam MN",
+        "Lucida Grande",
+        "Luminari",
+        "Malayalam MN",
+        "Malayalam Sangam MN",
+        "Marker Felt",
+        "Material Design Icons",
+        "Menlo",
+        "MesloLGS NF",
+        "Metal Vengeance",
+        "Microsoft Sans Serif",
+        "Mishafi",
+        "Mishafi Gold",
+        "Monaco",
+        "Mshtakan",
+        "Mukta Mahee",
+        "Muna",
+        "Myanmar MN",
+        "Myanmar Sangam MN",
+        "Nadeem",
+        "Nanum Pen",
+        "New Peninim MT",
+        "Noteworthy",
+        "Noto Color Emoji",
+        "Noto Nastaliq Urdu",
+        "Noto Sans Batak",
+        "Noto Sans CJK JP",
+        "Noto Sans Kannada",
+        "Noto Sans Myanmar",
+        "Noto Sans NKo",
+        "Noto Sans Oriya",
+        "Noto Sans Syriac",
+        "Noto Sans Tagalog",
+        "Noto Serif Myanmar",
+        "Open Sans",
+        "Optima",
+        "Orittish",
+        "Oriya MN",
+        "Oriya Sangam MN",
+        "PT Mono",
+        "PT Sans",
+        "PT Sans Caption",
+        "PT Sans Narrow",
+        "PT Serif",
+        "PT Serif Caption",
+        "Palatino",
+        "Papyrus",
+        "Party LET",
+        "Phosphate",
+        "PingFang HK",
+        "PingFang MO",
+        "PingFang SC",
+        "PingFang TC",
+        "Pixeboy",
+        "Plantagenet Cherokee",
+        "Raanana",
+        "Righteous",
+        "Roboto",
+        "Rock Salt",
+        "Rockwell",
+        "STIX Two Math",
+        "STIX Two Text",
+        "STSong",
+        "Sana",
+        "Sathu",
+        "Savoye LET",
+        "Shree Devanagari 714",
+        "SignPainter",
+        "Silom",
+        "Sinhala MN",
+        "Sinhala Sangam MN",
+        "Skia",
+        "Snell Roundhand",
+        "Songti SC",
+        "Songti TC",
+        "Sukhumvit Set",
+        "Symbol",
+        "Tahoma",
+        "Tamil MN",
+        "Tamil Sangam MN",
+        "Telugu MN",
+        "Telugu Sangam MN",
+        "Thonburi",
+        "Times New Roman",
+        "Trattatello",
+        "Trebuchet MS",
+        "Tw Cen MT",
+        "Tw Cen MT Condensed",
+        "Tw Cen MT Condensed Extra Bold",
+        "Twemoji COLRv0",
+        "Verdana",
+        "Waseem",
+        "Webdings",
+        "Wingdings",
+        "Wingdings 2",
+        "Wingdings 3",
+        "Zapf Dingbats",
+        "Zapfino"
+      ]
+    },
+    "fontfile": {
+      "value": "",
+      "menus": []
+    },
+    "typeface": {
+      "value": "Regular",
+      "menus": [
+        "Regular",
+        "Italic",
+        "Bold",
+        "Bold Italic"
+      ]
+    },
+    "bold": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "italic": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "scaletofit": {
+      "value": "never",
+      "menus": [
+        "never",
+        "always",
+        "onlyshrink"
+      ]
+    },
+    "fontsize": {
+      "value": "20.0",
+      "menus": []
+    },
+    "fontsizeunits": {
+      "value": "panelunits",
+      "menus": [
+        "panelunits",
+        "fract",
+        "relfract",
+        "points"
+      ]
+    },
+    "tracking": {
+      "value": "0.0",
+      "menus": []
+    },
+    "skew": {
+      "value": "0.0",
+      "menus": []
+    },
+    "horzstretch": {
+      "value": "1.0",
+      "menus": []
+    },
+    "linespacing": {
+      "value": "1.0",
+      "menus": []
+    },
+    "linespacingunit": {
+      "value": "default",
+      "menus": [
+        "default",
+        "fontsize",
+        "panelunits",
+        "points",
+        "fraction",
+        "fractionaspect"
+      ]
+    },
+    "fontcolorr": {
+      "value": "1.0",
+      "menus": []
+    },
+    "fontcolorg": {
+      "value": "1.0",
+      "menus": []
+    },
+    "fontcolorb": {
+      "value": "1.0",
+      "menus": []
+    },
+    "fontalpha": {
+      "value": "1.0",
+      "menus": []
+    },
+    "customselectcolor": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "selectcolorr": {
+      "value": "0.0",
+      "menus": []
+    },
+    "selectcolorg": {
+      "value": "0.25",
+      "menus": []
+    },
+    "selectcolorb": {
+      "value": "0.35",
+      "menus": []
+    },
+    "dropshadow": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "dropshadowcolorr": {
+      "value": "0.0",
+      "menus": []
+    },
+    "dropshadowcolorg": {
+      "value": "0.0",
+      "menus": []
+    },
+    "dropshadowcolorb": {
+      "value": "0.0",
+      "menus": []
+    },
+    "dropshadowalpha": {
+      "value": "1.0",
+      "menus": []
+    },
+    "dropshadowoffsetx": {
+      "value": "0.019999999552965164",
+      "menus": []
+    },
+    "dropshadowoffsety": {
+      "value": "-0.03999999910593033",
+      "menus": []
+    },
+    "dropshadowoffsetunits": {
+      "value": "panelunits",
+      "menus": [
+        "panelunits",
+        "fract",
+        "relfract",
+        "points"
+      ]
+    },
+    "textoffsetx": {
+      "value": "0.0",
+      "menus": []
+    },
+    "textoffsety": {
+      "value": "0.0",
+      "menus": []
+    },
+    "textoffsetunits": {
+      "value": "panelunits",
+      "menus": [
+        "panelunits",
+        "fract",
+        "relfract",
+        "points"
+      ]
+    },
+    "textpaddingl": {
+      "value": "0.0",
+      "menus": []
+    },
+    "textpaddingr": {
+      "value": "0.0",
+      "menus": []
+    },
+    "textpaddingb": {
+      "value": "0.0",
+      "menus": []
+    },
+    "textpaddingt": {
+      "value": "0.0",
+      "menus": []
+    },
+    "textpaddingunits": {
+      "value": "panelunits",
+      "menus": [
+        "panelunits",
+        "fract",
+        "relfract",
+        "points"
+      ]
+    },
+    "alignx": {
+      "value": "center",
+      "menus": [
+        "left",
+        "center",
+        "right"
+      ]
+    },
+    "alignxmode": {
+      "value": "metrics",
+      "menus": [
+        "metrics",
+        "bbox"
+      ]
+    },
+    "aligny": {
+      "value": "center",
+      "menus": [
+        "bottom",
+        "center",
+        "top",
+        "baseline"
+      ]
+    },
+    "alignymode": {
+      "value": "metrics",
+      "menus": [
+        "metrics",
+        "bbox"
+      ]
+    },
+    "x": {
+      "value": "0",
+      "menus": []
+    },
+    "y": {
+      "value": "0",
+      "menus": []
+    },
+    "w": {
+      "value": "400",
+      "menus": []
+    },
+    "h": {
+      "value": "300",
+      "menus": []
+    },
+    "fixedaspect": {
+      "value": "off",
+      "menus": [
+        "off",
+        "horizontal",
+        "vertical"
+      ]
+    },
+    "aspect": {
+      "value": "1.0",
+      "menus": []
+    },
+    "layer": {
+      "value": "0.0",
+      "menus": []
+    },
+    "hmode": {
+      "value": "fixed",
+      "menus": [
+        "fixed",
+        "fill",
+        "anchors"
+      ]
+    },
+    "leftanchor": {
+      "value": "0.0",
+      "menus": []
+    },
+    "leftoffset": {
+      "value": "0.0",
+      "menus": []
+    },
+    "rightanchor": {
+      "value": "1.0",
+      "menus": []
+    },
+    "rightoffset": {
+      "value": "0.0",
+      "menus": []
+    },
+    "horigin": {
+      "value": "0.0",
+      "menus": []
+    },
+    "hfillweight": {
+      "value": "1.0",
+      "menus": []
+    },
+    "vmode": {
+      "value": "fixed",
+      "menus": [
+        "fixed",
+        "fill",
+        "anchors"
+      ]
+    },
+    "bottomanchor": {
+      "value": "0.0",
+      "menus": []
+    },
+    "bottomoffset": {
+      "value": "0.0",
+      "menus": []
+    },
+    "topanchor": {
+      "value": "1.0",
+      "menus": []
+    },
+    "topoffset": {
+      "value": "0.0",
+      "menus": []
+    },
+    "vorigin": {
+      "value": "0.0",
+      "menus": []
+    },
+    "vfillweight": {
+      "value": "1.0",
+      "menus": []
+    },
+    "alignallow": {
+      "value": "allow",
+      "menus": [
+        "allow",
+        "ignore",
+        "ignoremargin"
+      ]
+    },
+    "alignorder": {
+      "value": "0.0",
+      "menus": []
+    },
+    "postoffsetx": {
+      "value": "0.0",
+      "menus": []
+    },
+    "postoffsety": {
+      "value": "0.0",
+      "menus": []
+    },
+    "sizefromwindow": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "display": {
+      "value": "True",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "enable": {
+      "value": "True",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "helpdat": {
+      "value": "None",
+      "menus": []
+    },
+    "cursor": {
+      "value": "pointer",
+      "menus": [
+        "pointer",
+        "linkselect",
+        "ibeam",
+        "cross",
+        "busy",
+        "activate",
+        "invisible",
+        "arrowUp",
+        "arrowDown",
+        "arrowLeft",
+        "arrowRight",
+        "arrowUpDown",
+        "arrowLeftRight",
+        "arrowAll",
+        "arrowD1",
+        "arrowD2",
+        "arrowD3",
+        "arrowD4",
+        "arrowD1D3",
+        "arrowD2D4",
+        "arrowAllDiagonal",
+        "arrow"
+      ]
+    },
+    "multitouch": {
+      "value": "mtouchparent",
+      "menus": [
+        "mtouchparent",
+        "mtouchyes",
+        "mtouchno"
+      ]
+    },
+    "constraincursor": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "clickthrough": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "allowuishortcuts": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "mousewheel": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "uvbuttonsleft": {
+      "value": "True",
+      "menus": []
+    },
+    "uvbuttonsmiddle": {
+      "value": "False",
+      "menus": []
+    },
+    "uvbuttonsright": {
+      "value": "False",
+      "menus": []
+    },
+    "mouserel": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "resizel": {
+      "value": "False",
+      "menus": []
+    },
+    "resizer": {
+      "value": "False",
+      "menus": []
+    },
+    "resizeb": {
+      "value": "False",
+      "menus": []
+    },
+    "resizet": {
+      "value": "False",
+      "menus": []
+    },
+    "resizecomp": {
+      "value": "/project1/phase8_probe/probe_textCOMP",
+      "menus": []
+    },
+    "resizewmin": {
+      "value": "5.0",
+      "menus": []
+    },
+    "resizewmax": {
+      "value": "400.0",
+      "menus": []
+    },
+    "resizehmin": {
+      "value": "5.0",
+      "menus": []
+    },
+    "resizehmax": {
+      "value": "400.0",
+      "menus": []
+    },
+    "reposition": {
+      "value": "off",
+      "menus": [
+        "off",
+        "window",
+        "component"
+      ]
+    },
+    "repocomp": {
+      "value": "/project1/phase8_probe/probe_textCOMP",
+      "menus": []
+    },
+    "repositionxmin": {
+      "value": "0.0",
+      "menus": []
+    },
+    "repositionxmax": {
+      "value": "100.0",
+      "menus": []
+    },
+    "repositionymin": {
+      "value": "0.0",
+      "menus": []
+    },
+    "repositionymax": {
+      "value": "100.0",
+      "menus": []
+    },
+    "anchordrag": {
+      "value": "anchors",
+      "menus": [
+        "anchors",
+        "offsets"
+      ]
+    },
+    "bgcolorr": {
+      "value": "0.0",
+      "menus": []
+    },
+    "bgcolorg": {
+      "value": "0.0",
+      "menus": []
+    },
+    "bgcolorb": {
+      "value": "0.0",
+      "menus": []
+    },
+    "bgalpha": {
+      "value": "0.0",
+      "menus": []
+    },
+    "top": {
+      "value": "None",
+      "menus": []
+    },
+    "topfill": {
+      "value": "off",
+      "menus": [
+        "off",
+        "horizontal",
+        "vertical",
+        "best",
+        "native",
+        "outside"
+      ]
+    },
+    "topsmoothness": {
+      "value": "linear",
+      "menus": [
+        "usetop",
+        "nearest",
+        "linear",
+        "mipmap"
+      ]
+    },
+    "borderar": {
+      "value": "1.0",
+      "menus": []
+    },
+    "borderag": {
+      "value": "1.0",
+      "menus": []
+    },
+    "borderab": {
+      "value": "1.0",
+      "menus": []
+    },
+    "borderaalpha": {
+      "value": "1.0",
+      "menus": []
+    },
+    "borderbr": {
+      "value": "0.0",
+      "menus": []
+    },
+    "borderbg": {
+      "value": "0.0",
+      "menus": []
+    },
+    "borderbb": {
+      "value": "0.0",
+      "menus": []
+    },
+    "borderbalpha": {
+      "value": "1.0",
+      "menus": []
+    },
+    "leftborder": {
+      "value": "off",
+      "menus": [
+        "off",
+        "bordera",
+        "borderb"
+      ]
+    },
+    "leftborderi": {
+      "value": "off",
+      "menus": [
+        "off",
+        "bordera",
+        "borderb"
+      ]
+    },
+    "rightborder": {
+      "value": "off",
+      "menus": [
+        "off",
+        "bordera",
+        "borderb"
+      ]
+    },
+    "rightborderi": {
+      "value": "off",
+      "menus": [
+        "off",
+        "bordera",
+        "borderb"
+      ]
+    },
+    "bottomborder": {
+      "value": "off",
+      "menus": [
+        "off",
+        "bordera",
+        "borderb"
+      ]
+    },
+    "bottomborderi": {
+      "value": "off",
+      "menus": [
+        "off",
+        "bordera",
+        "borderb"
+      ]
+    },
+    "topborder": {
+      "value": "off",
+      "menus": [
+        "off",
+        "bordera",
+        "borderb"
+      ]
+    },
+    "topborderi": {
+      "value": "off",
+      "menus": [
+        "off",
+        "bordera",
+        "borderb"
+      ]
+    },
+    "borderover": {
+      "value": "True",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "dodisablecolor": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "disablecolorr": {
+      "value": "1.0",
+      "menus": []
+    },
+    "disablecolorg": {
+      "value": "1.0",
+      "menus": []
+    },
+    "disablecolorb": {
+      "value": "1.0",
+      "menus": []
+    },
+    "disablealpha": {
+      "value": "0.5",
+      "menus": []
+    },
+    "multrgb": {
+      "value": "True",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "composite": {
+      "value": "over",
+      "menus": [
+        "over",
+        "under",
+        "inside",
+        "outside",
+        "add",
+        "subtract",
+        "multiply"
+      ]
+    },
+    "opacity": {
+      "value": "1.0",
+      "menus": []
+    },
+    "align": {
+      "value": "none",
+      "menus": [
+        "none",
+        "horizlr",
+        "horizrl",
+        "verttb",
+        "vertbt",
+        "gridrows",
+        "gridcols",
+        "nodes"
+      ]
+    },
+    "spacing": {
+      "value": "0.0",
+      "menus": []
+    },
+    "alignmax": {
+      "value": "0",
+      "menus": []
+    },
+    "marginl": {
+      "value": "0.0",
+      "menus": []
+    },
+    "marginr": {
+      "value": "0.0",
+      "menus": []
+    },
+    "marginb": {
+      "value": "0.0",
+      "menus": []
+    },
+    "margint": {
+      "value": "0.0",
+      "menus": []
+    },
+    "justifymethod": {
+      "value": "group",
+      "menus": [
+        "individual",
+        "group"
+      ]
+    },
+    "justifyh": {
+      "value": "off",
+      "menus": [
+        "off",
+        "left",
+        "center",
+        "right"
+      ]
+    },
+    "justifyv": {
+      "value": "off",
+      "menus": [
+        "off",
+        "top",
+        "center",
+        "bottom"
+      ]
+    },
+    "fit": {
+      "value": "off",
+      "menus": [
+        "off",
+        "horizontal",
+        "vertical",
+        "best"
+      ]
+    },
+    "scalex": {
+      "value": "1.0",
+      "menus": []
+    },
+    "scaley": {
+      "value": "1.0",
+      "menus": []
+    },
+    "offsetx": {
+      "value": "0.0",
+      "menus": []
+    },
+    "offsety": {
+      "value": "0.0",
+      "menus": []
+    },
+    "crop": {
+      "value": "off",
+      "menus": [
+        "off",
+        "on",
+        "never"
+      ]
+    },
+    "phscrollbar": {
+      "value": "off",
+      "menus": [
+        "off",
+        "on",
+        "auto"
+      ]
+    },
+    "pvscrollbar": {
+      "value": "off",
+      "menus": [
+        "off",
+        "on",
+        "auto"
+      ]
+    },
+    "scrollbarthickness": {
+      "value": "10",
+      "menus": []
+    },
+    "scrolloverlay": {
+      "value": "off",
+      "menus": [
+        "off",
+        "ignore",
+        "ignoreover"
+      ]
+    },
+    "drag": {
+      "value": "dragparent",
+      "menus": [
+        "dragparent",
+        "legacy",
+        "usecallbacks"
+      ]
+    },
+    "dragscript": {
+      "value": "/sys/drag",
+      "menus": []
+    },
+    "droptypescript": {
+      "value": "None",
+      "menus": []
+    },
+    "dropdestscript": {
+      "value": "None",
+      "menus": []
+    },
+    "paneldragop": {
+      "value": "None",
+      "menus": []
+    },
+    "drop": {
+      "value": "dropparent",
+      "menus": [
+        "dropparent",
+        "legacy",
+        "usecallbacks",
+        "fillparm"
+      ]
+    },
+    "builtindrop": {
+      "value": "True",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "dropscript": {
+      "value": "/sys/drop",
+      "menus": []
+    },
+    "dropparm": {
+      "value": "",
+      "menus": []
+    },
+    "dragdropcallbacks": {
+      "value": "None",
+      "menus": []
+    },
+    "ext": {
+      "value": "0",
+      "menus": []
+    },
+    "ext0object": {
+      "value": "",
+      "menus": []
+    },
+    "ext0name": {
+      "value": "",
+      "menus": []
+    },
+    "ext0promote": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "reinitextensions": {
+      "value": "False",
+      "menus": []
+    },
+    "initextonstart": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "parentshortcut": {
+      "value": "",
+      "menus": []
+    },
+    "opshortcut": {
+      "value": "",
+      "menus": []
+    },
+    "iop": {
+      "value": "0",
+      "menus": []
+    },
+    "iop0shortcut": {
+      "value": "",
+      "menus": []
+    },
+    "iop0op": {
+      "value": "None",
+      "menus": []
+    },
+    "nodeview": {
+      "value": "default",
+      "menus": [
+        "default",
+        "opviewer"
+      ]
+    },
+    "opviewer": {
+      "value": "None",
+      "menus": []
+    },
+    "keepmemory": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "enablecloning": {
+      "value": "True",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "enablecloningpulse": {
+      "value": "False",
+      "menus": []
+    },
+    "clone": {
+      "value": "None",
+      "menus": []
+    },
+    "loadondemand": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "enableexternaltox": {
+      "value": "True",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "enableexternaltoxpulse": {
+      "value": "False",
+      "menus": []
+    },
+    "externaltox": {
+      "value": "",
+      "menus": []
+    },
+    "reloadcustom": {
+      "value": "True",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "reloadbuiltin": {
+      "value": "True",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "savebackup": {
+      "value": "True",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "subcompname": {
+      "value": "",
+      "menus": []
+    },
+    "relpath": {
+      "value": "inherit",
+      "menus": [
+        "inherit",
+        "project",
+        "externaltox"
+      ]
+    },
+    "parmcolorspace": {
+      "value": "srgb",
+      "menus": [
+        "srgb",
+        "srgblinear",
+        "rec601ntsc",
+        "rec709",
+        "rec2020",
+        "dcip3",
+        "dcip3d60",
+        "displayp3d65",
+        "aces2065-1",
+        "acescg",
+        "passthrough"
+      ]
+    },
+    "parmreferencewhite": {
+      "value": "useparent",
+      "menus": [
+        "default",
+        "useparent",
+        "sdr",
+        "hdr",
+        "ui"
+      ]
+    },
+    "chop": {
+      "value": "None",
+      "menus": []
+    },
+    "namedchop": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "overridemethod": {
+      "value": "trigger",
+      "menus": [
+        "trigger",
+        "always"
+      ]
+    },
+    "overlay": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    }
+  },
+  "tableDAT": {
+    "pageindex": {
+      "value": "0",
+      "menus": []
+    },
+    "edit": {
+      "value": "False",
+      "menus": []
+    },
+    "file": {
+      "value": "",
+      "menus": []
+    },
+    "syncfile": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "defaultreadencoding": {
+      "value": "autodetect",
+      "menus": [
+        "autodetect",
+        "utf8",
+        "utf16le",
+        "utf16be",
+        "cp1252"
+      ]
+    },
+    "loadonstart": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "loadonstartpulse": {
+      "value": "False",
+      "menus": []
+    },
+    "write": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "writepulse": {
+      "value": "False",
+      "menus": []
+    },
+    "removeblank": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "fill": {
+      "value": "manual",
+      "menus": [
+        "manual",
+        "setsize",
+        "setsizeandcontents",
+        "fillbycol",
+        "fillbyrow"
+      ]
+    },
+    "rows": {
+      "value": "3",
+      "menus": []
+    },
+    "cols": {
+      "value": "4",
+      "menus": []
+    },
+    "cellexpr": {
+      "value": "",
+      "menus": [
+        "me.subRow",
+        "me.subCol",
+        "me.subCol * 100 + me.subRow",
+        "f'({me.subRow}, {me.subCol})'",
+        "op('tablename')[me.subRow, me.subCol]",
+        "op('chopname')[0][me.subRow]",
+        "op('sopname').points[me.subRow].P[0]",
+        "op('sopname').points[me.subRow].P[me.subCol]"
+      ]
+    },
+    "includenames": {
+      "value": "True",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "fills": {
+      "value": "0",
+      "menus": []
+    },
+    "fills0names": {
+      "value": "",
+      "menus": []
+    },
+    "fills0expr": {
+      "value": "",
+      "menus": [
+        "me.subRow",
+        "me.subCol",
+        "me.subCol * 100 + me.subRow",
+        "f'({me.subRow}, {me.subCol})'",
+        "op('tablename')[me.subRow, me.subCol]",
+        "op('chopname')[0][me.subRow]",
+        "op('chopname')[me.fillName][me.subRow]",
+        "op('sopname').points[me.subRow].P[0]",
+        "op('sopname').points[me.subRow].P[me.subCol]"
+      ]
+    },
+    "language": {
+      "value": "input",
+      "menus": [
+        "input",
+        "parameter",
+        "text",
+        "python",
+        "glsl",
+        "json",
+        "yaml",
+        "xml",
+        "tscript"
+      ]
+    },
+    "extension": {
+      "value": "languageext",
+      "menus": [
+        "csv",
+        "dat",
+        "frag",
+        "glsl",
+        "html",
+        "json",
+        "md",
+        "py",
+        "rtf",
+        "sdp",
+        "tsv",
+        "txt",
+        "vert",
+        "xml",
+        "yaml",
+        "yml",
+        "languageext",
+        "customext"
+      ]
+    },
+    "customext": {
+      "value": "",
+      "menus": []
+    },
+    "wordwrap": {
+      "value": "input",
+      "menus": [
+        "input",
+        "on",
+        "off"
+      ]
+    }
+  },
+  "executeDAT": {
+    "pageindex": {
+      "value": "0",
+      "menus": []
+    },
+    "active": {
+      "value": "True",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "executeloc": {
+      "value": "here",
+      "menus": [
+        "current",
+        "here",
+        "op"
+      ]
+    },
+    "fromop": {
+      "value": "/project1/phase8_probe",
+      "menus": []
+    },
+    "start": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "startpulse": {
+      "value": "False",
+      "menus": []
+    },
+    "create": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "createpulse": {
+      "value": "False",
+      "menus": []
+    },
+    "exit": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "exitpulse": {
+      "value": "False",
+      "menus": []
+    },
+    "framestart": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "framestartpulse": {
+      "value": "False",
+      "menus": []
+    },
+    "frameend": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "frameendpulse": {
+      "value": "False",
+      "menus": []
+    },
+    "playstatechange": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "playstatepulse": {
+      "value": "False",
+      "menus": []
+    },
+    "devicechange": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "devicechangepulse": {
+      "value": "False",
+      "menus": []
+    },
+    "projectpresave": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "projectpresavepulse": {
+      "value": "False",
+      "menus": []
+    },
+    "projectpostsave": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "projectpostsavepulse": {
+      "value": "False",
+      "menus": []
+    },
+    "edit": {
+      "value": "False",
+      "menus": []
+    },
+    "file": {
+      "value": "",
+      "menus": []
+    },
+    "defaultreadencoding": {
+      "value": "autodetect",
+      "menus": [
+        "autodetect",
+        "utf8",
+        "utf16le",
+        "utf16be",
+        "cp1252"
+      ]
+    },
+    "syncfile": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "loadonstart": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "loadonstartpulse": {
+      "value": "False",
+      "menus": []
+    },
+    "write": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "writepulse": {
+      "value": "False",
+      "menus": []
+    },
+    "language": {
+      "value": "python",
+      "menus": [
+        "input",
+        "parameter",
+        "text",
+        "python",
+        "glsl",
+        "json",
+        "yaml",
+        "xml",
+        "tscript"
+      ]
+    },
+    "extension": {
+      "value": "languageext",
+      "menus": [
+        "csv",
+        "dat",
+        "frag",
+        "glsl",
+        "html",
+        "json",
+        "md",
+        "py",
+        "rtf",
+        "sdp",
+        "tsv",
+        "txt",
+        "vert",
+        "xml",
+        "yaml",
+        "yml",
+        "languageext",
+        "customext"
+      ]
+    },
+    "customext": {
+      "value": "",
+      "menus": []
+    },
+    "wordwrap": {
+      "value": "input",
+      "menus": [
+        "input",
+        "on",
+        "off"
+      ]
+    }
+  },
+  "cacheTOP": {
+    "pageindex": {
+      "value": "0",
+      "menus": []
+    },
+    "active": {
+      "value": "True",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "activepulse": {
+      "value": "False",
+      "menus": []
+    },
+    "cacheonce": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "replace": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "replacespulse": {
+      "value": "False",
+      "menus": []
+    },
+    "replaceindex": {
+      "value": "0",
+      "menus": []
+    },
+    "prefill": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "prefillpulse": {
+      "value": "False",
+      "menus": []
+    },
+    "cachesize": {
+      "value": "32",
+      "menus": []
+    },
+    "step": {
+      "value": "1",
+      "menus": []
+    },
+    "outputindex": {
+      "value": "0.0",
+      "menus": []
+    },
+    "outputindexunit": {
+      "value": "indices",
+      "menus": [
+        "indices",
+        "frames",
+        "seconds",
+        "fraction"
+      ]
+    },
+    "interp": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "alwayscook": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "reset": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "resetpulse": {
+      "value": "False",
+      "menus": []
+    },
+    "outputresolution": {
+      "value": "useinput",
+      "menus": [
+        "useinput",
+        "eighth",
+        "quarter",
+        "half",
+        "2x",
+        "4x",
+        "8x",
+        "fit",
+        "limit",
+        "custom",
+        "parpanel"
+      ]
+    },
+    "resolutionw": {
+      "value": "256",
+      "menus": [
+        "400 300",
+        "640 480",
+        "800 600",
+        "1024 768",
+        "1280 720",
+        "1920 1080",
+        "1920 1200",
+        "3840 2160",
+        "4096 2160",
+        "256 256",
+        "512 512",
+        "1024 1024",
+        "2048 2048",
+        "4096 4096"
+      ]
+    },
+    "resolutionh": {
+      "value": "256",
+      "menus": [
+        "400 300",
+        "640 480",
+        "800 600",
+        "1024 768",
+        "1280 720",
+        "1920 1080",
+        "1920 1200",
+        "3840 2160",
+        "4096 2160",
+        "256 256",
+        "512 512",
+        "1024 1024",
+        "2048 2048",
+        "4096 4096"
+      ]
+    },
+    "resmult": {
+      "value": "True",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "outputaspect": {
+      "value": "useinput",
+      "menus": [
+        "useinput",
+        "resolution",
+        "custom"
+      ]
+    },
+    "aspect1": {
+      "value": "1.0",
+      "menus": [
+        "1 1",
+        "4 3",
+        "16 9",
+        "16 10"
+      ]
+    },
+    "aspect2": {
+      "value": "1.0",
+      "menus": [
+        "1 1",
+        "4 3",
+        "16 9",
+        "16 10"
+      ]
+    },
+    "inputfiltertype": {
+      "value": "linear",
+      "menus": [
+        "nearest",
+        "linear",
+        "mipmap"
+      ]
+    },
+    "fillmode": {
+      "value": "best",
+      "menus": [
+        "useinput",
+        "fill",
+        "width",
+        "height",
+        "best",
+        "outside",
+        "nativeres"
+      ]
+    },
+    "filtertype": {
+      "value": "linear",
+      "menus": [
+        "useinput",
+        "nearest",
+        "linear",
+        "mipmap"
+      ]
+    },
+    "npasses": {
+      "value": "1",
+      "menus": []
+    },
+    "chanmask": {
+      "value": "15",
+      "menus": []
+    },
+    "format": {
+      "value": "useinput",
+      "menus": [
+        "useinput",
+        "rgba8fixed",
+        "rgba16float",
+        "rgba32float",
+        "rgb10a2fixed",
+        "rgba16fixed",
+        "rgba11float",
+        "mono8fixed",
+        "mono16fixed",
+        "mono16float",
+        "mono32float",
+        "rg8fixed",
+        "rg16fixed",
+        "rg16float",
+        "rg32float",
+        "a8fixed",
+        "a16fixed",
+        "a16float",
+        "a32float",
+        "monoalpha8fixed",
+        "monoalpha16fixed",
+        "monoalpha16float",
+        "monoalpha32float"
+      ]
+    },
+    "parmcolorspace": {
+      "value": "srgb",
+      "menus": [
+        "srgb",
+        "srgblinear",
+        "rec601ntsc",
+        "rec709",
+        "rec2020",
+        "dcip3",
+        "dcip3d60",
+        "displayp3d65",
+        "aces2065-1",
+        "acescg",
+        "passthrough"
+      ]
+    },
+    "parmreferencewhite": {
+      "value": "default",
+      "menus": [
+        "default",
+        "useparent",
+        "sdr",
+        "hdr",
+        "ui"
+      ]
+    }
+  },
+  "infoDAT": {
+    "pageindex": {
+      "value": "0",
+      "menus": []
+    },
+    "op": {
+      "value": "None",
+      "menus": []
+    },
+    "infotype": {
+      "value": "general",
+      "menus": [
+        "general"
+      ]
+    },
+    "passive": {
+      "value": "False",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "language": {
+      "value": "text",
+      "menus": [
+        "input",
+        "parameter",
+        "text",
+        "python",
+        "glsl",
+        "json",
+        "yaml",
+        "xml",
+        "tscript"
+      ]
+    },
+    "extension": {
+      "value": "languageext",
+      "menus": [
+        "csv",
+        "dat",
+        "frag",
+        "glsl",
+        "html",
+        "json",
+        "md",
+        "py",
+        "rtf",
+        "sdp",
+        "tsv",
+        "txt",
+        "vert",
+        "xml",
+        "yaml",
+        "yml",
+        "languageext",
+        "customext"
+      ]
+    },
+    "customext": {
+      "value": "",
+      "menus": []
+    },
+    "wordwrap": {
+      "value": "input",
+      "menus": [
+        "input",
+        "on",
+        "off"
+      ]
+    }
+  },
+  "glslTOP": {
+    "pageindex": {
+      "value": "0",
+      "menus": []
+    },
+    "glslversion": {
+      "value": "glsl430",
+      "menus": [
+        "glsl120",
+        "glsl430",
+        "glsl440",
+        "glsl450",
+        "glsl460"
+      ]
+    },
+    "mode": {
+      "value": "vertexpixel",
+      "menus": [
+        "vertexpixel",
+        "compute"
+      ]
+    },
+    "predat": {
+      "value": "None",
+      "menus": []
+    },
+    "vertexdat": {
+      "value": "None",
+      "menus": []
+    },
+    "pixeldat": {
+      "value": "/project1/phase8_probe/probe_glslTOP_pixel",
+      "menus": []
+    },
+    "computedat": {
+      "value": "/project1/phase8_probe/probe_glslTOP_compute",
+      "menus": []
+    },
+    "compilebehavior": {
+      "value": "stalluntildone",
+      "menus": [
+        "stalluntildone",
+        "threadedcheckerboard",
+        "threadedblack",
+        "threadedprevious"
+      ]
+    },
+    "errorbehavior": {
+      "value": "showcheckerboard",
+      "menus": [
+        "showcheckerboard",
+        "showblack",
+        "showprevious"
+      ]
+    },
+    "loaduniformnames": {
+      "value": "False",
+      "menus": []
+    },
+    "autodispatchsize": {
+      "value": "True",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "dispatchsizex": {
+      "value": "64",
+      "menus": []
+    },
+    "dispatchsizey": {
+      "value": "64",
+      "menus": []
+    },
+    "dispatchsizez": {
+      "value": "1",
+      "menus": []
+    },
+    "outputaccess": {
+      "value": "writeonly",
+      "menus": [
+        "writeonly",
+        "readwrite"
+      ]
+    },
+    "type": {
+      "value": "texture2d",
+      "menus": [
+        "texture2d",
+        "texture2darray",
+        "texture3d"
+      ]
+    },
+    "depth": {
+      "value": "input",
+      "menus": [
+        "input",
+        "custom"
+      ]
+    },
+    "customdepth": {
+      "value": "32",
+      "menus": []
+    },
+    "clearoutputs": {
+      "value": "True",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "clearvaluer": {
+      "value": "0.0",
+      "menus": []
+    },
+    "clearvalueg": {
+      "value": "0.0",
+      "menus": []
+    },
+    "clearvalueb": {
+      "value": "0.0",
+      "menus": []
+    },
+    "clearvaluea": {
+      "value": "0.0",
+      "menus": []
+    },
+    "inputmapping": {
+      "value": "all",
+      "menus": [
+        "all",
+        "ninputs"
+      ]
+    },
+    "nval": {
+      "value": "1",
+      "menus": []
+    },
+    "inputextenduv": {
+      "value": "zero",
+      "menus": [
+        "hold",
+        "zero",
+        "repeat",
+        "mirror"
+      ]
+    },
+    "inputextendw": {
+      "value": "repeat",
+      "menus": [
+        "hold",
+        "zero",
+        "repeat",
+        "mirror"
+      ]
+    },
+    "numcolorbufs": {
+      "value": "1",
+      "menus": []
+    },
+    "tops": {
+      "value": "None",
+      "menus": []
+    },
+    "simplexnoise": {
+      "value": "performance",
+      "menus": [
+        "performance",
+        "quality"
+      ]
+    },
+    "premultrgbbyalpha": {
+      "value": "True",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "color": {
+      "value": "0",
+      "menus": []
+    },
+    "color0name": {
+      "value": "",
+      "menus": []
+    },
+    "color0rgbr": {
+      "value": "1.0",
+      "menus": []
+    },
+    "color0rgbg": {
+      "value": "1.0",
+      "menus": []
+    },
+    "color0rgbb": {
+      "value": "1.0",
+      "menus": []
+    },
+    "color0alpha": {
+      "value": "1.0",
+      "menus": []
+    },
+    "vec": {
+      "value": "0",
+      "menus": []
+    },
+    "vec0name": {
+      "value": "",
+      "menus": []
+    },
+    "vec0valuex": {
+      "value": "0.5",
+      "menus": []
+    },
+    "vec0valuey": {
+      "value": "0.0",
+      "menus": []
+    },
+    "vec0valuez": {
+      "value": "0.0",
+      "menus": []
+    },
+    "vec0valuew": {
+      "value": "0.0",
+      "menus": []
+    },
+    "array": {
+      "value": "0",
+      "menus": []
+    },
+    "array0name": {
+      "value": "",
+      "menus": []
+    },
+    "array0type": {
+      "value": "float",
+      "menus": [
+        "float",
+        "vec2",
+        "vec3",
+        "vec4"
+      ]
+    },
+    "array0chop": {
+      "value": "None",
+      "menus": []
+    },
+    "array0arraytype": {
+      "value": "uniformarray",
+      "menus": [
+        "uniformarray",
+        "texturebuffer"
+      ]
+    },
+    "matrix": {
+      "value": "0",
+      "menus": []
+    },
+    "matrix0name": {
+      "value": "",
+      "menus": []
+    },
+    "matrix0value": {
+      "value": "None",
+      "menus": []
+    },
+    "ac": {
+      "value": "0",
+      "menus": []
+    },
+    "ac0name": {
+      "value": "",
+      "menus": []
+    },
+    "ac0initvalue": {
+      "value": "val",
+      "menus": [
+        "val",
+        "chop"
+      ]
+    },
+    "ac0singlevalue": {
+      "value": "0",
+      "menus": []
+    },
+    "ac0chopvalue": {
+      "value": "None",
+      "menus": []
+    },
+    "const": {
+      "value": "0",
+      "menus": []
+    },
+    "const0name": {
+      "value": "",
+      "menus": []
+    },
+    "const0value": {
+      "value": "0.0",
+      "menus": []
+    },
+    "buffer": {
+      "value": "0",
+      "menus": []
+    },
+    "buffer0pop": {
+      "value": "None",
+      "menus": []
+    },
+    "buffer0attrclass": {
+      "value": "point",
+      "menus": [
+        "point",
+        "primitive",
+        "vertex"
+      ]
+    },
+    "buffer0attr": {
+      "value": "",
+      "menus": []
+    },
+    "buffer0name": {
+      "value": "",
+      "menus": []
+    },
+    "outputresolution": {
+      "value": "useinput",
+      "menus": [
+        "useinput",
+        "eighth",
+        "quarter",
+        "half",
+        "2x",
+        "4x",
+        "8x",
+        "fit",
+        "limit",
+        "custom",
+        "parpanel"
+      ]
+    },
+    "resolutionw": {
+      "value": "256",
+      "menus": [
+        "400 300",
+        "640 480",
+        "800 600",
+        "1024 768",
+        "1280 720",
+        "1920 1080",
+        "1920 1200",
+        "3840 2160",
+        "4096 2160",
+        "256 256",
+        "512 512",
+        "1024 1024",
+        "2048 2048",
+        "4096 4096"
+      ]
+    },
+    "resolutionh": {
+      "value": "256",
+      "menus": [
+        "400 300",
+        "640 480",
+        "800 600",
+        "1024 768",
+        "1280 720",
+        "1920 1080",
+        "1920 1200",
+        "3840 2160",
+        "4096 2160",
+        "256 256",
+        "512 512",
+        "1024 1024",
+        "2048 2048",
+        "4096 4096"
+      ]
+    },
+    "resmult": {
+      "value": "True",
+      "menus": [
+        "off",
+        "on"
+      ]
+    },
+    "outputaspect": {
+      "value": "resolution",
+      "menus": [
+        "useinput",
+        "resolution",
+        "custom"
+      ]
+    },
+    "aspect1": {
+      "value": "1.0",
+      "menus": [
+        "1 1",
+        "4 3",
+        "16 9",
+        "16 10"
+      ]
+    },
+    "aspect2": {
+      "value": "1.0",
+      "menus": [
+        "1 1",
+        "4 3",
+        "16 9",
+        "16 10"
+      ]
+    },
+    "inputfiltertype": {
+      "value": "linear",
+      "menus": [
+        "nearest",
+        "linear",
+        "mipmap"
+      ]
+    },
+    "fillmode": {
+      "value": "best",
+      "menus": [
+        "useinput",
+        "fill",
+        "width",
+        "height",
+        "best",
+        "outside",
+        "nativeres"
+      ]
+    },
+    "filtertype": {
+      "value": "linear",
+      "menus": [
+        "useinput",
+        "nearest",
+        "linear",
+        "mipmap"
+      ]
+    },
+    "npasses": {
+      "value": "1",
+      "menus": []
+    },
+    "chanmask": {
+      "value": "15",
+      "menus": []
+    },
+    "format": {
+      "value": "useinput",
+      "menus": [
+        "useinput",
+        "rgba8fixed",
+        "rgba16float",
+        "rgba32float",
+        "rgb10a2fixed",
+        "rgba16fixed",
+        "rgba11float",
+        "mono8fixed",
+        "mono16fixed",
+        "mono16float",
+        "mono32float",
+        "rg8fixed",
+        "rg16fixed",
+        "rg16float",
+        "rg32float",
+        "a8fixed",
+        "a16fixed",
+        "a16float",
+        "a32float",
+        "monoalpha8fixed",
+        "monoalpha16fixed",
+        "monoalpha16float",
+        "monoalpha32float"
+      ]
+    },
+    "parmcolorspace": {
+      "value": "srgb",
+      "menus": [
+        "srgb",
+        "srgblinear",
+        "rec601ntsc",
+        "rec709",
+        "rec2020",
+        "dcip3",
+        "dcip3d60",
+        "displayp3d65",
+        "aces2065-1",
+        "acescg",
+        "passthrough"
+      ]
+    },
+    "parmreferencewhite": {
+      "value": "default",
+      "menus": [
+        "default",
+        "useparent",
+        "sdr",
+        "hdr",
+        "ui"
+      ]
+    }
+  }
+}

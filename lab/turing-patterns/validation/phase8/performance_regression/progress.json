@@ -1,0 +1,260 @@
+{
+  "checks": {
+    "full grid reference fixed state": {
+      "passed": true,
+      "max_error": 0.0,
+      "tolerance": 1e-06
+    },
+    "full grid reference fixed patterns": {
+      "passed": true,
+      "max_error": 0.00048798322677612305,
+      "tolerance": 0.0008
+    },
+    "full grid reference fixed out1": {
+      "passed": true,
+      "max_error": 0.00048792362213134766,
+      "tolerance": 0.0008
+    },
+    "full grid reference fixed source_preview": {
+      "passed": true,
+      "max_error": 0.0,
+      "tolerance": 1e-06
+    },
+    "full grid reference fixed mask_preview": {
+      "passed": true,
+      "max_error": 0.0,
+      "tolerance": 1e-06
+    },
+    "full grid reference fixed palette": {
+      "passed": true,
+      "max_error": 0.0,
+      "tolerance": 1e-06
+    },
+    "full grid reference tint state": {
+      "passed": true,
+      "max_error": 0.0,
+      "tolerance": 1e-06
+    },
+    "full grid reference tint patterns": {
+      "passed": true,
+      "max_error": 0.0004881620407104492,
+      "tolerance": 0.0008
+    },
+    "full grid reference tint out1": {
+      "passed": true,
+      "max_error": 0.0004881620407104492,
+      "tolerance": 0.0008
+    },
+    "full grid reference tint source_preview": {
+      "passed": true,
+      "max_error": 0.0,
+      "tolerance": 1e-06
+    },
+    "full grid reference tint mask_preview": {
+      "passed": true,
+      "max_error": 0.0,
+      "tolerance": 1e-06
+    },
+    "full grid reference tint palette": {
+      "passed": true,
+      "max_error": 0.0,
+      "tolerance": 1e-06
+    },
+    "full grid reference ramp state": {
+      "passed": true,
+      "max_error": 0.0,
+      "tolerance": 1e-06
+    },
+    "full grid reference ramp patterns": {
+      "passed": true,
+      "max_error": 0.0004882216453552246,
+      "tolerance": 0.0008
+    },
+    "full grid reference ramp out1": {
+      "passed": true,
+      "max_error": 0.0004882216453552246,
+      "tolerance": 0.0008
+    },
+    "full grid reference ramp source_preview": {
+      "passed": true,
+      "max_error": 0.0,
+      "tolerance": 1e-06
+    },
+    "full grid reference ramp mask_preview": {
+      "passed": true,
+      "max_error": 0.0,
+      "tolerance": 1e-06
+    },
+    "full grid reference ramp palette": {
+      "passed": true,
+      "max_error": 0.0,
+      "tolerance": 1e-06
+    },
+    "full grid reference dye state": {
+      "passed": true,
+      "max_error": 0.0,
+      "tolerance": 1e-06
+    },
+    "full grid reference dye patterns": {
+      "passed": true,
+      "max_error": 0.0004882216453552246,
+      "tolerance": 0.0008
+    },
+    "full grid reference dye out1": {
+      "passed": true,
+      "max_error": 0.00048798322677612305,
+      "tolerance": 0.0008
+    },
+    "full grid reference dye source_preview": {
+      "passed": true,
+      "max_error": 0.0,
+      "tolerance": 1e-06
+    },
+    "full grid reference dye mask_preview": {
+      "passed": true,
+      "max_error": 0.0,
+      "tolerance": 1e-06
+    },
+    "full grid reference dye palette": {
+      "passed": true,
+      "max_error": 0.0,
+      "tolerance": 1e-06
+    },
+    "no media coarse chemical reference wrap": {
+      "passed": true,
+      "max_error": 0.0,
+      "tolerance": 1e-06
+    },
+    "no media coarse chemical reference noflux": {
+      "passed": true,
+      "max_error": 0.0,
+      "tolerance": 1e-06
+    },
+    "no media coarse chemical reference clear": {
+      "passed": true,
+      "max_error": 0.0,
+      "tolerance": 1e-06
+    },
+    "coarse premultiplied box CPU reference cell 4": {
+      "passed": true,
+      "max_error": 2.9802322387695312e-08,
+      "tolerance": 2e-06
+    },
+    "hidden transparent magenta excluded": {
+      "passed": true
+    },
+    "coarse fractional alpha retained": {
+      "passed": true
+    },
+    "simulation mask and influence dimensions": {
+      "passed": true
+    },
+    "public mask preview canvas dimensions": {
+      "passed": true
+    },
+    "float32 state and field formats": {
+      "passed": true
+    },
+    "light visual formats": {
+      "passed": true
+    },
+    "coarse premultiplied box CPU reference cell 7": {
+      "passed": true,
+      "max_error": 1.2857573361002572e-06,
+      "tolerance": 2e-06
+    },
+    "unused palette does not extract": {
+      "passed": true
+    },
+    "switch to clip initializes palette": {
+      "passed": true
+    },
+    "palette interval holds history": {
+      "passed": true
+    },
+    "palette interval updates on fourth tick": {
+      "passed": true
+    },
+    "smoothing elapsed uses four ticks": {
+      "passed": true
+    },
+    "interval snapshot replay state": {
+      "passed": true,
+      "max_error": 0.0,
+      "tolerance": 0
+    },
+    "interval snapshot replay patterns": {
+      "passed": true,
+      "max_error": 0.0,
+      "tolerance": 0
+    },
+    "interval snapshot replay out1": {
+      "passed": true,
+      "max_error": 0.0,
+      "tolerance": 0
+    },
+    "interval snapshot replay source_preview": {
+      "passed": true,
+      "max_error": 0.0,
+      "tolerance": 0
+    },
+    "interval snapshot replay mask_preview": {
+      "passed": true,
+      "max_error": 0.0,
+      "tolerance": 0
+    },
+    "interval snapshot replay palette": {
+      "passed": true,
+      "max_error": 0.0,
+      "tolerance": 0
+    },
+    "pause holds palette": {
+      "passed": true,
+      "max_error": 0.0,
+      "tolerance": 0
+    },
+    "pause holds age": {
+      "passed": true
+    },
+    "step advances one tick": {
+      "passed": true
+    },
+    "disabled carry retains signed channels": {
+      "passed": true,
+      "max_error": 0.0,
+      "tolerance": 0
+    },
+    "carry option does not change A B": {
+      "passed": true,
+      "max_error": 0.0,
+      "tolerance": 0
+    },
+    "signed chroma retained": {
+      "passed": true
+    },
+    "legacy snapshot history defaults": {
+      "passed": true
+    },
+    "partial performance metadata refused": {
+      "passed": true
+    },
+    "chemistry reset rebases palette schedule": {
+      "passed": true
+    },
+    "performance preset roundtrip": {
+      "passed": true
+    },
+    "custom ramp requests palette row": {
+      "passed": true
+    },
+    "custom base ramp skips clip extraction": {
+      "passed": true
+    },
+    "no shader or operator errors": {
+      "passed": true,
+      "errors": ""
+    }
+  },
+  "sha256": "e294ab9c7c732c3191100ebacb6366bb58f5c4a063c2e7c3376002ae2aa8d3d6",
+  "passed": true
+}

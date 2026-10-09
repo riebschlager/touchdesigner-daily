@@ -14,6 +14,7 @@ USE
   8. On Explorer, press Generate Thumbnails, then view fk_explorer as a panel and
      click the Feed/Kill map or a reference thumbnail.
 
+Phase 8 adds a compact status panel, shader diagnostics and consolidated validation.
 Phase 7 adds measured GPU optimizations and configurable color/palette histories.
 Phase 6 unifies boundaries and adds bounded, optional Velocity TOP transport.
 Phase 5 adds raw state snapshots, independent resets and safe state resampling.
@@ -44,7 +45,7 @@ validation files and TDAPI are not required. Phase 3 validation is in
 validation/phase3; Phase 4 preset/explorer validation is in validation/phase4.
 Phase 5 validation is in validation/phase5; Phase 6 boundary/flow validation is in
 validation/phase6; Phase 7 profiling/quality checks are in validation/phase7.
-Phase 8 is not implemented.
+Phase 8 diagnostics and consolidated live validation are in validation/phase8.
 """
 
 
@@ -608,6 +609,10 @@ float signalAt(vec2 uv, bool useTexture) {
 }
 float rawMask(vec2 uv) {
     int mode = int(uMask.x + 0.5);
+    // Motion smoothing samples outside the canvas too. Both histories are
+    // transparent there; clamping only the previous sample creates false motion
+    // along the edge of a completely stationary opaque/fractional-alpha source.
+    if (mode == 5 && (any(lessThan(uv, vec2(0.0))) || any(greaterThan(uv, vec2(1.0))))) return 0.0;
     vec4 rgba = sampleCurrent(uv);
     float bright = rgba.a * luminance(rgba.rgb);
     if (mode == 0) return rgba.a;
@@ -1947,7 +1952,9 @@ def onPulse(par):
     clock = c.op('clock').module
     presets = c.op('preset_lib').module
     name = par.name
-    if name == 'Stamp':
+    if name == 'Refreshdiagnostics':
+        c.op('diagnostics').module.refresh(c, compile_shaders=True)
+    elif name == 'Stamp':
         clock.stamp(c)
     elif name == 'Step':
         clock.step(c)
@@ -1999,6 +2006,129 @@ def onValueChange(par, prev):
         c.op('clock').module.ensure_size(c)
     elif par.name in ('Moviefile', 'Sourcetop'):
         c.op('clock').module.ensure_source(c)
+    return
+'''
+
+
+DIAGNOSTICS_CALLBACKS = r'''
+"""Lightweight wall-clock status; explicit checks can demand every shader."""
+import time
+from pathlib import Path
+
+
+def shader_result(log, errors=''):
+    if errors:
+        return 'error', str(errors)
+    text = str(log).strip()
+    if any(word in text.lower() for word in ('error:', 'failed to compile', 'compile failed', 'link failed')):
+        return 'error', text
+    if 'Compiled Successfully' in text:
+        return 'ok', text
+    return 'unchecked', text or 'Not cooked yet; use Check Shaders / Refresh.'
+
+
+def source_status(c):
+    par = c.par.Sourcetop
+    source = par.eval()
+    assigned = str(par.val or '').strip()
+    expression = str(par.expr or '').strip()
+    if source is not None:
+        if source.family != 'TOP':
+            return 'Invalid Source TOP: ' + source.path
+        errors = source.errors()
+        if errors:
+            return 'Source TOP error: ' + str(errors).strip()
+        return 'Valid TOP: {} ({} x {})'.format(source.path, source.width, source.height)
+    if assigned or expression:
+        return 'Invalid Source TOP: unresolved reference ' + (assigned or expression)
+    if c.par.Moviefile.eval().strip():
+        movie = c.op('movie')
+        path = c.par.Moviefile.eval().strip()
+        # Decoder errors arrive asynchronously. Catch missing literal local files
+        # immediately; sequences, variable paths and URLs use decoder diagnostics.
+        if not any(token in path for token in ('*', '?', '[', '%', '$', '://')):
+            local = Path(path).expanduser()
+            if not local.is_absolute():
+                local = Path(project.folder) / local
+            if not local.is_file():
+                return 'Movie error: file not found ' + path
+        errors = movie.errors()
+        return ('Movie error: ' + str(errors).strip()) if errors else 'Movie assigned: ' + c.par.Moviefile.eval()
+    return 'No media (ambient simulation)'
+
+
+def refresh(c, compile_shaders=False):
+    shaders, logs = [], []
+    for name, info_name in c.fetch('Diagnosticshaders', []):
+        node, info = c.op(name), c.op(info_name)
+        if node is None or info is None:
+            result, log = 'error', 'Missing shader operator or compiler Info DAT'
+        else:
+            try:
+                if compile_shaders:
+                    node.cook(force=True)
+                    info.cook(force=True)
+                result, log = shader_result(info.text, node.errors())
+            except Exception as error:
+                result, log = 'error', str(error)
+        shaders.append((name, result))
+        logs.append('{} [{}]\n{}'.format(name, result, log))
+    c.op('shader_diagnostics').text = '\n\n'.join(logs)
+    c.store('Shaderhealth', shaders)
+    c.store('Diagnosticslastscan', time.perf_counter())
+    update(c)
+    return shaders
+
+
+def status_rows(c):
+    size = c.fetch('Appliedsize', (0, 0, 0, 0))
+    state = c.fetch('Clockstate', {})
+    health = c.fetch('Shaderhealth', [])
+    failed = [name for name, result in health if result == 'error']
+    unchecked = sum(result == 'unchecked' for _, result in health)
+    issues = c.fetch('Buildissues', [])
+    runtime = c.fetch('Runtimeerror', '')
+    shader = '{} errors / {} unchecked / {} shaders'.format(len(failed), unchecked, len(health))
+    if failed:
+        shader += ': ' + ', '.join(failed)
+    return [
+        ('Build', c.fetch('Diagnosticbuild', 'unknown') + ' (validated: 2025.33230 macOS)'),
+        ('Canvas / grid', '{} x {} / {} x {}'.format(*size)),
+        ('Clock', '{} / {}'.format(c.par.Clockmode.eval(), 'paused' if c.par.Pause else 'running')),
+        ('Ticks', '{} total / {} last frame'.format(state.get('ticks', 0), int(c.par.Tickcount))),
+        ('Substeps', '{} per tick / {} last frame'.format(int(c.par.Substeps), int(c.par.Substeps) * int(c.par.Tickcount))),
+        ('Time / lag', '{:.4f} s / {:.4f} s'.format(state.get('ticks', 0) / 60.0, state.get('debt', 0.0))),
+        ('Source', source_status(c)),
+        ('Shaders', shader),
+        ('Build issues', '; '.join(issues) or 'None'),
+        ('Runtime', runtime or 'OK'),
+    ]
+
+
+def update(c):
+    rows = status_rows(c)
+    table = c.op('status')
+    # Only rewrite when changed; no texture download, solver or palette cook.
+    if rows != c.fetch('Diagnosticsrows', None):
+        table.clear()
+        for row in rows:
+            table.appendRow(row)
+        c.store('Diagnosticsrows', rows)
+        c.store('Diagnosticstext', 'TURING MEDIA V2\n' + '\n'.join(
+            '{}: {}'.format(key, value if len(value) <= 100 else value[:97] + '...') for key, value in rows))
+
+
+def onFrameStart(frame):
+    c = me.parent()
+    try:
+        # Inspect existing compiler/error data twice a second, independent of Pause.
+        if time.perf_counter() - c.fetch('Diagnosticslastscan', 0.0) >= 0.5:
+            refresh(c)
+        else:
+            update(c)
+    except Exception as error:
+        c.store('Runtimeerror', 'Diagnostics: ' + str(error))
+        c.store('Diagnosticstext', 'TURING MEDIA V2\nDiagnostics error: ' + str(error))
     return
 '''
 
@@ -2205,7 +2335,8 @@ def desired_size(c):
 
 def source_signature(c):
     source = c.par.Sourcetop.eval()
-    return (c.par.Moviefile.eval(), getattr(source, 'id', None), getattr(source, 'path', None))
+    return (c.par.Moviefile.eval(), getattr(source, 'id', None), getattr(source, 'path', None),
+            getattr(source, 'width', None), getattr(source, 'height', None))
 
 
 def invalidate_motion(c):
@@ -2351,6 +2482,7 @@ def reset(c):
                  'media_mask', 'mask_preview', 'state', 'palette'):
         c.op(name).cook(force=True)
     _status(c, 0)
+    c.store('Runtimeerror', '')
 
 
 def palette_extract_required(c):
@@ -2483,7 +2615,12 @@ def onFrameStart(frame):
     state = _clock(c)
     # An output frame may be demanded by several viewers/consumers.
     if state['frame'] != absTime.frame:
-        advance(c)
+        try:
+            advance(c)
+        except Exception as error:
+            c.store('Runtimeerror', 'Clock stopped: ' + str(error))
+            me.par.active = False
+            print('ERROR: {} clock stopped: {}'.format(c.path, error))
         state['frame'] = absTime.frame
     return
 
@@ -2510,12 +2647,24 @@ def onCreate():
 # 8. Network construction
 # =============================================================================
 
+def _unsupported(node, message):
+    component = node if getattr(node.par, 'Clockmode', None) is not None else node.parent()
+    issues = list(component.fetch('Buildissues', []))
+    if message not in issues:
+        issues.append(message)
+    component.store('Buildissues', issues)
+    print('ERROR: ' + message)
+    raise RuntimeError(message)
+
+
 def _set(node, name, value):
     """Fail clearly if a required parameter is unavailable in this TD build."""
     parameter = getattr(node.par, name, None)
     if parameter is None:
-        raise RuntimeError('Missing parameter {}.{} in this TouchDesigner build'
-                           .format(node.path, name))
+        _unsupported(node, 'Missing parameter {}.{} in this TouchDesigner build'.format(node.path, name))
+    if isinstance(value, str) and parameter.menuNames and value not in parameter.menuNames:
+        _unsupported(node, 'Unsupported value {!r} for {}.{}; supported: {}'.format(
+            value, node.path, name, ', '.join(parameter.menuNames)))
     parameter.val = value
     return parameter
 
@@ -2523,7 +2672,7 @@ def _set(node, name, value):
 def _expression(node, name, expression):
     parameter = getattr(node.par, name, None)
     if parameter is None:
-        raise RuntimeError('Missing parameter {}.{}'.format(node.path, name))
+        _unsupported(node, 'Missing parameter {}.{}'.format(node.path, name))
     parameter.expr = expression
 
 
@@ -2570,6 +2719,9 @@ def _shader(component, name, dat_name, code, position):
     info = component.create(infoDAT, info_name + '_info')
     _set(info, 'op', node.name)
     info.nodeX, info.nodeY = position[0], position[1] - 300
+    shaders = list(component.fetch('Diagnosticshaders', []))
+    shaders.append((node.name, info.name))
+    component.store('Diagnosticshaders', shaders)
     return node
 
 
@@ -2583,6 +2735,34 @@ def _buffer(component, name, initial, position):
                        ('inputfiltertype', 'nearest')):
         _set(node, key, value)
     return node
+
+
+def _build_diagnostics(component):
+    # Standalone native creation is intentional; no TDAPI TOX dependency.
+    page = component.appendCustomPage('Diagnostics')
+    page.appendPulse('Refreshdiagnostics', label='Check Shaders / Refresh')
+    component.store('Diagnosticbuild', '{}.{}'.format(app.version, app.build))
+    status = component.create(tableDAT, 'status')
+    status.nodeX, status.nodeY = -600, -700
+    log = component.create(textDAT, 'shader_diagnostics')
+    log.nodeX, log.nodeY = -600, -1030
+    diagnostics = component.create(executeDAT, 'diagnostics')
+    diagnostics.nodeX, diagnostics.nodeY = -100, -700
+    diagnostics.text = DIAGNOSTICS_CALLBACKS.strip() + '\n'
+    _set(diagnostics, 'active', False)
+    _set(diagnostics, 'frameend', False)
+    _set(diagnostics, 'framestart', True)
+    panel = component.create(textCOMP, 'status_panel')
+    panel.nodeX, panel.nodeY = -100, -1030
+    for name, value in (('w', 640), ('h', 280), ('type', 'multiline'), ('fontsize', 14), ('alignx', 'left'),
+                        ('aligny', 'top'), ('wordwrap', True), ('bgcolorr', 0.025),
+                        ('bgcolorg', 0.035), ('bgcolorb', 0.045), ('bgalpha', 1.0),
+                        ('textpaddingl', 10), ('textpaddingr', 10),
+                        ('textpaddingt', 10), ('textpaddingb', 10)):
+        _set(panel, name, value)
+    _expression(panel, 'text', 'parent().fetch("Diagnosticstext", "Building...")')
+    _set(diagnostics, 'active', True)
+    return diagnostics
 
 
 def _reader(component, name, source, position):
@@ -2933,6 +3113,8 @@ def build_turing_media_v2(container=None):
     explorer_status.val = 'Thumbnails not generated'
     explorer_status.readOnly = True
 
+    diagnostics = _build_diagnostics(component)
+
     # A transparent canvas-sized source: no media means no influence at all.
     blank = component.create(constantTOP, 'blank')
     blank.nodeX, blank.nodeY = -1250, 400
@@ -2991,7 +3173,10 @@ def build_turing_media_v2(container=None):
                     CANVAS_ASPECT)),
     ])
 
-    # Manual sample history advances with ticks, including while single-stepping.
+    # Motion Cache TOPs explicitly disable Active, Cache Once and Always Cook.
+    # Readers may recook for any viewer, but history is replaced ONLY by tick,
+    # invalidation or restore. A stopped source therefore compares two identical
+    # samples on the next tick instead of retaining an old moving frame.
     for index, name in enumerate(('media_a', 'media_b')):
         _buffer(component, name, prepared, (-650, 1150 + index * 150))
     cache = _reader(component, 'media_cache', 'media_a', (-400, 650))
@@ -3297,7 +3482,8 @@ def build_turing_media_v2(container=None):
                             'Canvaswidth Canvasheight Cellsize Seed Seedradius Ambient Moviefile '
                             'Sourcetop Clipseed Restartclip Transformzero Applypreset Applyreset '
                             'Savepreset Deletepreset Importpresets Exportpresets Generatethumbs '
-                            'Resetchemistry Clearcolor Resetall Savestate Restorestate Exportstate Importstate')
+                            'Resetchemistry Clearcolor Resetall Savestate Restorestate Exportstate Importstate '
+                            'Refreshdiagnostics')
     _set(callbacks, 'custom', True)
     _set(callbacks, 'builtin', False)
     _set(callbacks, 'onpulse', True)
@@ -3324,6 +3510,8 @@ def build_turing_media_v2(container=None):
         nodeview.val = 'opviewer'
     component.viewer = True
     clock.module.reset(component)
+    diagnostics.module.refresh(component, compile_shaders=True)
+    diagnostics.cook(force=True)  # Register automatic diagnostic updates.
     _set(clock, 'active', True)
     print('Created {}. Play the timeline; view {}/out1.'.format(component.path, component.path))
     print('Choose Media > Movie File or Source TOP, or leave both blank for no media input.')
@@ -3335,7 +3523,7 @@ def build_turing_media_v2(container=None):
 # 9. Embedded help
 # =============================================================================
 
-NETWORK_HELP = '''TURING MEDIA V2 / PHASE 7 — MEASURED GPU OPTIMIZATIONS
+NETWORK_HELP = '''TURING MEDIA V2 / PHASE 8 — DIAGNOSTICS AND VALIDATION
 
 QUICK START
 Paste the entire builder into a Text DAT and Run Script. Play the timeline.
@@ -3343,6 +3531,26 @@ Each run creates a uniquely named turing_media_v2 component. No external
 packages, shader files, or TDAPI component are required. Save as a TOX to reuse.
 Leave Media > Movie File and Source TOP blank for ambient patterns, or assign
 media. Source TOP overrides Movie File. Use Clock > Pause and Step to inspect.
+
+DIAGNOSTICS / SUPPORTED BUILD
+View status_panel as a panel for canvas/grid dimensions, Clock Mode and Pause,
+total/last-frame ticks, numerical substeps, simulation age/lag, source validity,
+shader health, unsupported build settings and runtime failures. The status DAT
+contains the same fields without truncation. shader_diagnostics contains full
+compiler logs with operator names. Diagnostic observations never advance state.
+Existing compiler/error data refresh twice a wall-clock second, even when paused;
+status rows update each frame. With the timeline stopped, use Diagnostics >
+Check Shaders / Refresh. This pulse demands all shaders (including the optional
+explorer) but does not commit a tick or history sample. Initial construction also
+checks all shaders. An unchecked shader is reported separately from success.
+Missing required parameters and unsupported menu values raise a named error in
+Textport and remain in Build issues; the partially built component is retained.
+A clock exception disables its Execute DAT and records Runtime: Clock stopped.
+Fix the reported operator/settings, Reset All, then enable clock > Active.
+Known live-supported build: TouchDesigner 2025.33230 on macOS. The panel reports
+the actual build; other builds remain unvalidated. Source validity reports the
+active TOP or movie; an unassigned source is valid ambient operation. An unresolved
+TOP reference is reported even when the rendering fallback is transparent.
 
 CLOCK PAGE / UNITS
 One tick is 1/60 simulation second. Speed 1 advances one simulation second per
@@ -3389,6 +3597,13 @@ Motion measures alpha and alpha-weighted luminance changes per tick, not optical
 flow. Changes <=1e-6 are treated as floating-point noise. It settles to zero on
 the next unchanged tick; while paused history holds. Source changes invalidate
 both samples immediately and suppress the first new tick difference.
+Changing source TOP dimensions also invalidates the history. Both media_a/b
+Cache TOPs have Active, Cache Once and Always Cook disabled, cache size one,
+and RGBA32F format. Only explicit replacement advances them. Ordinary recooks
+and diagnostic refreshes retain both samples; Reset All, Restart Media, source
+changes and canvas resizing invalidate them. Snapshot restore reinstates both
+samples/readiness instead. A stopped source settles on the next sampled tick;
+Pause holds the last tick mask until Step/resume or explicit invalidation.
 
 TURING PAGE
 Feed/Kill and Diffusion A/B control chemistry. Ambient Seeds adds ten initial
@@ -3726,7 +3941,15 @@ palette=64x2 (clip ramp row 0, base ramp row 1); state=raw A/B + signed Oklab a/
 State alpha is DATA, not opacity. Do not premultiply or color-convert it.
 Each shader has a compiler Info DAT. The unselected blank movie may report an
 empty-file diagnostic; the transparent fallback is used until media is assigned.
-Validation scripts/results: validation/phase2, validation/phase3, validation/phase4.
+VALIDATED WORKFLOWS
+validation/phase8 documents the reproducible offline and live runners. The suite
+checks empty-field stability, finite bounded A/B, Pause/Step, stamp/continuous
+influence, canvas/domain boundaries, signed snapshot restoration, resize safety,
+fractional-alpha and premultiplied output, preset serialization and controlled
+30/60-FPS replay. It also injects and repairs a shader error to verify diagnostics,
+checks unsupported parameter reporting and tests motion stop/invalidation over
+real timeline frames. Each report includes the final builder SHA-256 and build.
+Earlier phases retain historical evidence and detailed contracts in phase2..7.
 Live-supported build: TouchDesigner 2025.33230 on macOS.
 '''
 
