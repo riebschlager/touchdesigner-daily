@@ -6,12 +6,12 @@ USE
   3. Play the timeline: ambient seed patterns grow immediately (no media).
   4. Select turing_media_v2. On Media, choose Movie File to load your own clip,
      or drag any TOP into Source TOP to drive it live (camera, generator, etc.).
-  5. Explore Influence > Mask Mode, Strength, and Display > Source Overlay.
-  6. On Color, switch Color Mode to tint, extract or carry the clip's colors.
-     Assign Color > Ramp TOP to replace the built-in teal/gold ramp with your own.
+  5. Explore Media > Mask Mode, Injection Rate, and Appearance > Source Overlay.
+  6. On Appearance, switch Color Mode to tint, extract or carry the clip's colors.
+     Assign Appearance > Ramp TOP to replace the built-in teal/gold ramp with your own.
   7. On Presets, pick a preset and Apply (keeps the evolving state) or Apply + Reset.
      Save Current Preset stores your settings in the component; Export/Import share them.
-  8. On Explorer, press Generate Thumbnails, then view fk_explorer as a panel and
+  8. On Presets, press Generate Thumbnails, then view fk_explorer as a panel and
      click the Feed/Kill map or a reference thumbnail.
 
 Phase 8 adds a compact status panel, shader diagnostics and consolidated validation.
@@ -28,10 +28,10 @@ ramp, state = raw A/B concentrations plus carried color.
 Clear Source TOP and Movie File to remove the media influence. No external dependencies.
 
 Default: 512 square, RGBA32F state, 60 ticks/second, 16 solver updates/tick.
-Turn on Turing > Rectangular Canvas for an independent Width and Height.
-Turing > Cell Size runs the simulation on a coarser grid (canvas / Cell Size)
+Turn on Simulation > Rectangular Canvas for an independent Width and Height.
+Simulation > Cell Size runs the simulation on a coarser grid (canvas / Cell Size)
 and upscales it for display: larger cells give thicker lines at any canvas size.
-Clock > Speed controls elapsed simulation time; Solver Quality controls accuracy.
+Simulation > Speed controls elapsed simulation time; Solver Quality controls accuracy.
 Save the .toe or save this component as a .tox to keep the generated network.
 
 References:
@@ -2647,6 +2647,54 @@ def onCreate():
 # 8. Network construction
 # =============================================================================
 
+PARAMETER_PAGES = (
+    ('Simulation', ('Turing', 'Clock')),
+    ('Media', ('Media', 'Influence')),
+    ('Motion', ('Transform', 'Flow', 'Domain')),
+    ('Appearance', ('Display', 'Color')),
+    ('Presets', ('Presets', 'Explorer')),
+    ('State', ('State',)),
+    ('Advanced', ('Performance', 'Diagnostics')),
+)
+
+
+def consolidate_parameter_pages(component):
+    """Move existing controls without recreating parameters or changing values."""
+    pages = {page.name: page for page in component.customPages}
+    page_names = tuple(name for name, _ in PARAMETER_PAGES)
+    if tuple(pages) == page_names:
+        return
+    # Capture every source before moving controls into an existing target page.
+    sections = {name: [p for p in component.customPars if p.page.name == name]
+                for _, names in PARAMETER_PAGES for name in names}
+    missing = [name for name in sections if name not in pages]
+    if missing:
+        raise RuntimeError('Missing parameter pages: ' + ', '.join(missing))
+    for target_name, source_names in PARAMETER_PAGES:
+        target = component.appendCustomPage(target_name)
+        order = 0
+        for section_index, source_name in enumerate(source_names):
+            for index, parameter in enumerate(sections[source_name]):
+                parameter.page = target
+                parameter.order = order
+                if section_index and index == 0:
+                    parameter.startSection = True
+                order += 1
+    for name, page in pages.items():
+        if name not in page_names:
+            # Page.destroy also destroys its parameters: only remove empty pages.
+            if any(p.page.name == name for p in component.customPars):
+                raise RuntimeError('Cannot remove nonempty parameter page: ' + name)
+            page.destroy()
+    component.sortCustomPages(*page_names)
+    for name in ('Feed', 'Seed', 'Simtime', 'Mediascale', 'Sourcepremult',
+                 'Maskmode', 'Savestate', 'Statefile', 'Presetfile', 'Fkfeedmin',
+                 'Thumbseed', 'Dyespread'):
+        getattr(component.par, name).startSection = True
+    component.par.Presetstatus.label = 'Preset Status'
+    component.par.Explorerstatus.label = 'Explorer Status'
+
+
 def _unsupported(node, message):
     component = node if getattr(node.par, 'Clockmode', None) is not None else node.parent()
     issues = list(component.fetch('Buildissues', []))
@@ -3114,6 +3162,7 @@ def build_turing_media_v2(container=None):
     explorer_status.readOnly = True
 
     diagnostics = _build_diagnostics(component)
+    consolidate_parameter_pages(component)
 
     # A transparent canvas-sized source: no media means no influence at all.
     blank = component.create(constantTOP, 'blank')
@@ -3515,7 +3564,7 @@ def build_turing_media_v2(container=None):
     _set(clock, 'active', True)
     print('Created {}. Play the timeline; view {}/out1.'.format(component.path, component.path))
     print('Choose Media > Movie File or Source TOP, or leave both blank for no media input.')
-    print('Explore Influence > Mask Mode and Strength, then Display > Source Overlay.')
+    print('Explore Media > Mask Mode and Injection Rate, then Appearance > Source Overlay.')
     return component
 
 
@@ -3530,7 +3579,18 @@ Paste the entire builder into a Text DAT and Run Script. Play the timeline.
 Each run creates a uniquely named turing_media_v2 component. No external
 packages, shader files, or TDAPI component are required. Save as a TOX to reuse.
 Leave Media > Movie File and Source TOP blank for ambient patterns, or assign
-media. Source TOP overrides Movie File. Use Clock > Pause and Step to inspect.
+media. Source TOP overrides Movie File. Use Simulation > Pause and Step to inspect.
+
+PARAMETER PAGES
+Simulation: canvas, chemistry, seeds and clock controls.
+Media: source, playback, fitting, influence and masks.
+Motion: global transform, velocity flow and domain confinement.
+Appearance: display, output view, palettes and carried color.
+Presets: preset management and Feed/Kill explorer settings.
+State: resets, resize behavior, memory snapshots and disk persistence.
+Advanced: history/performance controls and shader diagnostics.
+Separators divide the original sections. Parameter names, values, bindings,
+preset data and snapshot formats are unchanged by this layout.
 
 DIAGNOSTICS / SUPPORTED BUILD
 View status_panel as a panel for canvas/grid dimensions, Clock Mode and Pause,
@@ -3539,7 +3599,7 @@ shader health, unsupported build settings and runtime failures. The status DAT
 contains the same fields without truncation. shader_diagnostics contains full
 compiler logs with operator names. Diagnostic observations never advance state.
 Existing compiler/error data refresh twice a wall-clock second, even when paused;
-status rows update each frame. With the timeline stopped, use Diagnostics >
+status rows update each frame. With the timeline stopped, use Advanced >
 Check Shaders / Refresh. This pulse demands all shaders (including the optional
 explorer) but does not commit a tick or history sample. Initial construction also
 checks all shaders. An unchecked shader is reported separately from success.
@@ -3552,7 +3612,7 @@ the actual build; other builds remain unvalidated. Source validity reports the
 active TOP or movie; an unassigned source is valid ambient operation. An unresolved
 TOP reference is reported even when the rendering fallback is transparent.
 
-CLOCK PAGE / UNITS
+SIMULATION / CLOCK UNITS
 One tick is 1/60 simulation second. Speed 1 advances one simulation second per
 elapsed second. The reference is V1 at 60 FPS: 16 chemistry updates with dt=1
 per tick (960 chemistry time units per simulation second).
@@ -3605,16 +3665,16 @@ changes and canvas resizing invalidate them. Snapshot restore reinstates both
 samples/readiness instead. A stopped source settles on the next sampled tick;
 Pause holds the last tick mask until Step/resume or explicit invalidation.
 
-TURING PAGE
+SIMULATION / CANVAS AND CHEMISTRY
 Feed/Kill and Diffusion A/B control chemistry. Ambient Seeds adds ten initial
 patches. Editing Seed, Seed Radius or Ambient Seeds takes effect on the next
 explicit reset. Source changes keep chemistry by default and invalidate motion
-history. Dimension edits follow State > Resize Behavior. Turing > Reset is a
+history. Dimension edits follow State > Resize Behavior. Simulation > Reset is a
 Reset All alias. Reseed increments the seed and resets chemistry once, keeping
 carried color. Restart Media cues the movie and retains chemistry/age/color. The former Coral/Dividing Spots pulses are now presets (Presets page).
 Resolution controls a square canvas; Rectangular Canvas enables Width/Height.
 Cell Size divides the canvas dimensions for a coarser simulation, upscaled by
-Display > Upscale Filter. Larger cells make thicker lines and lower GPU cost.
+Appearance > Upscale Filter. Larger cells make thicker lines and lower GPU cost.
 Seed Radius, Edge Width, Mask Smoothing, Tint Spread and Translate use cells.
 
 MEDIA PAGE
@@ -3629,7 +3689,7 @@ Prepared media is straight RGBA. Source Premultiplied unpremultiplies incoming
 RGB when required; movie input premultiplication is off. Ignore Source Alpha
 makes the fitted media rectangle opaque; transparent padding stays transparent.
 
-INFLUENCE PAGE
+MEDIA / INFLUENCE
 Mask Mode: Silhouette=alpha, Bright/Dark Texture=alpha*brightness/darkness,
 Silhouette Edges=outline, Texture Edges=internal detail, Motion=tick difference.
 Mask Gain, Edge Width, Mask Smoothing and Motion Gain shape the mask.
@@ -3655,7 +3715,7 @@ Ranges may descend for reversed maps. Recovery and color injection remain
 independent in ALL three modes. Mode/range/domain changes preserve age and state;
 new settings apply on the next tick (or explicit stamp).
 
-DOMAIN PAGE
+MOTION / DOMAIN
 Domain Mask TOP is independent of Source TOP and works with every influence mode.
 Blank means the whole canvas. Red is sampled nearest in normalized canvas UV
 at simulation-cell centers, optionally inverted, then thresholded: value >=
@@ -3675,7 +3735,7 @@ cells instead of smoothly sliding along the wall. Domain changes during Pause
 are pending until Step/resume/Stamp/Reset; they never silently evolve state.
 Domain confinement controls raw state, not output opacity. Display reconstruction
 can soften a boundary on coarse grids; Clip Patterns to Alpha remains display-only.
-Canvas Boundary is on the Turing page and applies independently of Domain Boundary.
+Canvas Boundary is on the Simulation page and applies independently of Domain Boundary.
 Wrap repeats the domain mask across seams; both closed modes hold its edge values.
 Canvas Empty Exterior always supplies empty state outside the canvas, even when
 Domain Boundary is No Flux. Walls inside the canvas retain their own policy.
@@ -3716,7 +3776,7 @@ as unknown when applied; missing settings keep their current values and are
 reported. Menu values not offered by this build are reported as invalid.
 Parameters driven by an expression are set to constant; exported parameters
 are left alone and reported as blocked. Status shows the last result.
-Seed From Clip Only (Influence page) is a partial preset with one reset.
+Seed From Clip Only (Media page) is a partial preset with one reset.
 
 STATE PAGE / RESETS AND SNAPSHOTS
 Reset Chemistry applies the current seed to A/B and resets simulation age/debt;
@@ -3726,7 +3786,7 @@ A/B (red/green), simulation age, palette and media position remain unchanged.
 Restart Media (Media page) cues the movie, invalidates motion history and retains
 chemistry, carried color, palette and age. Reset All combines seed, color clear,
 movie restart and initial palette/media histories, resetting age/debt once.
-Every operation retains Pause. Turing > Reset is the Reset All alias; Reseed
+Every operation retains Pause. Simulation > Reset is the Reset All alias; Reseed
 increments Seed and invokes Reset Chemistry once. Apply Preset + Reset retains
 movie position while clearing chemistry/color/age/histories, as in Phase 4.
 
@@ -3794,7 +3854,7 @@ Network: fk_seed -> fk_a/fk_b (explicit ping-pong) -> fk_read -> fk_sim;
 fk_read -> fk_panel -> fk_explorer background. explorer: Execute DAT that polls
 panel input each frame and generates thumbnails.
 
-COLOR / DISPLAY
+APPEARANCE / COLOR AND DISPLAY
 All four color modes remain: Fixed Palette, Source Tint, Clip Palette, Carried
 Color. Ramp TOP optionally replaces the teal/gold ramp (horizontal middle row).
 Tint Spread blurs source color. Clip Palette sorts averaged 8x8 cells into a
@@ -3815,7 +3875,7 @@ display only; it does not confine simulation. Output is premultiplied RGBA.
 Output View selects final/patterns/mask/source-on-checkerboard. Upscale Filter
 selects cubic, linear or nearest reconstruction for coarse simulations.
 
-PERFORMANCE PAGE
+ADVANCED / PERFORMANCE
 Maintain Carried Color (default on) enables injection, neighbor spreading and
 color decay. Turn off when carried color is unnecessary: A/B evolution is
 unchanged, and existing signed chroma is retained. Global/velocity transport
@@ -3853,7 +3913,7 @@ Half-float chemical simulation was tested separately for 3600 ticks in coral and
 spots and failed pointwise fidelity; it is not a supported simulation mode.
 Profiling results, methods and limits: validation/phase7/README.md.
 
-TRANSFORM PAGE
+MOTION / TRANSFORM
 Enable Transform to move chemical and color state after every tick's solver.
 Grow and Scale X/Y are continuous percent rates per simulation second:
 scale = exp((grow + axis_scale)*.01*tick_seconds). Positive values expand.
@@ -3877,7 +3937,7 @@ The legacy parameter name Transformedge and token 'clear' remain portable. Old
 Clear presets now mean consistent Empty Exterior, including diffusion; choose
 No Flux to retain the old clamped diffusion behavior. Wrap is unchanged.
 
-FLOW PAGE
+MOTION / VELOCITY FLOW
 Enable Velocity and assign Velocity TOP. Blank/disabled/Strength=0 means no flow.
 Red = signed X velocity, green = signed Y velocity in simulation cells/second;
 positive X goes right, positive Y goes up (bottom-left UV origin). Zero RG is still.
