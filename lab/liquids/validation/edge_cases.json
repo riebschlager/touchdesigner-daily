@@ -1,0 +1,10 @@
+{
+  "checks": {
+    "65 sources rejected": true,
+    "TD sanitizes NaN CHOP sample": true,
+    "incompatible RGB sample count rejected": true,
+    "wired CHOP input": true
+  },
+  "live_start": 0.0,
+  "component": "/project1/fluid_validation3/fluid_solver1"
+}

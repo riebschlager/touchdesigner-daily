@@ -1,0 +1,29 @@
+{
+  "build": "2025.33230",
+  "component": "/project1/fluid_demo",
+  "checks": {
+    "four CHOP sources": true,
+    "one sample per channel": true,
+    "source wire reaches solver": true,
+    "independent colors": true,
+    "UV source positions": true,
+    "dropper 1 injects own RGB": true,
+    "dropper 2 injects own RGB": true,
+    "dropper 3 injects own RGB": true,
+    "dropper 4 injects own RGB": true,
+    "every dropper moves": true,
+    "pause holds motion and fluid time": true,
+    "demo Step advances one tick": true,
+    "individual dropper disabled": true,
+    "individual color editable": true,
+    "Reset restores orbit positions": true,
+    "Reset clears dye": true,
+    "motion speed zero holds droppers": true,
+    "colored simulation finite": true,
+    "demo error free": true,
+    "TOX reload retains relative CHOP wiring": true,
+    "reloaded TOX injects dye": true,
+    "reloaded TOX error free": true
+  },
+  "builder_sha256": "2433863f50c5b6dac7f528db240f3faecbefb383ef3a57ee2fd923e807eaf5e3"
+}

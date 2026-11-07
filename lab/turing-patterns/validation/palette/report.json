@@ -1,0 +1,27 @@
+{
+  "build": "2025.33230",
+  "component": "/project1/color_palette3",
+  "checks": {
+    "live API success": true,
+    "CHOP order reverse=False": true,
+    "ramp dimensions": true,
+    "TOP dimensions": true,
+    "swatch 0 reverse=False": true,
+    "swatch 1 reverse=False": true,
+    "swatch 2 reverse=False": true,
+    "swatch 3 reverse=False": true,
+    "swatch 4 reverse=False": true,
+    "ramp endpoints reverse=False": true,
+    "CHOP order reverse=True": true,
+    "swatch 0 reverse=True": true,
+    "swatch 1 reverse=True": true,
+    "swatch 2 reverse=True": true,
+    "swatch 3 reverse=True": true,
+    "swatch 4 reverse=True": true,
+    "ramp endpoints reverse=True": true,
+    "invalid seed preserves palette": true,
+    "invalid seed status": true,
+    "no operator errors": true
+  },
+  "builder_sha256": "226e063f78659cec4a59210f60bcaec59a147c6e40bfadf1e3823cf30a2b1627"
+}

@@ -1,0 +1,36 @@
+{
+  "build": "2025.33230",
+  "component": "/project1/fluid_validation3/fluid_solver",
+  "checks": {
+    "reset is empty": true,
+    "scalar source injects color": true,
+    "projection reduces divergence": true,
+    "closed wall normal velocity": true,
+    "pause holds state": true,
+    "finite evolving state": true,
+    "sample sources and RGB": true,
+    "separate RGB broadcasts": true,
+    "numbered sources and shared RGB": true,
+    "missing Y rejected": true,
+    "emit off is empty": true,
+    "MacCormack remains bounded": true,
+    "transparent output finite": true,
+    "periodic solver finite": true,
+    "rectangular resize": true,
+    "all shaders error free": true,
+    "viscosity and semi-Lagrangian finite": true,
+    "pixel coordinates": true,
+    "motion stirs fluid": true,
+    "teleport suppresses motion impulse": true,
+    "frame clock advances one tick": true,
+    "real-time catch-up is bounded": true,
+    "component has no operator errors": true
+  },
+  "metrics": {
+    "projection_rms_before": 0.016744103282690048,
+    "projection_rms_after": 0.00031841557938605547,
+    "dye_density_max": 1.156988501548767
+  },
+  "builder_sha256": "bfb255a141324e8be2147fa57756672620ea38f7a1ef9c628d948363fee954ab",
+  "platform": "macOS"
+}
